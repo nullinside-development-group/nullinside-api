@@ -1,0 +1,6 @@
+@Nullinside.Api_HostAddress = http://localhost:5125
+
+GET {{Nullinside.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
