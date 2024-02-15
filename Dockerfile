@@ -7,9 +7,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Nullinside.Api/Nullinside.Api.csproj", "Nullinside.Api/"]
-RUN dotnet restore "Nullinside.Api/Nullinside.Api.csproj"
-COPY . .
+COPY ["src/Nullinside.Api/Nullinside.Api.csproj", "src/Nullinside.Api/"]
+RUN dotnet restore "src/Nullinside.Api/Nullinside.Api.csproj"
+COPY src/ .
 WORKDIR "/src/Nullinside.Api"
 RUN dotnet build "Nullinside.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
