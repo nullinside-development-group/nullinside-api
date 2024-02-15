@@ -15,6 +15,7 @@ var app = builder.Build();
 // }
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UsePathBase("/api/v1");
 
 app.UseHttpsRedirection();
 
