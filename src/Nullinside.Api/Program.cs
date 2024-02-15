@@ -6,6 +6,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UsePathBase("/api/v1");
 
 // Configure the HTTP request pipeline.
 // if (app.Environment.IsDevelopment())
@@ -15,7 +16,6 @@ var app = builder.Build();
 // }
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UsePathBase("/api/v1");
 
 app.UseHttpsRedirection();
 
