@@ -1,0 +1,7 @@
+## Performs the database migration
+@Nullinside.Api_HostAddress = http://localhost:5036
+
+POST {{Nullinside.Api_HostAddress}}/database/migration
+Accept: application/json
+
+###
