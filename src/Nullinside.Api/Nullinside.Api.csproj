@@ -9,14 +9,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.66.0.1869"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+        <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.66.0.1869" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
     <ItemGroup>
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Nullinside.Api.Model\Nullinside.Api.Model.csproj" />
     </ItemGroup>
 
 </Project>

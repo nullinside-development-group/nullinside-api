@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nullinside.Api.Tests", "Nul
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nullinside.Api", "Nullinside.Api\Nullinside.Api.csproj", "{0C4225E8-AA77-47B9-9704-99C0C592A25E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nullinside.Api.Model", "Nullinside.Api.Model\Nullinside.Api.Model.csproj", "{C3992F52-856A-489B-9F73-C26F33CCFA05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0C4225E8-AA77-47B9-9704-99C0C592A25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C4225E8-AA77-47B9-9704-99C0C592A25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C4225E8-AA77-47B9-9704-99C0C592A25E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

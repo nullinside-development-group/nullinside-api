@@ -1,13 +1,21 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Nullinside.Api.Common;
 using Nullinside.Api.Middleware;
+using Nullinside.Api.Model;
 
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
-/*builder.Services.AddAuthentication(defaultSchema).AddBearerToken();*/
+
+// Secrets are mounted into the container.
+var server = Environment.GetEnvironmentVariable("MYSQL_SERVER");
+var username = Environment.GetEnvironmentVariable("MYSQL_USERNAME");
+var password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
+builder.Services.AddDbContext<NullinsideContext>(optionsBuilder =>
+    optionsBuilder.UseMySQL($"server={server};database=nullinside;user={username};password={password}"));
 builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
 builder.Services.AddAuthentication()
     .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", options => { });
