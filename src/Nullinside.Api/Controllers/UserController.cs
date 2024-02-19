@@ -33,4 +33,12 @@ public class UserController : ControllerBase
         var siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
         return Redirect($"{siteUrl}/google/login");
     }
+    
+    [HttpPost]
+    [Route("token/validate")]
+    public async Task<IActionResult> Validate(AuthToken token)
+    {
+        // return Ok(true);
+        return Unauthorized();
+    }
 }
