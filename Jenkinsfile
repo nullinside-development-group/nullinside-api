@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'GitHub PAT', url: 'https://github.com/ProgrammingByPermutation/nullinside-api.git'
+                git branch: env.BRANCH_NAME, credentialsId: 'GitHub PAT', url: 'https://github.com/ProgrammingByPermutation/nullinside-api.git'
             }
         }
         
