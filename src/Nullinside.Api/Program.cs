@@ -1,6 +1,65 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Models;
+using Nullinside.Api.Common;
+using Nullinside.Api.Middleware;
+
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+/*builder.Services.AddAuthentication(defaultSchema).AddBearerToken();*/
+builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
+builder.Services.AddAuthentication()
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", options => { });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthRoles.USER,
+        policy => policy.Requirements.Add(new BasicAuthorizationRequirement(AuthRoles.USER)));
+    options.AddPolicy(AuthRoles.ADMIN,
+        policy => policy.Requirements.Add(new BasicAuthorizationRequirement(AuthRoles.ADMIN)));
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireRole(AuthRoles.USER)
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "You api title", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n 
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      \r\n\r\nExample: 'Bearer 12345abcdef'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+    /*var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);*/
+});
+
 
 // Add services to the container.
 builder.Services.AddCors(options =>
@@ -23,6 +82,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 app.UsePathBase("/api/v1");
+app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

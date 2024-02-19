@@ -1,4 +1,5 @@
 using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nullinside.Api.Common;
 
@@ -17,6 +18,7 @@ public class UserController : ControllerBase
         _configuration = configuration;
     }
 
+    [AllowAnonymous]
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Login([FromForm] GoogleOpenIdToken creds)
@@ -33,7 +35,8 @@ public class UserController : ControllerBase
         var siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
         return Redirect($"{siteUrl}/google/login");
     }
-    
+
+    [AllowAnonymous]
     [HttpPost]
     [Route("token/validate")]
     public async Task<IActionResult> Validate(AuthToken token)
