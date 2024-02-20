@@ -2,16 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Nullinside.Api.Middleware;
 
-public class BasicAuthorizationHandler : AuthorizationHandler<BasicAuthorizationRequirement>, IAuthorizationRequirement
-{
+public class BasicAuthorizationHandler : AuthorizationHandler<BasicAuthorizationRequirement>, IAuthorizationRequirement {
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
-        BasicAuthorizationRequirement requirement)
-    {
-        try
-        {
+        BasicAuthorizationRequirement requirement) {
+        try {
             // do logic
-            if (context.User.IsInRole(requirement.Role))
-            {
+            if (context.User.IsInRole(requirement.Role)) {
                 context.Succeed(requirement);
                 return Task.CompletedTask;
             }
@@ -19,8 +15,7 @@ public class BasicAuthorizationHandler : AuthorizationHandler<BasicAuthorization
             context.Fail(new AuthorizationFailureReason(this, "User does not have permissions to this resource"));
             return Task.CompletedTask;
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             // handle error
             context.Fail(new AuthorizationFailureReason(this, ex.Message));
         }
