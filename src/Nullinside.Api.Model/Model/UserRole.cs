@@ -6,7 +6,8 @@ public class UserRole : ITableModel
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public string Role { get; set; }
+    public UserRoles Role { get; set; }
+    public DateTime RoleAdded { get; set; }
     
     public void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,4 +18,10 @@ public class UserRole : ITableModel
                 .HasMaxLength(10);
         });
     }
+}
+
+public enum UserRoles
+{
+    USER,
+    ADMIN
 }

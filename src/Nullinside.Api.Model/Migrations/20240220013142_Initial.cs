@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using MySql.EntityFrameworkCore.Metadata;
 
 #nullable disable
@@ -20,8 +21,10 @@ namespace Nullinside.Api.Model.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    Email = table.Column<string>(type: "longtext", nullable: true),
-                    Token = table.Column<string>(type: "longtext", nullable: true)
+                    Gmail = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
+                    Token = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
+                    UpdatedOn = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,7 +39,8 @@ namespace Nullinside.Api.Model.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Role = table.Column<string>(type: "longtext", nullable: false)
+                    Role = table.Column<int>(type: "int", maxLength: 10, nullable: false),
+                    RoleAdded = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -54,6 +58,12 @@ namespace Nullinside.Api.Model.Migrations
                 name: "IX_UserRoles_UserId",
                 table: "UserRoles",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Gmail",
+                table: "Users",
+                column: "Gmail",
+                unique: true);
         }
 
         /// <inheritdoc />

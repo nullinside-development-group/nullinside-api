@@ -9,10 +9,10 @@ namespace Nullinside.Api.Controllers;
 [Route("[controller]")]
 public class DatabaseController : ControllerBase
 {
-    private readonly ILogger<UserController> _logger;
     private readonly NullinsideContext _dbContext;
+    private readonly ILogger<DatabaseController> _logger;
 
-    public DatabaseController(ILogger<UserController> logger, NullinsideContext dbContext)
+    public DatabaseController(ILogger<DatabaseController> logger, NullinsideContext dbContext)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -23,7 +23,7 @@ public class DatabaseController : ControllerBase
     [Route("migration")]
     public async Task<IActionResult> Migrate()
     {
-        await this._dbContext.Database.MigrateAsync();
+        await _dbContext.Database.MigrateAsync();
         return Ok();
     }
 }
