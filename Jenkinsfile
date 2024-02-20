@@ -13,9 +13,14 @@ pipeline {
         
         stage('Build & Deploy') {
             steps {
-				sh """
-					bash go.sh 
-				"""
+				withCredentials([
+					usernamePassword(credentialsId: 'MySql', passwordVariable: 'MYSQL_PASSWORD', usernameVariable: 'MYSQL_USERNAME'),
+					string(credentialsId: 'MySqlServer', variable: 'MYSQL_SERVER')
+				]) {
+					sh """
+						bash go.sh 
+					"""
+				}
             }
         }
     }
