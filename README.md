@@ -12,6 +12,11 @@ To provide public, unauthenticated, access to endpoints add the `[AllowAnonymous
 
 To restrict endpoint access to a non-`User` role decorate it with an attribute like the following: `[Authorize(AuthRoles.ADMIN)]`
 
+### Creating Additional Roles
+
+1. Update the `Nullinside.Api.Common.AuthRoles` class with the new role name.
+2. 
+
 ## Known Issues
 
 1. **Error Message:** "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'RETURNING..." on `.SaveChangesAsync()`
