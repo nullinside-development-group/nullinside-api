@@ -6,25 +6,51 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using Nullinside.Api.Common;
+using Nullinside.Api.Common.Json;
 using Nullinside.Api.Model;
-using Nullinside.Api.Model.Model;
+using Nullinside.Api.Model.Ddl;
 
 namespace Nullinside.Api.Controllers;
 
+/// <summary>
+///   Handles user authentication and authorization.
+/// </summary>
 [ApiController]
 [Route("[controller]")]
 public class UserController : ControllerBase {
+  /// <summary>
+  ///   The application's configuration file.
+  /// </summary>
   private readonly IConfiguration _configuration;
+
+  /// <summary>
+  ///   The nullinside database.
+  /// </summary>
   private readonly NullinsideContext _dbContext;
+
+  /// <summary>
+  ///   The logger.
+  /// </summary>
   private readonly ILogger<UserController> _logger;
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="UserController" /> class.
+  /// </summary>
+  /// <param name="logger">The logger.</param>
+  /// <param name="configuration">The application's configuration file.</param>
+  /// <param name="dbContext">The nullinside database.</param>
   public UserController(ILogger<UserController> logger, IConfiguration configuration, NullinsideContext dbContext) {
     _logger = logger;
     _configuration = configuration;
     _dbContext = dbContext;
   }
 
+  /// <summary>
+  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by google as part of their OpenId workflow. It
+  ///   redirects users back to the nullinside website.
+  /// </summary>
+  /// <param name="creds">The credentials provided by google.</param>
+  /// <returns>A redirect to the nullinside website.</returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("login")]
@@ -56,7 +82,7 @@ public class UserController : ControllerBase {
           }
 
           _dbContext.UserRoles.Add(new UserRole {
-            Role = UserRoles.USER,
+            Role = UserRoles.User,
             UserId = existing.Id,
             RoleAdded = DateTime.UtcNow
           });
@@ -79,9 +105,16 @@ public class UserController : ControllerBase {
     }
   }
 
+  /// <summary>
+  ///   Validates that the provided token is valid.
+  /// </summary>
+  /// <param name="token">The token to validate.</param>
+  /// <returns>200 if successful, 401 otherwise.</returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("token/validate")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
   public async Task<IActionResult> Validate(AuthToken token) {
     try {
       User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token);
@@ -96,7 +129,13 @@ public class UserController : ControllerBase {
     }
   }
 
+  /// <summary>
+  ///   Generates a new unique bearer token.
+  /// </summary>
+  /// <returns>A bearer token.</returns>
   private static string GenerateBearerToken() {
+    // This method is trash but it doesn't matter. We should be doing real OAuth tokens with expirations and
+    // renewals. Right now nothing that exists on the site requires this level of sophistication.
     string allowed = "ABCDEFGHIJKLMONOPQRSTUVWXYZabcdefghijklmonopqrstuvwxyz0123456789";
     int strlen = 255; // Or whatever
     char[] randomChars = new char[strlen];

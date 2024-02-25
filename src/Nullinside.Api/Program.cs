@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -5,7 +7,7 @@ using Microsoft.OpenApi.Models;
 
 using Nullinside.Api.Middleware;
 using Nullinside.Api.Model;
-using Nullinside.Api.Model.Model;
+using Nullinside.Api.Model.Ddl;
 
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
@@ -22,12 +24,18 @@ builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", options => { });
 
 builder.Services.AddAuthorization(options => {
-  options.AddPolicy(UserRoles.USER.ToString(),
-    policy => policy.Requirements.Add(new BasicAuthorizationRequirement(UserRoles.USER.ToString())));
-  options.AddPolicy(UserRoles.ADMIN.ToString(),
-    policy => policy.Requirements.Add(new BasicAuthorizationRequirement(UserRoles.ADMIN.ToString())));
+  // Dynamically add all of the user roles that exist in the application.
+  foreach (object? role in Enum.GetValues(typeof(UserRoles))) {
+    string? roleName = role?.ToString();
+    if (null == roleName) {
+      continue;
+    }
+
+    options.AddPolicy(roleName, policy => policy.Requirements.Add(new BasicAuthorizationRequirement(roleName)));
+  }
+
   options.FallbackPolicy = new AuthorizationPolicyBuilder()
-    .RequireRole(UserRoles.USER.ToString())
+    .RequireRole(nameof(UserRoles.User))
     .RequireAuthenticatedUser()
     .Build();
 });
@@ -58,9 +66,10 @@ builder.Services.AddSwaggerGen(c => {
       new List<string>()
     }
   });
-  /*var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-  var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-  c.IncludeXmlComments(xmlPath);*/
+
+  string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+  string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+  c.IncludeXmlComments(xmlPath);
 });
 
 

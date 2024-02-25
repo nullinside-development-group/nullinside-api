@@ -6,19 +6,41 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using Nullinside.Api.Model;
-using Nullinside.Api.Model.Model;
+using Nullinside.Api.Model.Ddl;
 
 namespace Nullinside.Api.Middleware;
 
+/// <summary>
+///   Handles incoming Bearer tokens and converts them into objects that represents the user and their roles in the app.
+/// </summary>
 public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
+  /// <summary>
+  ///   The nullinside database.
+  /// </summary>
   private readonly NullinsideContext _dbContext;
+
+  /// <summary>
+  ///   The logger.
+  /// </summary>
   private readonly ILogger<BasicAuthenticationHandler> _logger;
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="BasicAuthenticationHandler" /> class.
+  /// </summary>
+  /// <param name="options">The options.</param>
+  /// <param name="logger">The logger.</param>
+  /// <param name="encoder">The url encoder.</param>
+  /// <param name="dbContext">The database.</param>
   public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, NullinsideContext dbContext) : base(options, logger, encoder) {
     _dbContext = dbContext;
     _logger = logger.CreateLogger<BasicAuthenticationHandler>();
   }
 
+  /// <summary>
+  ///   Pulls the bearer token out of the "Authorization" header and converts it into an object containing the user's
+  ///   information and their roles.
+  /// </summary>
+  /// <returns>The user and their roles if successful, <see cref="AuthenticateResult.Fail(string)" /> otherwise.</returns>
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
     // Read token from HTTP request header
     string authorizationHeader = Request.Headers["Authorization"]!;
