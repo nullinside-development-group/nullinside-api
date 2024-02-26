@@ -8,7 +8,14 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5036",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MYSQL_SERVER": "",
+        "MYSQL_USERNAME": "",
+        "MYSQL_PASSWORD": "",
+        "DOCKER_SERVER": "",
+        "DOCKER_USERNAME": "",
+        "DOCKER_PASSWORD": "",
+        "DOCKER_PASSWORD2": ""
       }
     },
     "https": {

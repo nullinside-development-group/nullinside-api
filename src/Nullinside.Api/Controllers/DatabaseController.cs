@@ -35,9 +35,7 @@ public class DatabaseController : ControllerBase {
   /// <summary>
   ///   Performs a database migration, apply any updates in a blocking call.
   /// </summary>
-  /// <returns>
-  ///   <seealso cref="OkResult" />
-  /// </returns>
+  /// <returns>True</returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("migration")]

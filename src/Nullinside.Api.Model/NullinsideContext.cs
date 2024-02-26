@@ -32,6 +32,11 @@ public class NullinsideContext : DbContext {
   public DbSet<UserRole> UserRoles { get; set; } = null!;
 
   /// <summary>
+  ///   The docker deployments that are configurable in the applications.
+  /// </summary>
+  public DbSet<DockerDeployments> DockerDeployments { get; set; } = null!;
+
+  /// <summary>
   ///   Configures the default database connection.
   /// </summary>
   /// <param name="optionsBuilder">The database configuration options.</param>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nullinside.Api.Model;
 
@@ -10,9 +11,11 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Model.Migrations
 {
     [DbContext(typeof(NullinsideContext))]
-    partial class NullinsideContextModelSnapshot : ModelSnapshot
+    [Migration("20240225235329_InitialDockerTables")]
+    partial class InitialDockerTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,11 +28,6 @@ namespace Nullinside.Api.Model.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
                     b.Property<bool>("IsDockerComposeProject")
                         .HasColumnType("tinyint(1)");
 
@@ -38,15 +36,7 @@ namespace Nullinside.Api.Model.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("DisplayName");
-
-                    b.HasIndex("IsDockerComposeProject", "Name");
 
                     b.ToTable("DockerDeployments");
                 });

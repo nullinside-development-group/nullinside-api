@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Security.Cryptography;
 
 using Google.Apis.Auth;
@@ -103,6 +104,24 @@ public class UserController : ControllerBase {
     catch (InvalidJwtException) {
       return Redirect($"{siteUrl}/google/login?error=1");
     }
+  }
+
+  /// <summary>
+  ///   Gets the roles of the current user.
+  /// </summary>
+  /// <returns>The collection of the user's roles.</returns>
+  [HttpGet]
+  [Route("roles")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public IActionResult GetRoles() {
+    return Ok(new {
+      roles =
+        (from identify in User.Identities
+          from claim in identify.Claims
+          where claim.Type == ClaimTypes.Role
+          select claim.Value).Distinct()
+    });
   }
 
   /// <summary>

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
+using Nullinside.Api.Common;
+using Nullinside.Api.Common.Support;
 using Nullinside.Api.Middleware;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
@@ -22,6 +24,7 @@ builder.Services.AddDbContext<NullinsideContext>(optionsBuilder =>
 builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", options => { });
+builder.Services.AddScoped<IDockerProxy, DockerProxy>();
 
 builder.Services.AddAuthorization(options => {
   // Dynamically add all of the user roles that exist in the application.
