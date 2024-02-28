@@ -88,7 +88,7 @@ public class DockerController : ControllerBase {
   [HttpPost("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<IActionResult> TurnOnOrOffDockerResources(int id, bool turnOn, CancellationToken token) {
+  public async Task<IActionResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request, CancellationToken token) {
     DockerDeployments? recognizedProjects = await _dbContext.DockerDeployments
       .FirstOrDefaultAsync(d => d.Id == id, token);
     if (null == recognizedProjects) {
@@ -97,10 +97,10 @@ public class DockerController : ControllerBase {
 
     bool result;
     if (recognizedProjects.IsDockerComposeProject) {
-      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, turnOn, token);
+      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token);
     }
     else {
-      result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, turnOn, token);
+      result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, request.TurnOn, token);
     }
 
     return Ok(result);
