@@ -46,20 +46,20 @@ public class DockerProxy : IDockerProxy {
 
   /// <inheritdoc />
   public async Task<IEnumerable<DockerResource>> GetContainers(CancellationToken cancellationToken) {
-    string response = await ExecuteCommand("docker container ls -a --format '{{.Names}}|{{.Status}}'", cancellationToken);
-    if (string.IsNullOrWhiteSpace(response)) {
+    (string output, string error) response = await ExecuteCommand("docker container ls -a --format '{{.Names}}|{{.Status}}'", cancellationToken);
+    if (string.IsNullOrWhiteSpace(response.output)) {
       return Enumerable.Empty<DockerResource>();
     }
 
     var containers = new List<DockerResource>();
-    foreach (string line in response.Split('\n')) {
+    foreach (string line in response.output.Split('\n')) {
       if (string.IsNullOrWhiteSpace(line)) {
         continue;
       }
 
       string[] parts = line.Split('|');
       if (parts.Length != 2) {
-        _logger.LogError($"Failed to parse the following docker container name into two parts on the '|' char: {line}");
+        _logger.LogError("Failed to parse the following docker container name into two parts on the '|' char: {line}", line);
         continue;
       }
 
@@ -74,12 +74,12 @@ public class DockerProxy : IDockerProxy {
 
   /// <inheritdoc />
   public async Task<IEnumerable<DockerResource>> GetDockerComposeProjects(CancellationToken cancellationToken) {
-    string responseJson = await ExecuteCommand("docker compose ls -a --format 'json'", cancellationToken);
-    if (string.IsNullOrWhiteSpace(responseJson)) {
+    (string output, string error) responseJson = await ExecuteCommand("docker compose ls -a --format 'json'", cancellationToken);
+    if (string.IsNullOrWhiteSpace(responseJson.output)) {
       return Enumerable.Empty<DockerResource>();
     }
 
-    var response = JsonConvert.DeserializeObject<List<DockerComposeLsOutput>>(responseJson);
+    var response = JsonConvert.DeserializeObject<List<DockerComposeLsOutput>>(responseJson.output);
     if (null == response) {
       return Enumerable.Empty<DockerResource>();
     }
@@ -93,21 +93,31 @@ public class DockerProxy : IDockerProxy {
   /// <inheritdoc />
   public async Task<bool> TurnOnOffDockerContainer(string name, bool turnOn, CancellationToken cancellationToken) {
     string command = turnOn ? "start" : "stop";
-    string responseJson = await ExecuteCommand($"docker container {command} {name}", cancellationToken);
-    return !string.IsNullOrWhiteSpace(responseJson);
+    (string output, string error) responseJson = await ExecuteCommand($"docker container {command} {name}", cancellationToken);
+    if (string.IsNullOrWhiteSpace(responseJson.error)) {
+      return false;
+    }
+
+    return (turnOn && responseJson.error.Contains("Started", StringComparison.InvariantCultureIgnoreCase)) ||
+           (!turnOn && responseJson.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
   }
 
   /// <inheritdoc />
   public async Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken) {
     string command = turnOn ? "start" : "stop";
-    string responseJson = await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken);
-    return !string.IsNullOrWhiteSpace(responseJson);
+    (string output, string error) responseJson = await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken);
+    if (string.IsNullOrWhiteSpace(responseJson.error)) {
+      return false;
+    }
+
+    return (turnOn && responseJson.error.Contains("Started", StringComparison.InvariantCultureIgnoreCase)) ||
+           (!turnOn && responseJson.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
   }
 
-  private async Task<string> ExecuteCommand(string command, CancellationToken token) {
+  private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token) {
     using SshClient client = new(_server, _username, _password);
     await client.ConnectAsync(token);
     using SshCommand? responseJson = client.RunCommand($"echo {_password2} | sudo -S {command}");
-    return responseJson.Result;
+    return (responseJson.Result, responseJson.Error);
   }
 }
