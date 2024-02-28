@@ -43,13 +43,13 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// <returns>The user and their roles if successful, <see cref="AuthenticateResult.Fail(string)" /> otherwise.</returns>
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
     // Read token from HTTP request header
-    string authorizationHeader = Request.Headers["Authorization"]!;
+    string? authorizationHeader = Request.Headers.Authorization;
     if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer ")) {
       return AuthenticateResult.Fail("No token");
     }
 
     // Remove "Bearer" to get pure token data
-    string token = authorizationHeader.Substring("Bearer ".Length);
+    string token = authorizationHeader["Bearer ".Length..];
 
     User? dbUser;
     try {
@@ -70,10 +70,10 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
 
     try {
       //auth logic
-      List<Claim> claims = new() {
+      List<Claim> claims = [
         new Claim(ClaimTypes.Email, dbUser.Gmail ?? string.Empty),
         new Claim(ClaimTypes.UserData, dbUser.Id.ToString())
-      };
+      ];
 
       if (null != dbUser.Roles) {
         foreach (UserRole role in dbUser.Roles) {

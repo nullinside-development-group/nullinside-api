@@ -84,6 +84,8 @@ public class DockerController : ControllerBase {
   ///   Turns on or off the docker resource.
   /// </summary>
   /// <param name="id">The id of the docker resource.</param>
+  /// <param name="request">The request to turn on or off a resource.</param>
+  /// <param name="token">The cancellation token.</param>
   [Authorize(nameof(UserRoles.VmAdmin))]
   [HttpPost("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]

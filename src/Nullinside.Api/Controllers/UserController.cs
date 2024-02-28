@@ -57,14 +57,13 @@ public class UserController : ControllerBase {
   [Route("login")]
   public async Task<IActionResult> Login([FromForm] GoogleOpenIdToken creds) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
-    string token;
     try {
       GoogleJsonWebSignature.Payload? credentials = await GoogleJsonWebSignature.ValidateAsync(creds.credential);
       if (string.IsNullOrWhiteSpace(credentials?.Email)) {
         return Redirect($"{siteUrl}/google/login?error=1");
       }
 
-      token = GenerateBearerToken();
+      string token = GenerateBearerToken();
       try {
         User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Gmail == credentials.Email);
         if (null == existing) {

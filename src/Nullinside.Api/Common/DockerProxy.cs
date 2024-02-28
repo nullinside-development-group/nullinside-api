@@ -59,7 +59,7 @@ public class DockerProxy : IDockerProxy {
 
       string[] parts = line.Split('|');
       if (parts.Length != 2) {
-        _logger.LogError($"Failed to parse the following docker container name into two parts on the '|' char: {line}");
+        _logger.LogError("Failed to parse the following docker container name into two parts on the '|' char: {line}", line);
         continue;
       }
 
