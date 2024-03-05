@@ -6,6 +6,7 @@ There are currently two roles defined in `Nullinside.Api.Model.Ddl.UserRoles`:
 
 1. `User`: The role given to everyone.
 2. `Admin`: The administrator role for the development team.
+3. `VmAdmin`: Allows access to virtual machine management.
 
 By default, all users are given the `User` role and all endpoints are configured to restrict access to someone with
 the `User` role.
