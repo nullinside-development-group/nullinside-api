@@ -37,7 +37,7 @@ jobs:
           dotnet-version: 8.x.x
         
       # Execute the build
-      - name: Execute Build
+      - name: Execute Release Build
         working-directory: ./src
         run: dotnet build --configuration Release
   test:
@@ -57,7 +57,7 @@ jobs:
           dotnet-version: 8.x.x
 
       # Execute the tests
-      - name: Execute Build
+      - name: Execute Tests
         working-directory: ./src
         run: dotnet test
     
