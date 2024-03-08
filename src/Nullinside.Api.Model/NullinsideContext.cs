@@ -62,7 +62,7 @@ public class NullinsideContext : DbContext {
       .Where(p => databaseTableType.IsAssignableFrom(p) && p is { IsInterface: false, IsAbstract: false });
 
     foreach (Type type in types) {
-      ITableModel? table = Activator.CreateInstance(type) as ITableModel;
+      var table = Activator.CreateInstance(type) as ITableModel;
       table?.OnModelCreating(modelBuilder);
     }
   }
