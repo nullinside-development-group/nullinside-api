@@ -37,7 +37,7 @@ public class DatabaseController : ControllerBase {
   /// </summary>
   /// <returns>True</returns>
   [AllowAnonymous]
-  [HttpPost]
+  [HttpGet]
   [Route("migration")]
   public async Task<IActionResult> Migrate() {
     await _dbContext.Database.MigrateAsync();
