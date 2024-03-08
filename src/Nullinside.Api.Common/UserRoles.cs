@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Model.Ddl;
+namespace Nullinside.Api.Common;
 
 /// <summary>
 ///   The API-defined roles the user can have to access various parts of the site.

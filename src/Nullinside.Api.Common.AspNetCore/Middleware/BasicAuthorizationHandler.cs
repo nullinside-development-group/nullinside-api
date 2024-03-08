@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Nullinside.Api.Middleware;
+namespace Nullinside.Api.Common.AspNetCore.Middleware;
 
 /// <summary>
 ///   Performs a basic check on the user's roles to ensure the user is in the role required for the endpoint.

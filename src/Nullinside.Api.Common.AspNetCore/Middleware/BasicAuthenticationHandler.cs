@@ -3,12 +3,13 @@ using System.Text.Encodings.Web;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 
-namespace Nullinside.Api.Middleware;
+namespace Nullinside.Api.Common.AspNetCore.Middleware;
 
 /// <summary>
 ///   Handles incoming Bearer tokens and converts them into objects that represents the user and their roles in the app.

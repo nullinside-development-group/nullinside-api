@@ -1,5 +1,20 @@
 # nullinside-api
 
+## Solutions
+
+1. Nullinside.Api: The API endpoints and controllers.
+2. Nullinside.Api.Common: Shared classes.
+3. Nullinside.Api.Common.AspNetCore: Shared classes that require the use of AspNetCore DLLs.
+4. Nullinside.Api.Model: The code first database.
+5. Nullinside.Api.Tests: The unit tests for all projects.
+
+### Why `Nullinside.Api.Common` and `Nullinside.Api.Common.AspNetCore`
+
+You get weird class conflicts when you import both the swagger version of AspNetCore and the latest version of
+EntityFrameworkCore. I could have worked through these by pulling in more granular packages but at the end of the day
+it's actually more "correct" to explicitly segregate on the line of "common functions added for this other library." So
+that's the evil I chose!
+
 ## Role-Based Authentication
 
 There are currently two roles defined in `Nullinside.Api.Model.Ddl.UserRoles`:

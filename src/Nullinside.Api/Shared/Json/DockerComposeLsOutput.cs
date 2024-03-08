@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Common.Json;
+namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   The `docker compose ls --format 'json'` output.

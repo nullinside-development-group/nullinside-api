@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Common.Json;
+namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   Represents the response from google for an OpenId token.

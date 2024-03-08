@@ -18,7 +18,7 @@ public class NullinsideContext : DbContext {
   ///   Initializes a new instance of <see cref="NullinsideContext" />
   /// </summary>
   /// <param name="options">The options for configuring the database connection.</param>
-  public NullinsideContext(DbContextOptions options) : base(options) {
+  public NullinsideContext(DbContextOptions<NullinsideContext> options) : base(options) {
   }
 
   /// <summary>
@@ -62,7 +62,7 @@ public class NullinsideContext : DbContext {
       .Where(p => databaseTableType.IsAssignableFrom(p) && p is { IsInterface: false, IsAbstract: false });
 
     foreach (Type type in types) {
-      ITableModel? table = Activator.CreateInstance(type) as ITableModel;
+      var table = Activator.CreateInstance(type) as ITableModel;
       table?.OnModelCreating(modelBuilder);
     }
   }

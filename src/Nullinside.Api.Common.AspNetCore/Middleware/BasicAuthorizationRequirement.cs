@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 
-namespace Nullinside.Api.Middleware;
+namespace Nullinside.Api.Common.AspNetCore.Middleware;
 
 /// <summary>
 ///   Represents a requirement where a user is expected to have one role.
