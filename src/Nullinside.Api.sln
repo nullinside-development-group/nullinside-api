@@ -18,6 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{80
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nullinside.Api.Common", "Nullinside.Api.Common\Nullinside.Api.Common.csproj", "{994E35B0-2208-4C01-B805-1337AB9677ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nullinside.Api.Common.AspNetCore", "Nullinside.Api.Common.AspNetCore\Nullinside.Api.Common.AspNetCore.csproj", "{1564C5EF-42D2-479D-B0BF-62073B09B318}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +40,14 @@ Global
 		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3992F52-856A-489B-9F73-C26F33CCFA05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994E35B0-2208-4C01-B805-1337AB9677ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994E35B0-2208-4C01-B805-1337AB9677ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994E35B0-2208-4C01-B805-1337AB9677ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994E35B0-2208-4C01-B805-1337AB9677ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1564C5EF-42D2-479D-B0BF-62073B09B318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1564C5EF-42D2-479D-B0BF-62073B09B318}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1564C5EF-42D2-479D-B0BF-62073B09B318}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1564C5EF-42D2-479D-B0BF-62073B09B318}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

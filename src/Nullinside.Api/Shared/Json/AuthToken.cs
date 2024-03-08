@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Common.Json;
+namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   Represents an authentication token provided to the site via a "Bearer" token header.

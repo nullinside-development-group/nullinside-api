@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using Nullinside.Api.Common;
+
 namespace Nullinside.Api.Model.Ddl;
 
 /// <summary>

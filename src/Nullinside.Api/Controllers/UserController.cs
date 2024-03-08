@@ -7,9 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using Nullinside.Api.Common.Json;
+using Nullinside.Api.Common;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
+using Nullinside.Api.Shared.Json;
 
 namespace Nullinside.Api.Controllers;
 

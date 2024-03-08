@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Common.Json;
+namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   Represents a basic error where you just want to give the caller an error message and nothing more.

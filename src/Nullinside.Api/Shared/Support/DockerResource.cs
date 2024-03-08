@@ -1,6 +1,6 @@
 using Nullinside.Api.Model.Ddl;
 
-namespace Nullinside.Api.Common.Support;
+namespace Nullinside.Api.Shared.Support;
 
 /// <summary>
 ///   A docker resource representing either a docker compose project

@@ -1,4 +1,4 @@
-namespace Nullinside.Api.Common.Json;
+namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   A request to turn on or off a docker resource.

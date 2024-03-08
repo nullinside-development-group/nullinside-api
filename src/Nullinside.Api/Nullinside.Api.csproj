@@ -41,6 +41,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Nullinside.Api.Common.AspNetCore\Nullinside.Api.Common.AspNetCore.csproj"/>
+        <ProjectReference Include="..\Nullinside.Api.Common\Nullinside.Api.Common.csproj"/>
         <ProjectReference Include="..\Nullinside.Api.Model\Nullinside.Api.Model.csproj"/>
     </ItemGroup>
 

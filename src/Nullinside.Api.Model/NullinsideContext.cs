@@ -18,7 +18,7 @@ public class NullinsideContext : DbContext {
   ///   Initializes a new instance of <see cref="NullinsideContext" />
   /// </summary>
   /// <param name="options">The options for configuring the database connection.</param>
-  public NullinsideContext(DbContextOptions options) : base(options) {
+  public NullinsideContext(DbContextOptions<NullinsideContext> options) : base(options) {
   }
 
   /// <summary>

@@ -1,11 +1,11 @@
 using Newtonsoft.Json;
 
-using Nullinside.Api.Common.Json;
-using Nullinside.Api.Common.Support;
+using Nullinside.Api.Shared.Json;
+using Nullinside.Api.Shared.Support;
 
 using Renci.SshNet;
 
-namespace Nullinside.Api.Common;
+namespace Nullinside.Api.Shared;
 
 /// <summary>
 ///   Handles interactions with docker on a docker server.
