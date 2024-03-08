@@ -12,6 +12,11 @@ namespace Nullinside.Api.Null.Model;
 ///   simply by implementing the IDesignTimeDbContextFactory interface.
 /// </summary>
 public class NullinsideContextFactory : IDesignTimeDbContextFactory<NullinsideContext> {
+  /// <summary>
+  ///   Creates a new database context.
+  /// </summary>
+  /// <param name="args">The argument to pass to it.</param>
+  /// <returns>The database context.</returns>
   public NullinsideContext CreateDbContext(string[] args) {
     var optionsBuilder = new DbContextOptionsBuilder<NullinsideContext>();
 
