@@ -103,21 +103,36 @@ public class DockerProxy : IDockerProxy {
   }
 
   /// <inheritdoc />
-  public async Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken) {
-    string command = turnOn ? "start" : "stop";
-    (string output, string error) responseJson = await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken);
-    if (string.IsNullOrWhiteSpace(responseJson.error)) {
+  public async Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken, string? backupFolder) {
+    IEnumerable<DockerResource> existing = await GetDockerComposeProjects(cancellationToken);
+    if (null != existing.FirstOrDefault(e => name.Equals(e.Name))) {
+      string command = turnOn ? "start" : "stop";
+      (string output, string error) stdout = await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken);
+      if (string.IsNullOrWhiteSpace(stdout.error)) {
+        return false;
+      }
+
+      return (turnOn && stdout.error.Contains("Started", StringComparison.InvariantCultureIgnoreCase)) ||
+             (!turnOn && stdout.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    if (!turnOn || string.IsNullOrWhiteSpace(backupFolder)) {
       return false;
     }
 
-    return (turnOn && responseJson.error.Contains("Started", StringComparison.InvariantCultureIgnoreCase)) ||
-           (!turnOn && responseJson.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
+    (string output, string error) output = await ExecuteCommand("docker compose up -d", cancellationToken, backupFolder);
+    if (string.IsNullOrWhiteSpace(output.error)) {
+      return false;
+    }
+
+    return (turnOn && output.error.Contains("Started", StringComparison.InvariantCultureIgnoreCase)) ||
+           (!turnOn && output.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
   }
 
-  private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token) {
+  private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token, string? dir = null) {
     using SshClient client = new(_server, _username, _password);
     await client.ConnectAsync(token);
-    using SshCommand? responseJson = client.RunCommand($"echo {_password2} | sudo -S {command}");
+    using SshCommand? responseJson = client.RunCommand($"cd {dir}; echo {_password2} | sudo -S {command}");
     return (responseJson.Result, responseJson.Error);
   }
 }

@@ -69,12 +69,8 @@ public class DockerController : ControllerBase {
         knownDeployment.IsDockerComposeProject
           ? projects.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false)
           : containers.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false);
-      if (null == existingContainer) {
-        continue;
-      }
-
       response.Add(new DockerResource(knownDeployment) {
-        IsOnline = existingContainer.IsOnline
+        IsOnline = existingContainer is { IsOnline: true }
       });
     }
 
@@ -100,7 +96,7 @@ public class DockerController : ControllerBase {
 
     bool result;
     if (recognizedProjects.IsDockerComposeProject) {
-      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token);
+      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token, recognizedProjects.ServerDir);
     }
     else {
       result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, request.TurnOn, token);
