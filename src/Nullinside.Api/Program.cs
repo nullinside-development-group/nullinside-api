@@ -20,7 +20,7 @@ string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");
 string? username = Environment.GetEnvironmentVariable("MYSQL_USERNAME");
 string? password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 builder.Services.AddDbContext<NullinsideContext>(optionsBuilder =>
-  optionsBuilder.UseMySQL($"server={server};database=nullinside;user={username};password={password}"));
+  optionsBuilder.UseMySQL($"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true"));
 builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", _ => { });

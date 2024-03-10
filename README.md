@@ -45,3 +45,6 @@ Names are imported dynamically. Every name in the `UserRoles` enum will be conve
        or `.ValueGeneratedOnUpdate()` in the modeling POCOs.
     2. **Description:** For whatever reason, these don't generate the correct SQL when you later perform an `UPDATE` on
        an unrelated field in the POCO and call `.SaveChangesAsync()`.
+2. **Error Message:** You'll get an error during database migration that says something about a bad SQL parameter.
+    1. **Solution:** Add `;AllowUserVariables=true` to your connection string.
+    2. **Description:** These variables are turned off by default but EF uses them.
