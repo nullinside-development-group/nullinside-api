@@ -33,6 +33,7 @@ public interface IDockerProxy {
   /// <param name="name">The project name.</param>
   /// <param name="turnOn">True to start the resource up, false to turn it off.</param>
   /// <param name="cancellationToken">The cancellation token.</param>
+  /// <param name="backupDir">If the compose project doesn't already exist, the directory to find it in.</param>
   /// <returns>True if successful, false otherwise.</returns>
-  Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken);
+  Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken, string? backupDir);
 }

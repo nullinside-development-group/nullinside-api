@@ -17,6 +17,11 @@ public class DockerDeployments : ITableModel {
   public bool IsDockerComposeProject { get; set; }
 
   /// <summary>
+  ///   The directory on the server where the project is.
+  /// </summary>
+  public string? ServerDir { get; set; }
+
+  /// <summary>
   ///   Gets or sets the docker compose project name if <seealso cref="IsDockerComposeProject" /> is true, else the
   ///   container name.
   /// </summary>
@@ -55,6 +60,8 @@ public class DockerDeployments : ITableModel {
         .HasMaxLength(50)
         .IsRequired();
       entity.Property(e => e.Notes)
+        .HasMaxLength(255);
+      entity.Property(e => e.ServerDir)
         .HasMaxLength(255);
     });
   }
