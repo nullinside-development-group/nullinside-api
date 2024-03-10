@@ -1,5 +1,7 @@
 # nullinside-api
 
+[![CodeQL](https://github.com/nullinside-development-group/nullinside-api/workflows/CodeQL/badge.svg)](https://github.com/nullinside-development-group/nullinside-api/actions?query=workflow%3ACodeQL)
+
 ## Solutions
 
 1. Nullinside.Api: The API endpoints and controllers.
