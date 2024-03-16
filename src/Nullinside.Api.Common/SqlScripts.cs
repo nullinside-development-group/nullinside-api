@@ -6,7 +6,7 @@
 public static class SqlScripts {
   /// <summary>
   ///   Performs the Levenshtein distance fuzzy search in a MySQL database.
-  ///   <seealso cref="https://en.wikipedia.org/wiki/Levenshtein_distance" />
+  ///   https://en.wikipedia.org/wiki/Levenshtein_distance
   /// </summary>
   /// <remarks>Also requires the <see cref="LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION" />.</remarks>
   public const string LEVENSHTEIN_DISTANCE_SEARCH =
