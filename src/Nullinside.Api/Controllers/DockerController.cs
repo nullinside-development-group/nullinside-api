@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Nullinside.Api.Common;
+using Nullinside.Api.Common.Docker;
+using Nullinside.Api.Common.Docker.Support;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Shared.Json;
-using Nullinside.Api.Shared.Support;
 
 namespace Nullinside.Api.Controllers;
 
@@ -69,7 +70,10 @@ public class DockerController : ControllerBase {
         knownDeployment.IsDockerComposeProject
           ? projects.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false)
           : containers.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false);
-      response.Add(new DockerResource(knownDeployment) {
+      response.Add(new DockerResource {
+        Id = knownDeployment.Id,
+        Name = knownDeployment.DisplayName,
+        Notes = knownDeployment.Notes,
         IsOnline = existingContainer is { IsOnline: true }
       });
     }

@@ -1,6 +1,4 @@
-using Nullinside.Api.Model.Ddl;
-
-namespace Nullinside.Api.Shared.Support;
+namespace Nullinside.Api.Common.Docker.Support;
 
 /// <summary>
 ///   A docker resource representing either a docker compose project
@@ -11,16 +9,6 @@ public class DockerResource {
   ///   Initializes a new instance of the <see cref="DockerResource" /> class.
   /// </summary>
   public DockerResource() {
-  }
-
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="DockerResource" /> class.
-  /// </summary>
-  /// <param name="source">The source object to copy.</param>
-  public DockerResource(DockerDeployments source) {
-    Id = source.Id;
-    Name = source.DisplayName;
-    Notes = source.Notes;
   }
 
   /// <summary>
