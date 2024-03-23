@@ -1,4 +1,6 @@
-namespace Nullinside.Api.Shared.Support;
+using Nullinside.Api.Common.Docker.Support;
+
+namespace Nullinside.Api.Common.Docker;
 
 /// <summary>
 ///   The contract to communicate with a docker server.

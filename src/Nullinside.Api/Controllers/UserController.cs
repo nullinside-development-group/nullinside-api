@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Model.Shared;
-using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
 namespace Nullinside.Api.Controllers;

@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-using Nullinside.Api.Model;
-
-namespace Nullinside.Api.Null.Model;
+namespace Nullinside.Api.Model;
 
 /// <summary>
 ///   This exists to support the CLI's migration creation tools. The CLI's migration tools don't work if you don't have a

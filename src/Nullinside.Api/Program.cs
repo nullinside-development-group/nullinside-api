@@ -7,9 +7,8 @@ using Microsoft.OpenApi.Models;
 
 using Nullinside.Api.Common;
 using Nullinside.Api.Common.AspNetCore.Middleware;
+using Nullinside.Api.Common.Docker;
 using Nullinside.Api.Model;
-using Nullinside.Api.Shared;
-using Nullinside.Api.Shared.Support;
 
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 

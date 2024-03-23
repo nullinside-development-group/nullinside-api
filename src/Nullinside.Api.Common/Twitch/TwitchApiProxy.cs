@@ -1,10 +1,8 @@
-﻿using Nullinside.Api.Common;
-
-using TwitchLib.Api;
+﻿using TwitchLib.Api;
 using TwitchLib.Api.Auth;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
-namespace Nullinside.Api.Shared;
+namespace Nullinside.Api.Common.Twitch;
 
 /// <summary>
 ///   A proxy for making twitch requests.

@@ -47,4 +47,8 @@
         <ProjectReference Include="..\Nullinside.Api.Model\Nullinside.Api.Model.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Shared\Support\"/>
+    </ItemGroup>
+
 </Project>
