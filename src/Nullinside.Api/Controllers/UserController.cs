@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
 
 using Google.Apis.Auth;
 
@@ -7,9 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using Nullinside.Api.Common;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
+using Nullinside.Api.Model.Shared;
 using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
@@ -66,7 +65,7 @@ public class UserController : ControllerBase {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      string? bearerToken = await GetTokenAndSaveToDatabase(credentials.Email, token);
+      string? bearerToken = await UserHelpers.GetTokenAndSaveToDatabase(_dbContext, credentials.Email, token);
       if (string.IsNullOrWhiteSpace(bearerToken)) {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
@@ -107,65 +106,12 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    string? bearerToken = await GetTokenAndSaveToDatabase(email, token);
+    string? bearerToken = await UserHelpers.GetTokenAndSaveToDatabase(_dbContext, email, token);
     if (string.IsNullOrWhiteSpace(bearerToken)) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
 
     return Redirect($"{siteUrl}/user/login?token={bearerToken}");
-  }
-
-  /// <summary>
-  ///   Generates a new bearer token, saves it to the database, and returns it.
-  /// </summary>
-  /// <param name="email">The email address of the user, user will be created if they don't already exist.</param>
-  /// <param name="token">The cancellation token.</param>
-  /// <param name="authToken">The authorization token for twitch, if applicable.</param>
-  /// <param name="refreshToken">The refresh token for twitch, if applicable.</param>
-  /// <param name="expires">The expiration date of the token for twitch, if applicable.</param>
-  /// <returns>The bearer token if successful, null otherwise.</returns>
-  private async Task<string?> GetTokenAndSaveToDatabase(string email, CancellationToken token = new(), string? authToken = null, string? refreshToken = null, DateTime? expires = null) {
-    string bearerToken = GenerateBearerToken();
-    try {
-      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
-      if (null == existing) {
-        _dbContext.Users.Add(new User {
-          Email = email,
-          Token = bearerToken,
-          TwitchToken = authToken,
-          TwitchRefreshToken = refreshToken,
-          TwitchTokenExpiration = expires,
-          UpdatedOn = DateTime.UtcNow,
-          CreatedOn = DateTime.UtcNow
-        });
-
-        await _dbContext.SaveChangesAsync(token);
-
-        existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
-        if (null == existing) {
-          return null;
-        }
-
-        _dbContext.UserRoles.Add(new UserRole {
-          Role = UserRoles.User,
-          UserId = existing.Id,
-          RoleAdded = DateTime.UtcNow
-        });
-      }
-      else {
-        existing.Token = bearerToken;
-        existing.TwitchToken = authToken;
-        existing.TwitchRefreshToken = refreshToken;
-        existing.TwitchTokenExpiration = expires;
-        existing.UpdatedOn = DateTime.UtcNow;
-      }
-
-      await _dbContext.SaveChangesAsync(token);
-      return bearerToken;
-    }
-    catch {
-      return null;
-    }
   }
 
   /// <summary>
@@ -208,23 +154,5 @@ public class UserController : ControllerBase {
     catch (Exception) {
       return StatusCode(500);
     }
-  }
-
-  /// <summary>
-  ///   Generates a new unique bearer token.
-  /// </summary>
-  /// <returns>A bearer token.</returns>
-  private static string GenerateBearerToken() {
-    // This method is trash but it doesn't matter. We should be doing real OAuth tokens with expirations and
-    // renewals. Right now nothing that exists on the site requires this level of sophistication.
-    string allowed = "ABCDEFGHIJKLMONOPQRSTUVWXYZabcdefghijklmonopqrstuvwxyz0123456789";
-    int strlen = 255; // Or whatever
-    char[] randomChars = new char[strlen];
-
-    for (int i = 0; i < strlen; i++) {
-      randomChars[i] = allowed[RandomNumberGenerator.GetInt32(0, allowed.Length)];
-    }
-
-    return new string(randomChars);
   }
 }
