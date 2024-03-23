@@ -12,14 +12,29 @@ public class User : ITableModel {
   public int Id { get; set; }
 
   /// <summary>
-  ///   The user's gmail account, if signed up with.
+  ///   The user's email account.
   /// </summary>
-  public string? Gmail { get; set; }
+  public string? Email { get; set; }
 
   /// <summary>
   ///   The user's auth token for interacting with the site's API.
   /// </summary>
   public string? Token { get; set; }
+
+  /// <summary>
+  ///   The oauth token for interacting with the twitch API.
+  /// </summary>
+  public string? TwitchToken { get; set; }
+
+  /// <summary>
+  ///   The refresh token for interacting with the twitch API.
+  /// </summary>
+  public string? TwitchRefreshToken { get; set; }
+
+  /// <summary>
+  ///   When the <see cref="TwitchToken" /> expires.
+  /// </summary>
+  public DateTime? TwitchTokenExpiration { get; set; }
 
   /// <summary>
   ///   The last timestamp of when the user logged into the site.
@@ -43,10 +58,10 @@ public class User : ITableModel {
   public void OnModelCreating(ModelBuilder modelBuilder) {
     modelBuilder.Entity<User>(entity => {
       entity.HasKey(e => e.Id);
-      entity.HasIndex(e => e.Gmail)
+      entity.HasIndex(e => e.Email)
         .IsUnique();
       entity.HasMany(e => e.Roles);
-      entity.Property(e => e.Gmail)
+      entity.Property(e => e.Email)
         .HasMaxLength(255);
       entity.Property(e => e.Token)
         .HasMaxLength(255);

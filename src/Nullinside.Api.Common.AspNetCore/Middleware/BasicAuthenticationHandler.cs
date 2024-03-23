@@ -72,7 +72,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     try {
       //auth logic
       List<Claim> claims = [
-        new Claim(ClaimTypes.Email, dbUser.Gmail ?? string.Empty),
+        new Claim(ClaimTypes.Email, dbUser.Email ?? string.Empty),
         new Claim(ClaimTypes.UserData, dbUser.Id.ToString())
       ];
 

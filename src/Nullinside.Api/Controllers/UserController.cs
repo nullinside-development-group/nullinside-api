@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Nullinside.Api.Common;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
+using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
 namespace Nullinside.Api.Controllers;
@@ -52,57 +53,118 @@ public class UserController : ControllerBase {
   ///   redirects users back to the nullinside website.
   /// </summary>
   /// <param name="creds">The credentials provided by google.</param>
+  /// <param name="token">The cancellation token.</param>
   /// <returns>A redirect to the nullinside website.</returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("login")]
-  public async Task<IActionResult> Login([FromForm] GoogleOpenIdToken creds) {
+  public async Task<IActionResult> Login([FromForm] GoogleOpenIdToken creds, CancellationToken token) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     try {
       GoogleJsonWebSignature.Payload? credentials = await GoogleJsonWebSignature.ValidateAsync(creds.credential);
       if (string.IsNullOrWhiteSpace(credentials?.Email)) {
-        return Redirect($"{siteUrl}/google/login?error=1");
+        return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      string token = GenerateBearerToken();
-      try {
-        User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Gmail == credentials.Email);
-        if (null == existing) {
-          _dbContext.Users.Add(new User {
-            Gmail = credentials.Email,
-            Token = token,
-            UpdatedOn = DateTime.UtcNow,
-            CreatedOn = DateTime.UtcNow
-          });
-
-          await _dbContext.SaveChangesAsync();
-
-          existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Gmail == credentials.Email);
-          if (null == existing) {
-            return Redirect($"{siteUrl}/google/login?error=2");
-          }
-
-          _dbContext.UserRoles.Add(new UserRole {
-            Role = UserRoles.User,
-            UserId = existing.Id,
-            RoleAdded = DateTime.UtcNow
-          });
-        }
-        else {
-          existing.Token = token;
-          existing.UpdatedOn = DateTime.UtcNow;
-        }
-
-        await _dbContext.SaveChangesAsync();
-        return Redirect($"{siteUrl}/google/login?token={token}");
+      string? bearerToken = await GetTokenAndSaveToDatabase(credentials.Email, token);
+      if (string.IsNullOrWhiteSpace(bearerToken)) {
+        return Redirect($"{siteUrl}/user/login?error=2");
       }
-      catch (Exception ex) {
-        _logger.LogError(ex, "Failed to get/create/update user token in database");
-        return Redirect($"{siteUrl}/google/login?error=2");
-      }
+
+      return Redirect($"{siteUrl}/user/login?token={bearerToken}");
     }
     catch (InvalidJwtException) {
-      return Redirect($"{siteUrl}/google/login?error=1");
+      return Redirect($"{siteUrl}/user/login?error=1");
+    }
+  }
+
+
+  /// <summary>
+  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
+  ///   redirects users back to the nullinside website.
+  /// </summary>
+  /// <param name="code">The credentials provided by twitch.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
+  /// </returns>
+  [AllowAnonymous]
+  [HttpGet]
+  [Route("twitch-login")]
+  public async Task<IActionResult> TwitchLogin([FromQuery] string code, CancellationToken token) {
+    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    var api = new TwitchApiProxy();
+    if (!await api.GetAccessToken(code, token)) {
+      return Redirect($"{siteUrl}/user/login?error=3");
+    }
+
+    string? email = await api.GetUserEmail(token);
+    if (string.IsNullOrWhiteSpace(email)) {
+      return Redirect($"{siteUrl}/user/login?error=4");
+    }
+
+    string? bearerToken = await GetTokenAndSaveToDatabase(email, token);
+    if (string.IsNullOrWhiteSpace(bearerToken)) {
+      return Redirect($"{siteUrl}/user/login?error=2");
+    }
+
+    return Redirect($"{siteUrl}/user/login?token={bearerToken}");
+  }
+
+  /// <summary>
+  ///   Generates a new bearer token, saves it to the database, and returns it.
+  /// </summary>
+  /// <param name="email">The email address of the user, user will be created if they don't already exist.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <param name="authToken">The authorization token for twitch, if applicable.</param>
+  /// <param name="refreshToken">The refresh token for twitch, if applicable.</param>
+  /// <param name="expires">The expiration date of the token for twitch, if applicable.</param>
+  /// <returns>The bearer token if successful, null otherwise.</returns>
+  private async Task<string?> GetTokenAndSaveToDatabase(string email, CancellationToken token = new(), string? authToken = null, string? refreshToken = null, DateTime? expires = null) {
+    string bearerToken = GenerateBearerToken();
+    try {
+      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+      if (null == existing) {
+        _dbContext.Users.Add(new User {
+          Email = email,
+          Token = bearerToken,
+          TwitchToken = authToken,
+          TwitchRefreshToken = refreshToken,
+          TwitchTokenExpiration = expires,
+          UpdatedOn = DateTime.UtcNow,
+          CreatedOn = DateTime.UtcNow
+        });
+
+        await _dbContext.SaveChangesAsync(token);
+
+        existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+        if (null == existing) {
+          return null;
+        }
+
+        _dbContext.UserRoles.Add(new UserRole {
+          Role = UserRoles.User,
+          UserId = existing.Id,
+          RoleAdded = DateTime.UtcNow
+        });
+      }
+      else {
+        existing.Token = bearerToken;
+        existing.TwitchToken = authToken;
+        existing.TwitchRefreshToken = refreshToken;
+        existing.TwitchTokenExpiration = expires;
+        existing.UpdatedOn = DateTime.UtcNow;
+      }
+
+      await _dbContext.SaveChangesAsync(token);
+      return bearerToken;
+    }
+    catch {
+      return null;
     }
   }
 

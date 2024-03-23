@@ -15,7 +15,10 @@
         "DOCKER_SERVER": "",
         "DOCKER_USERNAME": "",
         "DOCKER_PASSWORD": "",
-        "DOCKER_PASSWORD2": ""
+        "DOCKER_PASSWORD2": "",
+        "TWITCH_BOT_CLIENT_ID": "",
+        "TWITCH_BOT_CLIENT_SECRET": "",
+        "TWITCH_BOT_CLIENT_REDIRECT": ""
       }
     },
     "https": {
