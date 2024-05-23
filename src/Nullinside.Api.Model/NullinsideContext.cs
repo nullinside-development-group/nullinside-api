@@ -37,6 +37,11 @@ public class NullinsideContext : DbContext {
   public DbSet<DockerDeployments> DockerDeployments { get; set; } = null!;
 
   /// <summary>
+  ///   The feature toggles.
+  /// </summary>
+  public DbSet<FeatureToggle> FeatureToggle { get; set; } = null!;
+
+  /// <summary>
   ///   Configures the default database connection.
   /// </summary>
   /// <param name="optionsBuilder">The database configuration options.</param>
@@ -44,7 +49,8 @@ public class NullinsideContext : DbContext {
     string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");
     string? username = Environment.GetEnvironmentVariable("MYSQL_USERNAME");
     string? password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
-    optionsBuilder.UseMySQL($"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true");
+    optionsBuilder.UseMySQL(
+      $"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true");
   }
 
   /// <summary>
