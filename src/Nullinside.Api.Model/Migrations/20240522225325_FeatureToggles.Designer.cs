@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nullinside.Api.Model;
 
@@ -10,9 +11,11 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Model.Migrations
 {
     [DbContext(typeof(NullinsideContext))]
-    partial class NullinsideContextModelSnapshot : ModelSnapshot
+    [Migration("20240522225325_FeatureToggles")]
+    partial class FeatureToggles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,8 +68,8 @@ namespace Nullinside.Api.Model.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<string>("IsEnabled")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
