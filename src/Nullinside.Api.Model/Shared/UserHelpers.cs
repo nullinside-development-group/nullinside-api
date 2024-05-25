@@ -8,11 +8,11 @@ using Nullinside.Api.Model.Ddl;
 namespace Nullinside.Api.Model.Shared;
 
 /// <summary>
-///   Helper methods for user functions in the database.
+/// Helper methods for user functions in the database.
 /// </summary>
 public static class UserHelpers {
   /// <summary>
-  ///   Generates a new bearer token, saves it to the database, and returns it.
+  /// Generates a new bearer token, saves it to the database, and returns it.
   /// </summary>
   /// <param name="dbContext">The database context.</param>
   /// <param name="email">The email address of the user, user will be created if they don't already exist.</param>
@@ -20,15 +20,22 @@ public static class UserHelpers {
   /// <param name="authToken">The authorization token for twitch, if applicable.</param>
   /// <param name="refreshToken">The refresh token for twitch, if applicable.</param>
   /// <param name="expires">The expiration date of the token for twitch, if applicable.</param>
+  /// <param name="twitchUsername">The username of the user on twitch.</param>
+  /// <param name="twitchId">The id of the user on twitch.</param>
   /// <returns>The bearer token if successful, null otherwise.</returns>
-  public static async Task<string?> GetTokenAndSaveToDatabase(NullinsideContext dbContext, string email, CancellationToken token = new(), string? authToken = null, string? refreshToken = null, DateTime? expires = null) {
+  public static async Task<string?> GetTokenAndSaveToDatabase(NullinsideContext dbContext, string email,
+    CancellationToken token = new(), string? authToken = null, string? refreshToken = null, DateTime? expires = null,
+    string? twitchUsername = null, string? twitchId = null) {
     string bearerToken = GenerateBearerToken();
     try {
-      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+      // We prevent banned users from logging into the site.
+      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, token);
       if (null == existing) {
         dbContext.Users.Add(new User {
           Email = email,
           Token = bearerToken,
+          TwitchId = twitchId,
+          TwitchUsername = twitchUsername,
           TwitchToken = authToken,
           TwitchRefreshToken = refreshToken,
           TwitchTokenExpiration = expires,
@@ -51,6 +58,8 @@ public static class UserHelpers {
       }
       else {
         existing.Token = bearerToken;
+        existing.TwitchId = twitchId;
+        existing.TwitchUsername = twitchUsername;
         existing.TwitchToken = authToken;
         existing.TwitchRefreshToken = refreshToken;
         existing.TwitchTokenExpiration = expires;
@@ -66,7 +75,7 @@ public static class UserHelpers {
   }
 
   /// <summary>
-  ///   Generates a new unique bearer token.
+  /// Generates a new unique bearer token.
   /// </summary>
   /// <returns>A bearer token.</returns>
   public static string GenerateBearerToken() {
