@@ -171,7 +171,7 @@ public class TwitchApiProxy {
       string? cursor = null;
       int total = 0;
       do {
-        GetChattersResponse? response = await api.Helix.Chat.GetChattersAsync(channelId, "416540646", 1000, cursor);
+        GetChattersResponse? response = await api.Helix.Chat.GetChattersAsync(channelId, botId, 1000, cursor);
         if (null == response) {
           break;
         }

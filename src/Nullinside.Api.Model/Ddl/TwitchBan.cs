@@ -14,13 +14,17 @@ public class TwitchBan : ITableModel {
   /// <summary>
   ///   The channel they were banned in.
   /// </summary>
-  public User Channel { get; set; }
+  public string ChannelId { get; set; }
 
   /// <summary>
   ///   The user that was banned.
   /// </summary>
   /// <remarks>Don't ask me why they made this a string.</remarks>
-  public TwitchUser BannedUser { get; set; }
+  public string BannedUserTwitchId { get; set; }
+
+  public string Reason { get; set; }
+
+  public DateTime Timestamp { get; set; }
 
   /// <summary>
   ///   The method used to configure the POCOs of the table.
@@ -29,8 +33,12 @@ public class TwitchBan : ITableModel {
   public void OnModelCreating(ModelBuilder modelBuilder) {
     modelBuilder.Entity<TwitchBan>(entity => {
       entity.HasKey(e => e.Id);
-      entity.HasOne(e => e.Channel);
-      entity.HasOne(e => e.BannedUser);
+      entity.Property(e => e.ChannelId)
+        .HasMaxLength(255);
+      entity.Property(e => e.BannedUserTwitchId)
+        .HasMaxLength(255);
+      entity.Property(e => e.Reason)
+        .HasMaxLength(255);
     });
   }
 }
