@@ -186,6 +186,15 @@ public class TwitchApiProxy {
     }, Retries, token);
   }
 
+  /// <summary>
+  ///   Bans a list of users.
+  /// </summary>
+  /// <param name="channelId">The twitch account id of the channel to ban the users from.</param>
+  /// <param name="botId">The twitch account id of the bot user.</param>
+  /// <param name="users">The list of users to ban.</param>
+  /// <param name="reason">The reason for the ban.</param>
+  /// <param name="token">The stopping token.</param>
+  /// <returns>The users with confirmed bans.</returns>
   public async Task<IEnumerable<BannedUser>> BanUsers(string channelId, string botId,
     IEnumerable<(string Id, string Username)> users,
     string reason, CancellationToken token = new()) {
@@ -200,13 +209,13 @@ public class TwitchApiProxy {
             Reason = reason
           });
 
-          if (null != response?.Data) {
+          if (null == response || null == response.Data) {
             continue;
           }
 
           bannedUsers.AddRange(response.Data);
         }
-        catch (Exception ex) {
+        catch {
         }
 
         return bannedUsers;

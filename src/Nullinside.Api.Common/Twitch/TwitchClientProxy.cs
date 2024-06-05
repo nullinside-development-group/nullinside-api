@@ -8,9 +8,11 @@ using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
 using TwitchLib.Communication.Models;
 
+using Timer = System.Timers.Timer;
+
 namespace Nullinside.Api.Common.Twitch;
 
-using Timer = System.Timers.Timer;
+using Timer = Timer;
 
 /// <summary>
 ///   The singleton of the Cathy bot that existing in chat for reading and sending twitch chat messages.
@@ -30,7 +32,7 @@ public class TwitchClientProxy : IDisposable {
   ///   The lock to prevent mutual exclusion on <see cref="onMessageReceived" />
   ///   and <see cref="onRaid" /> callbacks.
   /// </summary>
-  private readonly object callbackLock = new object();
+  private readonly object callbackLock = new();
 
   /// <summary>
   ///   The list of chats we attempted to join with the bot.
@@ -49,7 +51,7 @@ public class TwitchClientProxy : IDisposable {
   /// <summary>
   ///   The lock to prevent mutual exclusion on the <see cref="client" /> object.
   /// </summary>
-  private readonly object twitchClientLock = new object();
+  private readonly object twitchClientLock = new();
 
   /// <summary>
   ///   The twitch client to send and receive messages with.
@@ -62,14 +64,14 @@ public class TwitchClientProxy : IDisposable {
   private Action<OnMessageReceivedArgs>? onMessageReceived;
 
   /// <summary>
-  ///   The callback(s) to invoke when a channel receives a ban message.
-  /// </summary>
-  private Action<OnUserBannedArgs>? onUserBanReceived;
-
-  /// <summary>
   ///   The callback(s) to invoke when a channel is raided.
   /// </summary>
   private Action<OnRaidNotificationArgs>? onRaid;
+
+  /// <summary>
+  ///   The callback(s) to invoke when a channel receives a ban message.
+  /// </summary>
+  private Action<OnUserBannedArgs>? onUserBanReceived;
 
   /// <summary>
   ///   The web socket to connect to twitch chat with.
@@ -80,13 +82,13 @@ public class TwitchClientProxy : IDisposable {
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
   /// </summary>
   protected TwitchClientProxy() {
-    this.joinedChannels = new HashSet<string>();
+    joinedChannels = new HashSet<string>();
 
     // The timer for checking to make sure the IRC channel is connected.
-    this.twitchChatClientReconnect = new Timer(1000);
-    this.twitchChatClientReconnect.AutoReset = false;
-    this.twitchChatClientReconnect.Elapsed += this.TwitchChatClientReconnectOnElapsed;
-    this.twitchChatClientReconnect.Start();
+    twitchChatClientReconnect = new Timer(1000);
+    twitchChatClientReconnect.AutoReset = false;
+    twitchChatClientReconnect.Elapsed += TwitchChatClientReconnectOnElapsed;
+    twitchChatClientReconnect.Start();
   }
 
   /// <summary>
@@ -94,23 +96,31 @@ public class TwitchClientProxy : IDisposable {
   /// </summary>
   public static TwitchClientProxy Instance {
     get {
-      if (null == TwitchClientProxy.instance) {
-        TwitchClientProxy.instance = new TwitchClientProxy();
+      if (null == instance) {
+        instance = new TwitchClientProxy();
       }
 
-      return TwitchClientProxy.instance;
+      return instance;
     }
   }
 
   /// <summary>
-  /// Gets or sets the twitch username to connect with.
+  ///   Gets or sets the twitch username to connect with.
   /// </summary>
   public string? TwitchUsername { get; set; }
 
   /// <summary>
-  /// Gets or sets the twitch OAuth token to use to connect.
+  ///   Gets or sets the twitch OAuth token to use to connect.
   /// </summary>
   public string? TwitchOAuthToken { get; set; }
+
+  /// <summary>
+  ///   Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+  /// </summary>
+  public void Dispose() {
+    Dispose(true);
+    GC.SuppressFinalize(this);
+  }
 
   /// <summary>
   ///   Send a message in twitch chat.
@@ -129,9 +139,9 @@ public class TwitchClientProxy : IDisposable {
     }
 
     // Try to connect and join the channel.
-    var connectedAndJoined = false;
-    for (var i = 0; i < retryConnection; i++) {
-      if (await this.JoinChannel(channel)) {
+    bool connectedAndJoined = false;
+    for (int i = 0; i < retryConnection; i++) {
+      if (await JoinChannel(channel)) {
         connectedAndJoined = true;
         break;
       }
@@ -143,17 +153,17 @@ public class TwitchClientProxy : IDisposable {
     }
 
     try {
-      lock (this.twitchClientLock) {
+      lock (twitchClientLock) {
         // If we are not connected for some reason, we shouldn't have gotten here, so get out.
-        if (null == this.client ||
-            !this.client.IsConnected ||
-            null == this.client.JoinedChannels.FirstOrDefault(j =>
+        if (null == client ||
+            !client.IsConnected ||
+            null == client.JoinedChannels.FirstOrDefault(j =>
               channel.Equals(j.Channel, StringComparison.InvariantCultureIgnoreCase))) {
           return false;
         }
 
-        TwitchClientProxy.LOG.Info($"{channel} Sending: {message}");
-        this.client.SendMessage(channel, message);
+        LOG.Info($"{channel} Sending: {message}");
+        client.SendMessage(channel, message);
       }
     }
     catch {
@@ -170,25 +180,25 @@ public class TwitchClientProxy : IDisposable {
   /// <returns>True if connected and joined, false otherwise.</returns>
   private async Task<bool> JoinChannel(string channel) {
     // First add the channel to the master list.
-    lock (this.joinedChannels) {
-      this.joinedChannels.Add(channel.ToLowerInvariant());
+    lock (joinedChannels) {
+      joinedChannels.Add(channel.ToLowerInvariant());
     }
 
     // Try to connect.
-    if (!await this.Connect()) {
+    if (!await Connect()) {
       return false;
     }
 
     return await Task.Run(() => {
       try {
         // If we don't have a client, give up.
-        if (null == this.client) {
+        if (null == client) {
           return false;
         }
 
-        lock (this.twitchClientLock) {
+        lock (twitchClientLock) {
           // If we are already in the channel, we are done.
-          if (null != this.client.JoinedChannels.FirstOrDefault(c =>
+          if (null != client.JoinedChannels.FirstOrDefault(c =>
                 channel.Equals(c.Channel, StringComparison.InvariantCultureIgnoreCase))) {
             return true;
           }
@@ -196,7 +206,7 @@ public class TwitchClientProxy : IDisposable {
           // Otherwise, join the channel. At one point we waited here on the "OnJoinedChannel" to ensure the
           // connection before moving onto the next channel. However, it was causing a massive slowdown in
           // the application, and we've been working fine without it...so for now...we try this...
-          this.client.JoinChannel(channel);
+          client.JoinChannel(channel);
         }
 
         return true;
@@ -212,23 +222,23 @@ public class TwitchClientProxy : IDisposable {
   /// </summary>
   /// <param name="sender">The timer.</param>
   /// <param name="e">The event arguments.</param>
-  private async void TwitchChatClientReconnectOnElapsed(object sender, ElapsedEventArgs e) {
+  private async void TwitchChatClientReconnectOnElapsed(object? sender, ElapsedEventArgs e) {
     // Connect the chat client.
-    await this.Connect();
+    await Connect();
 
     // Pull the master list of channels we should be connected to the stack.
     string[]? allChannels = null;
-    lock (this.joinedChannels) {
-      allChannels = this.joinedChannels.ToArray();
+    lock (joinedChannels) {
+      allChannels = joinedChannels.ToArray();
     }
 
     // Join all the channels.
-    foreach (var channel in allChannels) {
-      await this.JoinChannel(channel);
+    foreach (string channel in allChannels) {
+      await JoinChannel(channel);
     }
 
     // Restart the timer.
-    this.twitchChatClientReconnect.Start();
+    twitchChatClientReconnect.Start();
   }
 
   /// <summary>
@@ -237,53 +247,53 @@ public class TwitchClientProxy : IDisposable {
   /// <returns>True if successful, false otherwise.</returns>
   private async Task<bool> Connect() {
     // If we're already connected, we are good to go.
-    lock (this.twitchClientLock) {
-      if (this.client?.IsConnected ?? false) {
+    lock (twitchClientLock) {
+      if (client?.IsConnected ?? false) {
         return true;
       }
     }
 
     // If we don't have the ability to connect, we can leave early.
-    if (string.IsNullOrWhiteSpace(this.TwitchUsername) || string.IsNullOrWhiteSpace(this.TwitchOAuthToken)) {
+    if (string.IsNullOrWhiteSpace(TwitchUsername) || string.IsNullOrWhiteSpace(TwitchOAuthToken)) {
       return false;
     }
 
     return await Task.Run(() => {
       try {
         bool isConnected = false;
-        lock (this.twitchClientLock) {
+        lock (twitchClientLock) {
           // If this is a first time initialization, create a brand-new client.
-          bool haveNoClient = null == this.client;
+          bool haveNoClient = null == client;
           if (haveNoClient) {
             var clientOptions = new ClientOptions
               { MessagesAllowedInPeriod = 750, ThrottlingPeriod = TimeSpan.FromSeconds(30) };
 
-            this.socket = new WebSocketClient(clientOptions);
-            this.client = new TwitchClient(this.socket);
-            var credentials = new ConnectionCredentials(this.TwitchUsername, this.TwitchOAuthToken);
-            this.client.Initialize(credentials);
-            this.client.AutoReListenOnException = true;
-            this.client.OnMessageReceived += this.TwitchChatClient_OnMessageReceived;
-            this.client.OnUserBanned += this.TwitchChatClient_OnUserBanned;
-            this.client.OnRaidNotification += this.TwitchChatClient_OnRaidNotification;
+            socket = new WebSocketClient(clientOptions);
+            client = new TwitchClient(socket);
+            var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
+            client.Initialize(credentials);
+            client.AutoReListenOnException = true;
+            client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
+            client.OnUserBanned += TwitchChatClient_OnUserBanned;
+            client.OnRaidNotification += TwitchChatClient_OnRaidNotification;
           }
 
           try {
             // If we are not connect, connect.
-            if (!this.client?.IsConnected ?? false) {
+            if (null != client && client.IsConnected) {
               // If this is a new chat client, connect for the first time, otherwise reconnect.
-              Action connect = haveNoClient ? () => this.client.Connect() : () => this.client.Reconnect();
+              Action connect = haveNoClient ? () => client.Connect() : () => client.Reconnect();
               using var connectedEvent = new ManualResetEventSlim(false);
               EventHandler<OnConnectedArgs> onConnected = (_, _) => connectedEvent.Set();
               try {
-                this.client!.OnConnected += onConnected;
+                client!.OnConnected += onConnected;
                 connect();
                 if (!connectedEvent.Wait(30 * 1000)) {
                   return false;
                 }
               }
               finally {
-                this.client.OnConnected -= onConnected;
+                client.OnConnected -= onConnected;
               }
             }
           }
@@ -291,7 +301,7 @@ public class TwitchClientProxy : IDisposable {
           }
 
           // Determine if we successfully connected.
-          isConnected = this.client?.IsConnected ?? false;
+          isConnected = client?.IsConnected ?? false;
         }
 
         return isConnected;
@@ -309,11 +319,11 @@ public class TwitchClientProxy : IDisposable {
   /// <param name="callback">The callback to invoke.</param>
   /// <returns>An asynchronous task.</returns>
   public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
-    await this.JoinChannel(channel);
+    await JoinChannel(channel);
 
-    lock (this.callbackLock) {
-      this.onMessageReceived -= callback;
-      this.onMessageReceived += callback;
+    lock (callbackLock) {
+      onMessageReceived -= callback;
+      onMessageReceived += callback;
     }
   }
 
@@ -323,32 +333,32 @@ public class TwitchClientProxy : IDisposable {
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
   public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
-    lock (this.callbackLock) {
-      this.onMessageReceived -= callback;
+    lock (callbackLock) {
+      onMessageReceived -= callback;
     }
   }
 
   /// <summary>
-  /// Adds a callback for when users are banned from the chat.
+  ///   Adds a callback for when users are banned from the chat.
   /// </summary>
   /// <param name="channel">The channel to subscribe to notifications for.</param>
   /// <param name="callback">The callback to invoke when a user is banned.</param>
   public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
-    await this.JoinChannel(channel);
+    await JoinChannel(channel);
 
-    lock (this.callbackLock) {
-      this.onUserBanReceived -= callback;
-      this.onUserBanReceived += callback;
+    lock (callbackLock) {
+      onUserBanReceived -= callback;
+      onUserBanReceived += callback;
     }
   }
 
   /// <summary>
-  /// Removes a callback for when users are banned from the chat.
+  ///   Removes a callback for when users are banned from the chat.
   /// </summary>
   /// <param name="callback">The callback to remove from when a user is banned.</param>
   public void RemoveBannedCallback(Action<OnUserBannedArgs> callback) {
-    lock (this.callbackLock) {
-      this.onUserBanReceived -= callback;
+    lock (callbackLock) {
+      onUserBanReceived -= callback;
     }
   }
 
@@ -359,11 +369,11 @@ public class TwitchClientProxy : IDisposable {
   /// <param name="callback">The callback to invoke.</param>
   /// <returns>An asynchronous task.</returns>
   public async Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
-    await this.JoinChannel(channel);
+    await JoinChannel(channel);
 
-    lock (this.callbackLock) {
-      this.onRaid -= callback;
-      this.onRaid += callback;
+    lock (callbackLock) {
+      onRaid -= callback;
+      onRaid += callback;
     }
   }
 
@@ -373,8 +383,8 @@ public class TwitchClientProxy : IDisposable {
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
   public void RemoveRaidCallback(Action<OnRaidNotificationArgs> callback) {
-    lock (this.callbackLock) {
-      this.onRaid -= callback;
+    lock (callbackLock) {
+      onRaid -= callback;
     }
   }
 
@@ -386,15 +396,15 @@ public class TwitchClientProxy : IDisposable {
   private void TwitchChatClient_OnRaidNotification(object? sender, OnRaidNotificationArgs e) {
     Delegate[]? invokeList = null;
 
-    lock (this.callbackLock) {
-      invokeList = this.onRaid?.GetInvocationList();
+    lock (callbackLock) {
+      invokeList = onRaid?.GetInvocationList();
     }
 
     if (null == invokeList) {
       return;
     }
 
-    foreach (var del in invokeList) {
+    foreach (Delegate del in invokeList) {
       del.DynamicInvoke(e);
     }
   }
@@ -407,15 +417,15 @@ public class TwitchClientProxy : IDisposable {
   private void TwitchChatClient_OnMessageReceived(object? sender, OnMessageReceivedArgs e) {
     Delegate[]? invokeList = null;
 
-    lock (this.callbackLock) {
-      invokeList = this.onMessageReceived?.GetInvocationList();
+    lock (callbackLock) {
+      invokeList = onMessageReceived?.GetInvocationList();
     }
 
     if (null == invokeList) {
       return;
     }
 
-    foreach (var del in invokeList) {
+    foreach (Delegate del in invokeList) {
       del.DynamicInvoke(e);
     }
   }
@@ -423,35 +433,27 @@ public class TwitchClientProxy : IDisposable {
   private void TwitchChatClient_OnUserBanned(object? sender, OnUserBannedArgs e) {
     Delegate[]? invokeList = null;
 
-    lock (this.callbackLock) {
-      invokeList = this.onUserBanReceived?.GetInvocationList();
+    lock (callbackLock) {
+      invokeList = onUserBanReceived?.GetInvocationList();
     }
 
     if (null == invokeList) {
       return;
     }
 
-    foreach (var del in invokeList) {
+    foreach (Delegate del in invokeList) {
       del.DynamicInvoke(e);
     }
   }
 
   /// <summary>
-  /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+  ///   Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
   /// </summary>
   /// <param name="disposing">True if called directly, false if called from the destructor.</param>
   protected virtual void Dispose(bool disposing) {
     if (disposing) {
-      this.twitchChatClientReconnect?.Dispose();
-      this.socket?.Dispose();
+      twitchChatClientReconnect?.Dispose();
+      socket?.Dispose();
     }
-  }
-
-  /// <summary>
-  /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-  /// </summary>
-  public void Dispose() {
-    Dispose(true);
-    GC.SuppressFinalize(this);
   }
 }

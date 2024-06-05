@@ -14,16 +14,22 @@ public class TwitchBan : ITableModel {
   /// <summary>
   ///   The channel they were banned in.
   /// </summary>
-  public string ChannelId { get; set; }
+  public string ChannelId { get; set; } = null!;
 
   /// <summary>
   ///   The user that was banned.
   /// </summary>
   /// <remarks>Don't ask me why they made this a string.</remarks>
-  public string BannedUserTwitchId { get; set; }
+  public string BannedUserTwitchId { get; set; } = null!;
 
-  public string Reason { get; set; }
+  /// <summary>
+  ///   The reason for the ban.
+  /// </summary>
+  public string Reason { get; set; } = null!;
 
+  /// <summary>
+  ///   The timestamp of when the ban was performed.
+  /// </summary>
   public DateTime Timestamp { get; set; }
 
   /// <summary>
