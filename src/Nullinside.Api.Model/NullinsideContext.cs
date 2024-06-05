@@ -37,6 +37,16 @@ public class NullinsideContext : DbContext {
   public DbSet<DockerDeployments> DockerDeployments { get; set; } = null!;
 
   /// <summary>
+  ///   The docker deployments that are configurable in the applications.
+  /// </summary>
+  public DbSet<TwitchUser> TwitchUser { get; set; } = null!;
+
+  /// <summary>
+  ///   The docker deployments that are configurable in the applications.
+  /// </summary>
+  public DbSet<TwitchBan> TwitchBan { get; set; } = null!;
+
+  /// <summary>
   ///   The feature toggles.
   /// </summary>
   public DbSet<FeatureToggle> FeatureToggle { get; set; } = null!;

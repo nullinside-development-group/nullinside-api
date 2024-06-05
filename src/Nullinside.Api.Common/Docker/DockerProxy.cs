@@ -9,36 +9,36 @@ using Renci.SshNet;
 namespace Nullinside.Api.Common.Docker;
 
 /// <summary>
-///   Handles interactions with docker on a docker server.
+/// Handles interactions with docker on a docker server.
 /// </summary>
 public class DockerProxy : IDockerProxy {
   /// <summary>
-  ///   The logger.
+  /// The logger.
   /// </summary>
   private readonly ILogger<DockerProxy> _logger;
 
   /// <summary>
-  ///   The password for the docker server.
+  /// The password for the docker server.
   /// </summary>
   private readonly string? _password = Environment.GetEnvironmentVariable("DOCKER_PASSWORD");
 
   /// <summary>
-  ///   The password for the docker server.
+  /// The password for the docker server.
   /// </summary>
   private readonly string? _password2 = Environment.GetEnvironmentVariable("DOCKER_PASSWORD2");
 
   /// <summary>
-  ///   The server that hosts the docker deployments.
+  /// The server that hosts the docker deployments.
   /// </summary>
   private readonly string? _server = Environment.GetEnvironmentVariable("DOCKER_SERVER");
 
   /// <summary>
-  ///   The username to login to the docker server.
+  /// The username to login to the docker server.
   /// </summary>
   private readonly string? _username = Environment.GetEnvironmentVariable("DOCKER_USERNAME");
 
   /// <summary>
-  ///   Initializes a new instance of the <see cref="DockerProxy" /> class.
+  /// Initializes a new instance of the <see cref="DockerProxy" /> class.
   /// </summary>
   /// <param name="logger">The logger.</param>
   public DockerProxy(ILogger<DockerProxy> logger) {

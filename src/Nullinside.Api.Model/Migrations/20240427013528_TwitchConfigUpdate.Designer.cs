@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nullinside.Api.Model;
 
@@ -10,9 +11,11 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Model.Migrations
 {
     [DbContext(typeof(NullinsideContext))]
-    partial class NullinsideContextModelSnapshot : ModelSnapshot
+    [Migration("20240427013528_TwitchConfigUpdate")]
+    partial class TwitchConfigUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,75 +56,6 @@ namespace Nullinside.Api.Model.Migrations
                     b.HasIndex("IsDockerComposeProject", "Name");
 
                     b.ToTable("DockerDeployments");
-                });
-
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.FeatureToggle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Feature")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("tinyint(1)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FeatureToggle");
-                });
-
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.TwitchBan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("BannedUserTwitchId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ChannelId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TwitchBan");
-                });
-
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.TwitchUser", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("TwitchId")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("TwitchUsername")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TwitchId")
-                        .IsUnique();
-
-                    b.ToTable("TwitchUser");
                 });
 
             modelBuilder.Entity("Nullinside.Api.Model.Ddl.TwitchUserConfig", b =>
@@ -169,9 +103,6 @@ namespace Nullinside.Api.Model.Migrations
 
                     b.Property<string>("TwitchId")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("TwitchLastScanned")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("TwitchRefreshToken")
                         .HasColumnType("longtext");

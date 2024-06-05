@@ -7,23 +7,23 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Controllers;
 
 /// <summary>
-///   Provides insights and management options for the internal database of the website.
+/// Provides insights and management options for the internal database of the website.
 /// </summary>
 [ApiController]
 [Route("[controller]")]
 public class DatabaseController : ControllerBase {
   /// <summary>
-  ///   The nullinside database.
+  /// The nullinside database.
   /// </summary>
   private readonly NullinsideContext _dbContext;
 
   /// <summary>
-  ///   The logger.
+  /// The logger.
   /// </summary>
   private readonly ILogger<DatabaseController> _logger;
 
   /// <summary>
-  ///   Initializes a new instance of the <see cref="DatabaseController" /> class.
+  /// Initializes a new instance of the <see cref="DatabaseController" /> class.
   /// </summary>
   /// <param name="logger">The logger.</param>
   /// <param name="dbContext">The nullinside database.</param>
@@ -33,7 +33,7 @@ public class DatabaseController : ControllerBase {
   }
 
   /// <summary>
-  ///   Performs a database migration, apply any updates in a blocking call.
+  /// Performs a database migration, apply any updates in a blocking call.
   /// </summary>
   /// <returns>True</returns>
   [AllowAnonymous]

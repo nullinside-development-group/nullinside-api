@@ -15,41 +15,42 @@ using Nullinside.Api.Shared.Json;
 namespace Nullinside.Api.Controllers;
 
 /// <summary>
-///   Handles user authentication and authorization.
+/// Handles user authentication and authorization.
 /// </summary>
 [ApiController]
 [Route("[controller]")]
 public class UserController : ControllerBase {
   /// <summary>
-  ///   The application's configuration file.
+  /// The application's configuration file.
   /// </summary>
   private readonly IConfiguration _configuration;
 
   /// <summary>
-  ///   The nullinside database.
+  /// The nullinside database.
   /// </summary>
   private readonly NullinsideContext _dbContext;
 
   /// <summary>
-  ///   The logger.
+  /// The logger.
   /// </summary>
   private readonly ILogger<UserController> _logger;
 
   /// <summary>
-  ///   Initializes a new instance of the <see cref="UserController" /> class.
+  /// Initializes a new instance of the <see cref="UserController" /> class.
   /// </summary>
   /// <param name="logger">The logger.</param>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
   public UserController(ILogger<UserController> logger, IConfiguration configuration, NullinsideContext dbContext) {
     _logger = logger;
+    logger.LogInformation("hi");
     _configuration = configuration;
     _dbContext = dbContext;
   }
 
   /// <summary>
-  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by google as part of their OpenId workflow. It
-  ///   redirects users back to the nullinside website.
+  /// **NOT CALLED BY SITE OR USERS** This endpoint is called by google as part of their OpenId workflow. It
+  /// redirects users back to the nullinside website.
   /// </summary>
   /// <param name="creds">The credentials provided by google.</param>
   /// <param name="token">The cancellation token.</param>
@@ -79,17 +80,17 @@ public class UserController : ControllerBase {
 
 
   /// <summary>
-  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
-  ///   redirects users back to the nullinside website.
+  /// **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
+  /// redirects users back to the nullinside website.
   /// </summary>
   /// <param name="code">The credentials provided by twitch.</param>
   /// <param name="token">The cancellation token.</param>
   /// <returns>
-  ///   A redirect to the nullinside website.
-  ///   Errors:
-  ///   2 = Internal error generating token.
-  ///   3 = Code was invalid
-  ///   4 = Twitch account has no email
+  /// A redirect to the nullinside website.
+  /// Errors:
+  /// 2 = Internal error generating token.
+  /// 3 = Code was invalid
+  /// 4 = Twitch account has no email
   /// </returns>
   [AllowAnonymous]
   [HttpGet]
@@ -115,7 +116,7 @@ public class UserController : ControllerBase {
   }
 
   /// <summary>
-  ///   Gets the roles of the current user.
+  /// Gets the roles of the current user.
   /// </summary>
   /// <returns>The collection of the user's roles.</returns>
   [HttpGet]
@@ -133,7 +134,7 @@ public class UserController : ControllerBase {
   }
 
   /// <summary>
-  ///   Validates that the provided token is valid.
+  /// Validates that the provided token is valid.
   /// </summary>
   /// <param name="token">The token to validate.</param>
   /// <returns>200 if successful, 401 otherwise.</returns>
@@ -144,7 +145,7 @@ public class UserController : ControllerBase {
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
   public async Task<IActionResult> Validate(AuthToken token) {
     try {
-      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token);
+      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned);
       if (null == existing) {
         return Unauthorized();
       }
