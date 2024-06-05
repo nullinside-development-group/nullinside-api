@@ -26,7 +26,8 @@ public static class Retry {
   ///   <paramref name="action" /> was executed <paramref name="numberOfRetries" /> times and it never
   ///   succeeded.
   /// </exception>
-  public static async Task<T> Execute<T>(Func<Task<T>> action, int numberOfRetries, CancellationToken token = new(), TimeSpan? waitTime = null, Action<Exception>? runOnFailure = null) {
+  public static async Task<T> Execute<T>(Func<Task<T>> action, int numberOfRetries, CancellationToken token = new(),
+    TimeSpan? waitTime = null, Action<Exception>? runOnFailure = null) {
     int tries = 0;
     while (tries <= numberOfRetries && !token.IsCancellationRequested) {
       try {
@@ -44,6 +45,6 @@ public static class Retry {
       }
     }
 
-    throw new RetryException($"Error after {tries} tries");
+    throw new RetryException($"Error after {tries - 1} tries");
   }
 }
