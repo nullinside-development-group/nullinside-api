@@ -4,6 +4,7 @@ using log4net;
 
 using TwitchLib.Api;
 using TwitchLib.Api.Auth;
+using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
@@ -196,8 +197,7 @@ public class TwitchApiProxy {
   /// <param name="token">The stopping token.</param>
   /// <returns>The users with confirmed bans.</returns>
   public async Task<IEnumerable<BannedUser>> BanUsers(string channelId, string botId,
-    IEnumerable<(string Id, string Username)> users,
-    string reason, CancellationToken token = new()) {
+    IEnumerable<(string Id, string Username)> users, string reason, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       TwitchAPI api = GetApi();
 
@@ -215,7 +215,12 @@ public class TwitchApiProxy {
 
           bannedUsers.AddRange(response.Data);
         }
-        catch {
+        catch (HttpResponseException ex) {
+          string exceptionReason = await ex.HttpResponse.Content.ReadAsStringAsync(token);
+          Log.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}: {exceptionReason}", ex);
+        }
+        catch (Exception ex) {
+          Log.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}", ex);
         }
 
         return bannedUsers;
