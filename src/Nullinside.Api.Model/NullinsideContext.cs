@@ -52,6 +52,11 @@ public class NullinsideContext : DbContext {
   public DbSet<FeatureToggle> FeatureToggle { get; set; } = null!;
 
   /// <summary>
+  ///   The twitch user configuration.
+  /// </summary>
+  public DbSet<TwitchUserConfig> TwitchUserConfig { get; set; } = null!;
+
+  /// <summary>
   ///   Configures the default database connection.
   /// </summary>
   /// <param name="optionsBuilder">The database configuration options.</param>

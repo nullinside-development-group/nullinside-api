@@ -7,6 +7,7 @@ using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
+using TwitchLib.Api.Helix.Models.Moderation.GetModerators;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace Nullinside.Api.Common.Twitch;
@@ -19,6 +20,24 @@ public class TwitchApiProxy {
   ///   The logger.
   /// </summary>
   private static readonly ILog Log = LogManager.GetLogger(typeof(TwitchApiProxy));
+
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="TwitchApiProxy" /> class.
+  /// </summary>
+  public TwitchApiProxy() {
+  }
+
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="TwitchApiProxy" /> class.
+  /// </summary>
+  /// <param name="token">The access token.</param>
+  /// <param name="refreshToken">The refresh token.</param>
+  /// <param name="tokenExpires">When the token expires (utc).</param>
+  public TwitchApiProxy(string token, string refreshToken, DateTime tokenExpires) {
+    AccessToken = token;
+    RefreshToken = refreshToken;
+    ExpiresUtc = tokenExpires;
+  }
 
   /// <summary>
   ///   The, public, twitch client id.
@@ -227,6 +246,53 @@ public class TwitchApiProxy {
       }
 
       return Enumerable.Empty<BannedUser>();
+    }, Retries, token);
+  }
+
+  /// <summary>
+  ///   Gets the list of mods for the channel.
+  /// </summary>
+  /// <param name="channelId">The twitch id of the channel to get mods for.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>The collection of moderators.</returns>
+  public async Task<IEnumerable<Moderator>> GetMods(string channelId, CancellationToken token = new()) {
+    return await Retry.Execute(async () => {
+      TwitchAPI api = GetApi();
+
+      var results = new List<Moderator>();
+      GetModeratorsResponse? response = null;
+      do {
+        response = await api.Helix.Moderation.GetModeratorsAsync(channelId, first: 100,
+          after: response?.Pagination?.Cursor);
+        if (null == response || null == response.Data) {
+          break;
+        }
+
+
+        Moderator[]? data = response.Data;
+        if (null == data) {
+          continue;
+        }
+
+        results.AddRange(data);
+      } while (null != response.Pagination?.Cursor);
+
+      return results;
+    }, Retries, token);
+  }
+
+  /// <summary>
+  ///   Makes the bot account a mod.
+  /// </summary>
+  /// <param name="channelId">The twitch id of the channel to add the mod to.</param>
+  /// <param name="userId">The twitch user id to mod.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>True if successful, false otherwise.</returns>
+  public async Task<bool> ModAccount(string channelId, string userId, CancellationToken token = new()) {
+    return await Retry.Execute(async () => {
+      TwitchAPI api = GetApi();
+      await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId);
+      return true;
     }, Retries, token);
   }
 }
