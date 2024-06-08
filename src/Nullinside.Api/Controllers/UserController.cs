@@ -43,7 +43,6 @@ public class UserController : ControllerBase {
   /// <param name="dbContext">The nullinside database.</param>
   public UserController(ILogger<UserController> logger, IConfiguration configuration, NullinsideContext dbContext) {
     _logger = logger;
-    logger.LogInformation("hi");
     _configuration = configuration;
     _dbContext = dbContext;
   }
