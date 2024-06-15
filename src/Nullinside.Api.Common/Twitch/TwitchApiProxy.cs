@@ -2,6 +2,10 @@
 
 using log4net;
 
+using Newtonsoft.Json;
+
+using Nullinside.Api.Common.Twitch.Json;
+
 using TwitchLib.Api;
 using TwitchLib.Api.Auth;
 using TwitchLib.Api.Core.Exceptions;
@@ -294,5 +298,40 @@ public class TwitchApiProxy {
       await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId);
       return true;
     }, Retries, token);
+  }
+
+  /// <summary>
+  ///   Gets the list of channels the supplied user moderates for.
+  /// </summary>
+  /// <param name="userId">The user id to scan.</param>
+  /// <returns>The list of channels the supplied user moderates for.</returns>
+  public async Task<IEnumerable<TwitchModeratedChannel>> GetChannelsWeMod(string userId) {
+    using var client = new HttpClient();
+
+    var ret = new List<TwitchModeratedChannel>();
+    string? cursor = null;
+    do {
+      string url = $"https://api.twitch.tv/helix/moderation/channels?user_id={userId}&first=100";
+      if (null != cursor) {
+        url += $"&after={cursor}";
+      }
+
+      var request = new HttpRequestMessage(HttpMethod.Get, url);
+      request.Headers.Add("Authorization", $"Bearer {AccessToken}");
+      request.Headers.Add("Client-Id", ClientId);
+
+      using HttpResponseMessage response = await client.SendAsync(request);
+      response.EnsureSuccessStatusCode();
+      string responseBody = await response.Content.ReadAsStringAsync();
+      var moderatedChannels = JsonConvert.DeserializeObject<TwitchModeratedChannelsResponse>(responseBody);
+      if (null == moderatedChannels) {
+        break;
+      }
+
+      ret.AddRange(moderatedChannels.data);
+      cursor = moderatedChannels.pagination.cursor;
+    } while (null != cursor);
+
+    return ret;
   }
 }
