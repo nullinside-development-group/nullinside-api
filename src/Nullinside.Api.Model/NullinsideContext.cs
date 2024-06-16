@@ -65,7 +65,11 @@ public class NullinsideContext : DbContext {
     string? username = Environment.GetEnvironmentVariable("MYSQL_USERNAME");
     string? password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
     optionsBuilder.UseMySQL(
-      $"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true");
+      $"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true;",
+      builder => {
+        builder.CommandTimeout(60 * 5);
+        builder.EnableRetryOnFailure(3);
+      });
   }
 
   /// <summary>
