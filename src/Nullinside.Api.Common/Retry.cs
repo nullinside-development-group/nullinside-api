@@ -29,11 +29,13 @@ public static class Retry {
   public static async Task<T> Execute<T>(Func<Task<T>> action, int numberOfRetries, CancellationToken token = new(),
     TimeSpan? waitTime = null, Action<Exception>? runOnFailure = null) {
     int tries = 0;
+    Exception? exceptionToThrow = null;
     while (tries <= numberOfRetries && !token.IsCancellationRequested) {
       try {
         return await action();
       }
       catch (Exception ex) {
+        exceptionToThrow = ex;
         ++tries;
 
         // Why did I do as delay THEN method? Honestly...I don't have a good reason. You can change it if you want, just
@@ -43,6 +45,10 @@ public static class Retry {
           runOnFailure(ex);
         }
       }
+    }
+
+    if (null != exceptionToThrow) {
+      throw exceptionToThrow;
     }
 
     throw new RetryException($"Error after {tries - 1} tries");
