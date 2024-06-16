@@ -248,11 +248,9 @@ public class TwitchApiProxy {
         catch (Exception ex) {
           Log.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}", ex);
         }
-
-        return bannedUsers;
       }
 
-      return Enumerable.Empty<BannedUser>();
+      return bannedUsers;
     }, Retries, token);
   }
 
