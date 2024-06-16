@@ -12,7 +12,10 @@ using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Moderation.GetModerators;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
+
+using Stream = TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream;
 
 namespace Nullinside.Api.Common.Twitch;
 
@@ -333,5 +336,33 @@ public class TwitchApiProxy {
     } while (null != cursor);
 
     return ret;
+  }
+
+  /// <summary>
+  ///   Checks if the supplied channels are live.
+  /// </summary>
+  /// <param name="userIds">The twitch user ids.</param>
+  /// <returns>The list of twitch users that are currently live.</returns>
+  public async Task<IEnumerable<string>> GetLiveChannels(IEnumerable<string> userIds) {
+    TwitchAPI api = GetApi();
+
+    // We can only query 100 at a time, so throttle the search.
+    var liveUsers = new List<Stream>();
+    string[] twitchIdsArray = userIds.ToArray();
+    for (int i = 0; i < twitchIdsArray.Length; i += 100) {
+      int lastIndex = i + 100;
+      if (lastIndex > twitchIdsArray.Length) {
+        lastIndex = twitchIdsArray.Length;
+      }
+
+      GetStreamsResponse? response =
+        await api.Helix.Streams.GetStreamsAsync(userIds: twitchIdsArray[i..lastIndex].ToList());
+      if (null != response) {
+        liveUsers.AddRange(response.Streams.Where(s =>
+          "live".Equals(s.Type, StringComparison.InvariantCultureIgnoreCase)));
+      }
+    }
+
+    return liveUsers.Select(l => l.UserId);
   }
 }
