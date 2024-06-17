@@ -6,6 +6,7 @@ using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchLib.Communication.Clients;
+using TwitchLib.Communication.Events;
 using TwitchLib.Communication.Models;
 
 using Timer = System.Timers.Timer;
@@ -280,13 +281,15 @@ public class TwitchClientProxy : IDisposable {
 
           try {
             // If we are not connect, connect.
-            if (null != client && client.IsConnected) {
+            if (null != client && !client.IsConnected) {
               // If this is a new chat client, connect for the first time, otherwise reconnect.
               Action connect = haveNoClient ? () => client.Connect() : () => client.Reconnect();
               using var connectedEvent = new ManualResetEventSlim(false);
               EventHandler<OnConnectedArgs> onConnected = (_, _) => connectedEvent.Set();
+              EventHandler<OnReconnectedEventArgs> onReconnect = (_, _) => connectedEvent.Set();
               try {
                 client!.OnConnected += onConnected;
+                client!.OnReconnected += onReconnect;
                 connect();
                 if (!connectedEvent.Wait(30 * 1000)) {
                   return false;
@@ -294,6 +297,7 @@ public class TwitchClientProxy : IDisposable {
               }
               finally {
                 client.OnConnected -= onConnected;
+                client.OnReconnected -= onReconnect;
               }
             }
           }
