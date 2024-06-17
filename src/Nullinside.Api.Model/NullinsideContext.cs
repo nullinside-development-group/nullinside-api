@@ -57,6 +57,16 @@ public class NullinsideContext : DbContext {
   public DbSet<TwitchUserConfig> TwitchUserConfig { get; set; } = null!;
 
   /// <summary>
+  ///   The twitch logs of users banned outside the bot.
+  /// </summary>
+  public DbSet<TwitchUserBannedOutsideOfBotLogs> TwitchUserBannedOutsideOfBotLogs { get; set; } = null!;
+
+  /// <summary>
+  ///   The twitch logs of the user's chat.
+  /// </summary>
+  public DbSet<TwitchUserChatLogs> TwitchUserChatLogs { get; set; } = null!;
+
+  /// <summary>
   ///   Configures the default database connection.
   /// </summary>
   /// <param name="optionsBuilder">The database configuration options.</param>
