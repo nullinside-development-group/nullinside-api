@@ -10,7 +10,7 @@ namespace Nullinside.Api.Model.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder) {
           migrationBuilder.Sql("""
-                               REPLACE VIEW nullinside.BansWithMessagesInChat AS
+                               ALTER VIEW nullinside.BansWithMessagesInChat AS
                                SELECT DISTINCT(OuterC.Id), OuterC.Channel, OuterC.TwitchUsername, OuterC.Message, OuterC.`Timestamp`
                                FROM nullinside.TwitchUserChatLogs as OuterC
                                JOIN (
@@ -29,7 +29,7 @@ namespace Nullinside.Api.Model.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
           migrationBuilder.Sql("""
-                               REPLACE VIEW nullinside.BansWithMessagesInChat AS
+                               ALTER VIEW nullinside.BansWithMessagesInChat AS
                                SELECT OuterC.Id, OuterC.Channel, OuterC.TwitchUsername, OuterC.Message, OuterC.`Timestamp`
                                FROM nullinside.TwitchUserChatLogs as OuterC
                                JOIN (
