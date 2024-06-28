@@ -1,11 +1,11 @@
 namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
-/// Represents a basic error where you just want to give the caller an error message and nothing more.
+///   Represents a basic error where you just want to give the caller an error message and nothing more.
 /// </summary>
 public class BasicServerFailure {
   /// <summary>
-  /// Initializes a new instance of the <see cref="BasicServerFailure" /> class.
+  ///   Initializes a new instance of the <see cref="BasicServerFailure" /> class.
   /// </summary>
   /// <param name="error">The error message.</param>
   public BasicServerFailure(string error) {
@@ -13,7 +13,7 @@ public class BasicServerFailure {
   }
 
   /// <summary>
-  /// Gets or sets the error message.
+  ///   Gets or sets the error message.
   /// </summary>
   public string Error { get; set; }
 }

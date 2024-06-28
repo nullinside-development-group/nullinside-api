@@ -12,29 +12,29 @@ using Nullinside.Api.Shared.Json;
 namespace Nullinside.Api.Controllers;
 
 /// <summary>
-/// Provides insights and management options for the virtual machines hosted by the website.
+///   Provides insights and management options for the virtual machines hosted by the website.
 /// </summary>
 [Authorize(nameof(UserRoles.VmAdmin))]
 [ApiController]
 [Route("[controller]")]
 public class DockerController : ControllerBase {
   /// <summary>
-  /// The nullinside database.
+  ///   The nullinside database.
   /// </summary>
   private readonly NullinsideContext _dbContext;
 
   /// <summary>
-  /// The docker proxy.
+  ///   The docker proxy.
   /// </summary>
   private readonly IDockerProxy _docker;
 
   /// <summary>
-  /// The logger.
+  ///   The logger.
   /// </summary>
   private readonly ILogger<DockerController> _logger;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="DockerController" /> class.
+  ///   Initializes a new instance of the <see cref="DockerController" /> class.
   /// </summary>
   /// <param name="logger">The logger.</param>
   /// <param name="dbContext">The nullinside database.</param>
@@ -46,7 +46,7 @@ public class DockerController : ControllerBase {
   }
 
   /// <summary>
-  /// Gets the docker resources that can be configured.
+  ///   Gets the docker resources that can be configured.
   /// </summary>
   [Authorize(nameof(UserRoles.VmAdmin))]
   [HttpGet]
@@ -68,8 +68,10 @@ public class DockerController : ControllerBase {
     foreach (DockerDeployments knownDeployment in recognizedProjects.Result) {
       DockerResource? existingContainer =
         knownDeployment.IsDockerComposeProject
-          ? projects.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false)
-          : containers.Result.FirstOrDefault(c => c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false);
+          ? projects.Result.FirstOrDefault(c =>
+            c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false)
+          : containers.Result.FirstOrDefault(c =>
+            c.Name?.Equals(knownDeployment.Name, StringComparison.InvariantCultureIgnoreCase) ?? false);
       response.Add(new DockerResource {
         Id = knownDeployment.Id,
         Name = knownDeployment.DisplayName,
@@ -82,7 +84,7 @@ public class DockerController : ControllerBase {
   }
 
   /// <summary>
-  /// Turns on or off the docker resource.
+  ///   Turns on or off the docker resource.
   /// </summary>
   /// <param name="id">The id of the docker resource.</param>
   /// <param name="request">The request to turn on or off a resource.</param>
@@ -91,7 +93,8 @@ public class DockerController : ControllerBase {
   [HttpPost("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<IActionResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request, CancellationToken token) {
+  public async Task<IActionResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request,
+    CancellationToken token) {
     DockerDeployments? recognizedProjects = await _dbContext.DockerDeployments
       .FirstOrDefaultAsync(d => d.Id == id, token);
     if (null == recognizedProjects) {
@@ -100,7 +103,8 @@ public class DockerController : ControllerBase {
 
     bool result;
     if (recognizedProjects.IsDockerComposeProject) {
-      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token, recognizedProjects.ServerDir);
+      result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token,
+        recognizedProjects.ServerDir);
     }
     else {
       result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, request.TurnOn, token);

@@ -3,42 +3,42 @@ using Microsoft.EntityFrameworkCore;
 namespace Nullinside.Api.Model.Ddl;
 
 /// <summary>
-/// Represents docker deployments both in container form as well as docker compose project form.
+///   Represents docker deployments both in container form as well as docker compose project form.
 /// </summary>
 public class DockerDeployments : ITableModel {
   /// <summary>
-  /// Gets or sets the unique identifier of the row.
+  ///   Gets or sets the unique identifier of the row.
   /// </summary>
   public int Id { get; set; }
 
   /// <summary>
-  /// True if the row is in reference to a docker compose project, false if it is just a docker container.
+  ///   True if the row is in reference to a docker compose project, false if it is just a docker container.
   /// </summary>
   public bool IsDockerComposeProject { get; set; }
 
   /// <summary>
-  /// The directory on the server where the project is.
+  ///   The directory on the server where the project is.
   /// </summary>
   public string? ServerDir { get; set; }
 
   /// <summary>
-  /// Gets or sets the docker compose project name if <seealso cref="IsDockerComposeProject" /> is true, else the
-  /// container name.
+  ///   Gets or sets the docker compose project name if <seealso cref="IsDockerComposeProject" /> is true, else the
+  ///   container name.
   /// </summary>
   public required string Name { get; set; }
 
   /// <summary>
-  /// Gets or sets the display name.
+  ///   Gets or sets the display name.
   /// </summary>
   public required string DisplayName { get; set; }
 
   /// <summary>
-  /// Gets or sets the comment that should be shown on the screen in reference to the docker project/container.
+  ///   Gets or sets the comment that should be shown on the screen in reference to the docker project/container.
   /// </summary>
   public string? Notes { get; set; }
 
   /// <summary>
-  /// The method used to configure the POCOs of the table.
+  ///   The method used to configure the POCOs of the table.
   /// </summary>
   /// <param name="modelBuilder">The model builder.</param>
   public void OnModelCreating(ModelBuilder modelBuilder) {

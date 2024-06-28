@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text.Json;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -17,8 +16,7 @@ const string CORS_KEY = "_customAllowedSpecificOrigins";
 
 using ILoggerFactory loggerFactory =
   LoggerFactory.Create(builder =>
-    builder.AddSystemdConsole(options =>
-    {
+    builder.AddSystemdConsole(options => {
       options.IncludeScopes = true;
       options.TimestampFormat = "HH:mm:ss ";
     }));

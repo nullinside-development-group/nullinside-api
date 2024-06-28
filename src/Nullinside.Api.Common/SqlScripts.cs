@@ -1,12 +1,12 @@
 ﻿namespace Nullinside.Api.Common;
 
 /// <summary>
-/// Common SQL scripts for performing functions in the database.
+///   Common SQL scripts for performing functions in the database.
 /// </summary>
 public static class SqlScripts {
   /// <summary>
-  /// Performs the Levenshtein distance fuzzy search in a MySQL database.
-  /// https://en.wikipedia.org/wiki/Levenshtein_distance
+  ///   Performs the Levenshtein distance fuzzy search in a MySQL database.
+  ///   https://en.wikipedia.org/wiki/Levenshtein_distance
   /// </summary>
   /// <remarks>Also requires the <see cref="LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION" />.</remarks>
   public const string LEVENSHTEIN_DISTANCE_SEARCH =
@@ -22,7 +22,7 @@ public static class SqlScripts {
     """;
 
   /// <summary>
-  /// The inner function for the <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />. Not meant to be called directly.
+  ///   The inner function for the <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />. Not meant to be called directly.
   /// </summary>
   public const string LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION =
     """
@@ -62,7 +62,7 @@ public static class SqlScripts {
     """;
 
   /// <summary>
-  /// Removes <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />.
+  ///   Removes <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />.
   /// </summary>
   /// <remarks>Also requires the <see cref="LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION" />.</remarks>
   public const string LEVENSHTEIN_DISTANCE_SEARCH_REMOVE =
@@ -71,7 +71,7 @@ public static class SqlScripts {
     """;
 
   /// <summary>
-  /// The inner function for the <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />. Not meant to be called directly.
+  ///   The inner function for the <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />. Not meant to be called directly.
   /// </summary>
   public const string LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION_REMOVE =
     """
