@@ -40,9 +40,6 @@ public class DatabaseController : ControllerBase {
   [HttpGet]
   [Route("migration")]
   public async Task<IActionResult> Migrate() {
-    ILog? hello = LogManager.GetLogger(typeof(DatabaseController));
-    hello.Error("hi");
-
     await _dbContext.Database.MigrateAsync();
     return Ok();
   }
