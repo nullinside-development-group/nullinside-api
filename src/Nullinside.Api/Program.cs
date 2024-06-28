@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -10,9 +11,30 @@ using Nullinside.Api.Common.AspNetCore.Middleware;
 using Nullinside.Api.Common.Docker;
 using Nullinside.Api.Model;
 
+using WebApplicationBuilder = Microsoft.AspNetCore.Builder.WebApplicationBuilder;
+
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
+using ILoggerFactory loggerFactory =
+  LoggerFactory.Create(builder =>
+    builder.AddSystemdConsole(options =>
+    {
+      options.IncludeScopes = true;
+      options.TimestampFormat = "HH:mm:ss ";
+    }));
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+#if !DEBUG
+builder.Logging.AddJsonConsole(options =>
+{
+  options.IncludeScopes = false;
+  options.TimestampFormat = "HH:mm:ss ";
+  options.JsonWriterOptions = new JsonWriterOptions
+  {
+    Indented = true
+  };
+});
+#endif
 
 // Secrets are mounted into the container.
 string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");
