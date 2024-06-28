@@ -1,0 +1,20 @@
+name: nullinside-api
+services:
+    nullinside-api:
+        container_name: nullinside-api
+        environment:
+            - TWITCH_BOT_CLIENT_ID
+            - TWITCH_BOT_CLIENT_SECRET
+            - TWITCH_BOT_CLIENT_REDIRECT
+            - DOCKER_SERVER
+            - DOCKER_USERNAME
+            - DOCKER_PASSWORD
+            - DOCKER_PASSWORD2
+            - MYSQL_SERVER
+            - MYSQL_USERNAME
+            - MYSQL_PASSWORD
+        ports:
+            - 8081:8080
+            - 8082:8081
+        restart: unless-stopped
+        image: nullinside-api:latest
