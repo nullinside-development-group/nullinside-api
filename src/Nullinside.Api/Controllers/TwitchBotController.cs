@@ -1,3 +1,5 @@
+using log4net;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,17 +29,14 @@ public class TwitchBotController : ControllerBase {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<TwitchBotController> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(TwitchBotController));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="UserController" /> class.
   /// </summary>
-  /// <param name="logger">The logger.</param>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public TwitchBotController(ILogger<TwitchBotController> logger, IConfiguration configuration,
-    NullinsideContext dbContext) {
-    _logger = logger;
+  public TwitchBotController(IConfiguration configuration, NullinsideContext dbContext) {
     _configuration = configuration;
     _dbContext = dbContext;
   }

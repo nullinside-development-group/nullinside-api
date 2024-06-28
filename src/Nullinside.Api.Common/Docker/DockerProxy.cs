@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using log4net;
 
 using Newtonsoft.Json;
 
@@ -15,7 +15,7 @@ public class DockerProxy : IDockerProxy {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<DockerProxy> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(DockerProxy));
 
   /// <summary>
   ///   The password for the docker server.
@@ -37,14 +37,6 @@ public class DockerProxy : IDockerProxy {
   /// </summary>
   private readonly string? _username = Environment.GetEnvironmentVariable("DOCKER_USERNAME");
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="DockerProxy" /> class.
-  /// </summary>
-  /// <param name="logger">The logger.</param>
-  public DockerProxy(ILogger<DockerProxy> logger) {
-    _logger = logger;
-  }
-
   /// <inheritdoc />
   public async Task<IEnumerable<DockerResource>> GetContainers(CancellationToken cancellationToken) {
     (string output, string error) response =
@@ -61,8 +53,7 @@ public class DockerProxy : IDockerProxy {
 
       string[] parts = line.Split('|');
       if (parts.Length != 2) {
-        _logger.LogError("Failed to parse the following docker container name into two parts on the '|' char: {line}",
-          line);
+        _logger.Error($"Failed to parse the following docker container name into two parts on the '|' char: {line}");
         continue;
       }
 

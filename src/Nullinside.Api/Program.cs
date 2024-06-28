@@ -14,25 +14,9 @@ using WebApplicationBuilder = Microsoft.AspNetCore.Builder.WebApplicationBuilder
 
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
-using ILoggerFactory loggerFactory =
-  LoggerFactory.Create(builder =>
-    builder.AddSystemdConsole(options => {
-      options.IncludeScopes = true;
-      options.TimestampFormat = "HH:mm:ss ";
-    }));
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-#if !DEBUG
-builder.Logging.AddJsonConsole(options =>
-{
-  options.IncludeScopes = false;
-  options.TimestampFormat = "HH:mm:ss ";
-  options.JsonWriterOptions = new JsonWriterOptions
-  {
-    Indented = true
-  };
-});
-#endif
+builder.Logging.ClearProviders();
+builder.Logging.AddLog4Net();
 
 // Secrets are mounted into the container.
 string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");

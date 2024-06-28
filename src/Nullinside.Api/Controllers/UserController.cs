@@ -2,6 +2,8 @@ using System.Security.Claims;
 
 using Google.Apis.Auth;
 
+using log4net;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -33,16 +35,14 @@ public class UserController : ControllerBase {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<UserController> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(UserController));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="UserController" /> class.
   /// </summary>
-  /// <param name="logger">The logger.</param>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public UserController(ILogger<UserController> logger, IConfiguration configuration, NullinsideContext dbContext) {
-    _logger = logger;
+  public UserController(IConfiguration configuration, NullinsideContext dbContext) {
     _configuration = configuration;
     _dbContext = dbContext;
   }

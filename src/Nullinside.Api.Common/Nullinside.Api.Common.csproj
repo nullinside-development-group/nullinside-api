@@ -24,4 +24,16 @@
         <PackageReference Include="TwitchLib.Client" Version="3.3.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Compile Remove="Logging\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Remove="Logging\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Logging\**"/>
+    </ItemGroup>
+
 </Project>

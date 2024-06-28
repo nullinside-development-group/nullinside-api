@@ -1,3 +1,5 @@
+using log4net;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,16 +33,14 @@ public class DockerController : ControllerBase {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<DockerController> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(DockerController));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="DockerController" /> class.
   /// </summary>
-  /// <param name="logger">The logger.</param>
   /// <param name="dbContext">The nullinside database.</param>
   /// <param name="dockerProxy">The docker proxy.</param>
-  public DockerController(ILogger<DockerController> logger, NullinsideContext dbContext, IDockerProxy dockerProxy) {
-    _logger = logger;
+  public DockerController(NullinsideContext dbContext, IDockerProxy dockerProxy) {
     _dbContext = dbContext;
     _docker = dockerProxy;
   }

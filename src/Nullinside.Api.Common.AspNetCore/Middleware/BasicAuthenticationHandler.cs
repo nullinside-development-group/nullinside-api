@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+using log4net;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -23,7 +25,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<BasicAuthenticationHandler> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(BasicAuthenticationHandler));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="BasicAuthenticationHandler" /> class.
@@ -35,7 +37,6 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger,
     UrlEncoder encoder, NullinsideContext dbContext) : base(options, logger, encoder) {
     _dbContext = dbContext;
-    _logger = logger.CreateLogger<BasicAuthenticationHandler>();
   }
 
   /// <summary>
@@ -67,7 +68,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
       }
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to verify token against database");
+      _logger.Error("Failed to verify token against database", ex);
       return AuthenticateResult.Fail("Internal server error verifying token");
     }
 
@@ -94,7 +95,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
       return AuthenticateResult.Success(ticket);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to create an auth ticket after successful token validation");
+      _logger.Error("Failed to create an auth ticket after successful token validation", ex);
       return AuthenticateResult.Fail(ex);
     }
   }
