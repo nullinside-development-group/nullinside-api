@@ -1,6 +1,10 @@
 name: nullinside-api
 services:
     nullinside-api:
+        logging:
+            driver: loki
+            options:
+                loki-url: 'http://192.168.1.4:3100/loki/api/v1/push'
         container_name: nullinside-api
         environment:
             - TWITCH_BOT_CLIENT_ID
