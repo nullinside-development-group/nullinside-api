@@ -18,11 +18,11 @@ public class GitHubUpdateManager {
     if (string.IsNullOrWhiteSpace(owner)) {
       throw new ArgumentException("Cannot be null or whitespace", nameof(owner));
     }
-    
+
     if (string.IsNullOrWhiteSpace(repo)) {
       throw new ArgumentException("Cannot be null or whitespace", nameof(repo));
     }
-    
+
     var handler = new HttpClientHandler();
     handler.AutomaticDecompression = ~DecompressionMethods.None;
     using var httpClient = new HttpClient(handler);

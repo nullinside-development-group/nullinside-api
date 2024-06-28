@@ -10,9 +10,13 @@ using Nullinside.Api.Common.AspNetCore.Middleware;
 using Nullinside.Api.Common.Docker;
 using Nullinside.Api.Model;
 
+using WebApplicationBuilder = Microsoft.AspNetCore.Builder.WebApplicationBuilder;
+
 const string CORS_KEY = "_customAllowedSpecificOrigins";
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddLog4Net();
 
 // Secrets are mounted into the container.
 string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");

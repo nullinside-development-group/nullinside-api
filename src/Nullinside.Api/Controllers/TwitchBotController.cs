@@ -1,3 +1,5 @@
+using log4net;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,45 +17,42 @@ namespace Nullinside.Api.Controllers;
 [Route("[controller]")]
 public class TwitchBotController : ControllerBase {
   /// <summary>
-  /// The application's configuration file.
+  ///   The application's configuration file.
   /// </summary>
   private readonly IConfiguration _configuration;
 
   /// <summary>
-  /// The nullinside database.
+  ///   The nullinside database.
   /// </summary>
   private readonly NullinsideContext _dbContext;
 
   /// <summary>
-  /// The logger.
+  ///   The logger.
   /// </summary>
-  private readonly ILogger<TwitchBotController> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(TwitchBotController));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="UserController" /> class.
   /// </summary>
-  /// <param name="logger">The logger.</param>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public TwitchBotController(ILogger<TwitchBotController> logger, IConfiguration configuration,
-    NullinsideContext dbContext) {
-    _logger = logger;
+  public TwitchBotController(IConfiguration configuration, NullinsideContext dbContext) {
     _configuration = configuration;
     _dbContext = dbContext;
   }
 
   /// <summary>
-  /// **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
-  /// redirects users back to the nullinside website.
+  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
+  ///   redirects users back to the nullinside website.
   /// </summary>
   /// <param name="code">The credentials provided by twitch.</param>
   /// <param name="token">The cancellation token.</param>
   /// <returns>
-  /// A redirect to the nullinside website.
-  /// Errors:
-  /// 2 = Internal error generating token.
-  /// 3 = Code was invalid
-  /// 4 = Twitch account has no email
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
   /// </returns>
   [AllowAnonymous]
   [HttpGet]
@@ -70,7 +69,7 @@ public class TwitchBotController : ControllerBase {
       return Redirect($"{siteUrl}/twitch-bot/config?error={TwitchBotLoginErrors.TwitchAccountHasNoEmail}");
     }
 
-    var user = await api.GetTwitchUser(token);
+    (string? id, string? username) user = await api.GetTwitchUser(token);
     if (string.IsNullOrWhiteSpace(user.username) || string.IsNullOrWhiteSpace(user.id)) {
       return Redirect($"{siteUrl}/twitch-bot/config?error={TwitchBotLoginErrors.InternalError}");
     }

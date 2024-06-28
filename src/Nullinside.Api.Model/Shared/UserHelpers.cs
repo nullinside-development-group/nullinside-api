@@ -8,11 +8,11 @@ using Nullinside.Api.Model.Ddl;
 namespace Nullinside.Api.Model.Shared;
 
 /// <summary>
-/// Helper methods for user functions in the database.
+///   Helper methods for user functions in the database.
 /// </summary>
 public static class UserHelpers {
   /// <summary>
-  /// Generates a new bearer token, saves it to the database, and returns it.
+  ///   Generates a new bearer token, saves it to the database, and returns it.
   /// </summary>
   /// <param name="dbContext">The database context.</param>
   /// <param name="email">The email address of the user, user will be created if they don't already exist.</param>
@@ -75,7 +75,7 @@ public static class UserHelpers {
   }
 
   /// <summary>
-  /// Generates a new unique bearer token.
+  ///   Generates a new unique bearer token.
   /// </summary>
   /// <returns>A bearer token.</returns>
   public static string GenerateBearerToken() {

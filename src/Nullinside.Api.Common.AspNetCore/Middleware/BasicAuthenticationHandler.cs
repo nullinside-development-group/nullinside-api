@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+using log4net;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,34 +14,34 @@ using Nullinside.Api.Model.Ddl;
 namespace Nullinside.Api.Common.AspNetCore.Middleware;
 
 /// <summary>
-/// Handles incoming Bearer tokens and converts them into objects that represents the user and their roles in the app.
+///   Handles incoming Bearer tokens and converts them into objects that represents the user and their roles in the app.
 /// </summary>
 public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
   /// <summary>
-  /// The nullinside database.
+  ///   The nullinside database.
   /// </summary>
   private readonly NullinsideContext _dbContext;
 
   /// <summary>
-  /// The logger.
+  ///   The logger.
   /// </summary>
-  private readonly ILogger<BasicAuthenticationHandler> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(BasicAuthenticationHandler));
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="BasicAuthenticationHandler" /> class.
+  ///   Initializes a new instance of the <see cref="BasicAuthenticationHandler" /> class.
   /// </summary>
   /// <param name="options">The options.</param>
   /// <param name="logger">The logger.</param>
   /// <param name="encoder">The url encoder.</param>
   /// <param name="dbContext">The database.</param>
-  public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, NullinsideContext dbContext) : base(options, logger, encoder) {
+  public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger,
+    UrlEncoder encoder, NullinsideContext dbContext) : base(options, logger, encoder) {
     _dbContext = dbContext;
-    _logger = logger.CreateLogger<BasicAuthenticationHandler>();
   }
 
   /// <summary>
-  /// Pulls the bearer token out of the "Authorization" header and converts it into an object containing the user's
-  /// information and their roles.
+  ///   Pulls the bearer token out of the "Authorization" header and converts it into an object containing the user's
+  ///   information and their roles.
   /// </summary>
   /// <returns>The user and their roles if successful, <see cref="AuthenticateResult.Fail(string)" /> otherwise.</returns>
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
@@ -66,7 +68,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
       }
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to verify token against database");
+      _logger.Error("Failed to verify token against database", ex);
       return AuthenticateResult.Fail("Internal server error verifying token");
     }
 
@@ -93,7 +95,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
       return AuthenticateResult.Success(ticket);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to create an auth ticket after successful token validation");
+      _logger.Error("Failed to create an auth ticket after successful token validation", ex);
       return AuthenticateResult.Fail(ex);
     }
   }

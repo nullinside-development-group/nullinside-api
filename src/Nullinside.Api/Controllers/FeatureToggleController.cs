@@ -1,3 +1,5 @@
+using log4net;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,15 +22,13 @@ public class FeatureToggleController : ControllerBase {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private readonly ILogger<FeatureToggleController> _logger;
+  private readonly ILog _logger = LogManager.GetLogger(typeof(FeatureToggleController));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="FeatureToggleController" /> class.
   /// </summary>
-  /// <param name="logger">The logger.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public FeatureToggleController(ILogger<FeatureToggleController> logger, NullinsideContext dbContext) {
-    _logger = logger;
+  public FeatureToggleController(NullinsideContext dbContext) {
     _dbContext = dbContext;
   }
 
