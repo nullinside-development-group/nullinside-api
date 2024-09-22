@@ -130,7 +130,7 @@ public class DockerProxy : IDockerProxy {
 
   private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token,
     string? dir = null) {
-    using SshClient client = new(_server, _username, _password);
+    using SshClient client = new(_server!, _username!, _password!);
     await client.ConnectAsync(token);
     using SshCommand? responseJson = client.RunCommand($"cd {dir}; echo {_password2} | sudo -S {command}");
     return (responseJson.Result, responseJson.Error);
