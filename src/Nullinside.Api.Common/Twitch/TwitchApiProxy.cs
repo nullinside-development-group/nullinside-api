@@ -240,6 +240,7 @@ public class TwitchApiProxy {
           }
 
           bannedUsers.AddRange(response.Data);
+          Log.Debug($"Banned {user.Username} ({user.Id}) in {channelId}: {reason}");
         }
         catch (HttpResponseException ex) {
           string exceptionReason = await ex.HttpResponse.Content.ReadAsStringAsync(token);
