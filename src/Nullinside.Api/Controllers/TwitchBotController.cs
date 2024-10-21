@@ -24,7 +24,7 @@ public class TwitchBotController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The logger.
@@ -36,7 +36,7 @@ public class TwitchBotController : ControllerBase {
   /// </summary>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public TwitchBotController(IConfiguration configuration, NullinsideContext dbContext) {
+  public TwitchBotController(IConfiguration configuration, INullinsideContext dbContext) {
     _configuration = configuration;
     _dbContext = dbContext;
   }

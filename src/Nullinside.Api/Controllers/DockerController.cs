@@ -23,7 +23,7 @@ public class DockerController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The docker proxy.
@@ -40,7 +40,7 @@ public class DockerController : ControllerBase {
   /// </summary>
   /// <param name="dbContext">The nullinside database.</param>
   /// <param name="dockerProxy">The docker proxy.</param>
-  public DockerController(NullinsideContext dbContext, IDockerProxy dockerProxy) {
+  public DockerController(INullinsideContext dbContext, IDockerProxy dockerProxy) {
     _dbContext = dbContext;
     _docker = dockerProxy;
   }

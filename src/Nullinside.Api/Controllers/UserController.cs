@@ -30,7 +30,7 @@ public class UserController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The logger.
@@ -42,7 +42,7 @@ public class UserController : ControllerBase {
   /// </summary>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public UserController(IConfiguration configuration, NullinsideContext dbContext) {
+  public UserController(IConfiguration configuration, INullinsideContext dbContext) {
     _configuration = configuration;
     _dbContext = dbContext;
   }

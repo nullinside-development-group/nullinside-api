@@ -17,7 +17,7 @@ public class FeatureToggleController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The logger.
@@ -28,7 +28,7 @@ public class FeatureToggleController : ControllerBase {
   ///   Initializes a new instance of the <see cref="FeatureToggleController" /> class.
   /// </summary>
   /// <param name="dbContext">The nullinside database.</param>
-  public FeatureToggleController(NullinsideContext dbContext) {
+  public FeatureToggleController(INullinsideContext dbContext) {
     _dbContext = dbContext;
   }
 

@@ -20,7 +20,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The logger.
@@ -35,7 +35,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// <param name="encoder">The url encoder.</param>
   /// <param name="dbContext">The database.</param>
   public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger,
-    UrlEncoder encoder, NullinsideContext dbContext) : base(options, logger, encoder) {
+    UrlEncoder encoder, INullinsideContext dbContext) : base(options, logger, encoder) {
     _dbContext = dbContext;
   }
 

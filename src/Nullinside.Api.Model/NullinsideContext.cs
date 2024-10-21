@@ -7,7 +7,7 @@ namespace Nullinside.Api.Model;
 /// <summary>
 ///   The nullinside database.
 /// </summary>
-public class NullinsideContext : DbContext {
+public class NullinsideContext : DbContext, INullinsideContext {
   /// <summary>
   ///   Initializes a new instance of <see cref="NullinsideContext" />
   /// </summary>

@@ -17,7 +17,7 @@ public class DatabaseController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
   /// </summary>
-  private readonly NullinsideContext _dbContext;
+  private readonly INullinsideContext _dbContext;
 
   /// <summary>
   ///   The logger.
@@ -28,7 +28,7 @@ public class DatabaseController : ControllerBase {
   ///   Initializes a new instance of the <see cref="DatabaseController" /> class.
   /// </summary>
   /// <param name="dbContext">The nullinside database.</param>
-  public DatabaseController(NullinsideContext dbContext) {
+  public DatabaseController(INullinsideContext dbContext) {
     _dbContext = dbContext;
   }
 
