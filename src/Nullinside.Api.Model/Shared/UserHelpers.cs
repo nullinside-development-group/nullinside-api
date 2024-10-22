@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 
 using Nullinside.Api.Common;
+using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Model.Ddl;
 
 namespace Nullinside.Api.Model.Shared;
@@ -26,10 +27,9 @@ public static class UserHelpers {
   public static async Task<string?> GetTokenAndSaveToDatabase(INullinsideContext dbContext, string email,
     CancellationToken token = new(), string? authToken = null, string? refreshToken = null, DateTime? expires = null,
     string? twitchUsername = null, string? twitchId = null) {
-    string bearerToken = GenerateBearerToken();
+    string bearerToken = AuthUtils.GenerateBearerToken();
     try {
-      // We prevent banned users from logging into the site.
-      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, token);
+      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
       if (null == existing) {
         dbContext.Users.Add(new User {
           Email = email,
@@ -72,23 +72,5 @@ public static class UserHelpers {
     catch {
       return null;
     }
-  }
-
-  /// <summary>
-  ///   Generates a new unique bearer token.
-  /// </summary>
-  /// <returns>A bearer token.</returns>
-  public static string GenerateBearerToken() {
-    // This method is trash but it doesn't matter. We should be doing real OAuth tokens with expirations and
-    // renewals. Right now nothing that exists on the site requires this level of sophistication.
-    string allowed = "ABCDEFGHIJKLMONOPQRSTUVWXYZabcdefghijklmonopqrstuvwxyz0123456789";
-    int strlen = 255; // Or whatever
-    char[] randomChars = new char[strlen];
-
-    for (int i = 0; i < strlen; i++) {
-      randomChars[i] = allowed[RandomNumberGenerator.GetInt32(0, allowed.Length)];
-    }
-
-    return new string(randomChars);
   }
 }
