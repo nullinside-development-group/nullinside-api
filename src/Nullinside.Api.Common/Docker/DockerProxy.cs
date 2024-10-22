@@ -128,7 +128,14 @@ public class DockerProxy : IDockerProxy {
            (!turnOn && output.error.Contains("Stopped", StringComparison.InvariantCultureIgnoreCase));
   }
 
-  private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token,
+  /// <summary>
+  /// Executes an SSH command in the given directory.
+  /// </summary>
+  /// <param name="command">The command to execute.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <param name="dir">The directory to navigate to before executing the command.</param>
+  /// <returns>The STDOUT and STDERR of the command's execution.</returns>
+  private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token = new(),
     string? dir = null) {
     using SshClient client = new(_server!, _username!, _password!);
     await client.ConnectAsync(token);

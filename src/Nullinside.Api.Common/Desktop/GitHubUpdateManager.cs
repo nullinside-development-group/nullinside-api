@@ -7,7 +7,7 @@ namespace Nullinside.Api.Common.Desktop;
 /// <summary>
 ///   Handles checking for updates to the application via GitHub releases.
 /// </summary>
-public class GitHubUpdateManager {
+public static class GitHubUpdateManager {
   /// <summary>
   ///   Gets the latest version number of the release.
   /// </summary>
