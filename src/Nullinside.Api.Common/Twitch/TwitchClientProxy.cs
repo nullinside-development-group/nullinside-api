@@ -16,9 +16,9 @@ namespace Nullinside.Api.Common.Twitch;
 using Timer = Timer;
 
 /// <summary>
-///   The singleton of the Cathy bot that existing in chat for reading and sending twitch chat messages.
+///   The singleton of a twitch chat messaging client.
 /// </summary>
-public class TwitchClientProxy : IDisposable {
+public class TwitchClientProxy : ITwitchClientProxy {
   /// <summary>
   ///   The logger.
   /// </summary>
@@ -28,12 +28,6 @@ public class TwitchClientProxy : IDisposable {
   ///   The singleton instance of the class.
   /// </summary>
   private static TwitchClientProxy? instance;
-
-  /// <summary>
-  ///   The lock to prevent mutual exclusion on <see cref="onMessageReceived" />
-  ///   and <see cref="onRaid" /> callbacks.
-  /// </summary>
-  private readonly object callbackLock = new();
 
   /// <summary>
   ///   The list of chats we attempted to join with the bot.
@@ -105,34 +99,19 @@ public class TwitchClientProxy : IDisposable {
     }
   }
 
-  /// <summary>
-  ///   Gets or sets the twitch username to connect with.
-  /// </summary>
+  /// <inheritdoc />
   public string? TwitchUsername { get; set; }
 
-  /// <summary>
-  ///   Gets or sets the twitch OAuth token to use to connect.
-  /// </summary>
+  /// <inheritdoc />
   public string? TwitchOAuthToken { get; set; }
 
-  /// <summary>
-  ///   Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-  /// </summary>
+  /// <inheritdoc />
   public void Dispose() {
     Dispose(true);
     GC.SuppressFinalize(this);
   }
 
-  /// <summary>
-  ///   Send a message in twitch chat.
-  /// </summary>
-  /// <param name="channel">The channel to send the message in.</param>
-  /// <param name="message">The message to send.</param>
-  /// <param name="retryConnection">
-  ///   The number of times to retry connecting to twitch chat before
-  ///   giving up.
-  /// </param>
-  /// <returns>True if connected and sent, false otherwise.</returns>
+  /// <inheritdoc />
   public async Task<bool> SendMessage(string channel, string message, uint retryConnection = 5) {
     // Sanity check.
     if (string.IsNullOrWhiteSpace(channel)) {
@@ -172,6 +151,50 @@ public class TwitchClientProxy : IDisposable {
     }
 
     return true;
+  }
+
+  /// <inheritdoc />
+  public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
+    await JoinChannel(channel);
+    onMessageReceived -= callback;
+    onMessageReceived += callback;
+  }
+
+  /// <inheritdoc />
+  public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
+    onMessageReceived -= callback;
+  }
+
+  /// <inheritdoc />
+  public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
+    await JoinChannel(channel);
+
+    onUserBanReceived -= callback;
+    onUserBanReceived += callback;
+  }
+
+  /// <inheritdoc />
+  public void RemoveBannedCallback(Action<OnUserBannedArgs> callback) {
+    onUserBanReceived -= callback;
+  }
+
+  /// <inheritdoc />
+  public async Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
+    await JoinChannel(channel);
+
+    onRaid -= callback;
+    onRaid += callback;
+  }
+
+  /// <inheritdoc />
+  public void RemoveRaidCallback(Action<OnRaidNotificationArgs> callback) {
+    onRaid -= callback;
+  }
+
+  /// <inheritdoc />
+  public ValueTask DisposeAsync() {
+    Dispose();
+    return ValueTask.CompletedTask;
   }
 
   /// <summary>
@@ -317,93 +340,12 @@ public class TwitchClientProxy : IDisposable {
   }
 
   /// <summary>
-  ///   Adds a callback for when the channel receives a new chat message.
-  /// </summary>
-  /// <param name="channel">The name of the channel to add the callback for.</param>
-  /// <param name="callback">The callback to invoke.</param>
-  /// <returns>An asynchronous task.</returns>
-  public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
-    await JoinChannel(channel);
-
-    lock (callbackLock) {
-      onMessageReceived -= callback;
-      onMessageReceived += callback;
-    }
-  }
-
-  /// <summary>
-  ///   Removes a callback for when the channel receives a new chat message.
-  /// </summary>
-  /// <param name="callback">The callback to remove.</param>
-  /// <returns>An asynchronous task.</returns>
-  public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
-    lock (callbackLock) {
-      onMessageReceived -= callback;
-    }
-  }
-
-  /// <summary>
-  ///   Adds a callback for when users are banned from the chat.
-  /// </summary>
-  /// <param name="channel">The channel to subscribe to notifications for.</param>
-  /// <param name="callback">The callback to invoke when a user is banned.</param>
-  public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
-    await JoinChannel(channel);
-
-    lock (callbackLock) {
-      onUserBanReceived -= callback;
-      onUserBanReceived += callback;
-    }
-  }
-
-  /// <summary>
-  ///   Removes a callback for when users are banned from the chat.
-  /// </summary>
-  /// <param name="callback">The callback to remove from when a user is banned.</param>
-  public void RemoveBannedCallback(Action<OnUserBannedArgs> callback) {
-    lock (callbackLock) {
-      onUserBanReceived -= callback;
-    }
-  }
-
-  /// <summary>
-  ///   Adds a callback for when the channel receives a raid.
-  /// </summary>
-  /// <param name="channel">The channel to subscribe to callbacks for.</param>
-  /// <param name="callback">The callback to invoke.</param>
-  /// <returns>An asynchronous task.</returns>
-  public async Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
-    await JoinChannel(channel);
-
-    lock (callbackLock) {
-      onRaid -= callback;
-      onRaid += callback;
-    }
-  }
-
-  /// <summary>
-  ///   Removes a callback for when the channel receives a raid.
-  /// </summary>
-  /// <param name="callback">The callback to remove.</param>
-  /// <returns>An asynchronous task.</returns>
-  public void RemoveRaidCallback(Action<OnRaidNotificationArgs> callback) {
-    lock (callbackLock) {
-      onRaid -= callback;
-    }
-  }
-
-  /// <summary>
   ///   Handles when the channel receives a raid.
   /// </summary>
   /// <param name="sender">The twitch client.</param>
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnRaidNotification(object? sender, OnRaidNotificationArgs e) {
-    Delegate[]? invokeList = null;
-
-    lock (callbackLock) {
-      invokeList = onRaid?.GetInvocationList();
-    }
-
+    Delegate[]? invokeList = onRaid?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
@@ -419,12 +361,7 @@ public class TwitchClientProxy : IDisposable {
   /// <param name="sender">The twitch client.</param>
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnMessageReceived(object? sender, OnMessageReceivedArgs e) {
-    Delegate[]? invokeList = null;
-
-    lock (callbackLock) {
-      invokeList = onMessageReceived?.GetInvocationList();
-    }
-
+    Delegate[]? invokeList = onMessageReceived?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
@@ -434,13 +371,13 @@ public class TwitchClientProxy : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Handles when a channel receives a new ban.
+  /// </summary>
+  /// <param name="sender">The twitch client.</param>
+  /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnUserBanned(object? sender, OnUserBannedArgs e) {
-    Delegate[]? invokeList = null;
-
-    lock (callbackLock) {
-      invokeList = onUserBanReceived?.GetInvocationList();
-    }
-
+    Delegate[]? invokeList = onUserBanReceived?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
