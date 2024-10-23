@@ -1,4 +1,4 @@
-﻿namespace Nullinside.Api.Shared.Support;
+﻿namespace Nullinside.Api.Common.Twitch.Support;
 
 /// <summary>
 ///   Enumerates the types of errors when authenticating with twitch.
