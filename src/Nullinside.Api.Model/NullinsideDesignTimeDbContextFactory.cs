@@ -9,7 +9,7 @@ namespace Nullinside.Api.Model;
 ///   references more than once solution with a DbContext in it. This factory is lazy loaded by the CLI automatically
 ///   simply by implementing the IDesignTimeDbContextFactory interface.
 /// </summary>
-public class NullinsideContextFactory : IDesignTimeDbContextFactory<NullinsideContext> {
+public class NullinsideDesignTimeDbContextFactory : IDesignTimeDbContextFactory<NullinsideContext> {
   /// <summary>
   ///   Creates a new database context.
   /// </summary>

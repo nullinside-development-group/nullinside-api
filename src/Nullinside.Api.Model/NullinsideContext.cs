@@ -67,22 +67,6 @@ public class NullinsideContext : DbContext, INullinsideContext {
   public DbSet<TwitchUserChatLogs> TwitchUserChatLogs { get; set; } = null!;
 
   /// <summary>
-  ///   Configures the default database connection.
-  /// </summary>
-  /// <param name="optionsBuilder">The database configuration options.</param>
-  protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-    string? server = Environment.GetEnvironmentVariable("MYSQL_SERVER");
-    string? username = Environment.GetEnvironmentVariable("MYSQL_USERNAME");
-    string? password = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
-    optionsBuilder.UseMySQL(
-      $"server={server};database=nullinside;user={username};password={password};AllowUserVariables=true;",
-      builder => {
-        builder.CommandTimeout(60 * 5);
-        builder.EnableRetryOnFailure(3);
-      });
-  }
-
-  /// <summary>
   ///   Dynamically finds all <seealso cref="ITableModel" /> classes and generates tables from their definitions.
   /// </summary>
   /// <param name="modelBuilder">The model builder passed to us by the framework.</param>

@@ -65,7 +65,7 @@ public class UserController : ControllerBase {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      string? bearerToken = await UserHelpers.GetTokenAndSaveToDatabase(_dbContext, credentials.Email, token);
+      string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, token);
       if (string.IsNullOrWhiteSpace(bearerToken)) {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
@@ -107,7 +107,7 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    string? bearerToken = await UserHelpers.GetTokenAndSaveToDatabase(_dbContext, email, token);
+    string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, token);
     if (string.IsNullOrWhiteSpace(bearerToken)) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
