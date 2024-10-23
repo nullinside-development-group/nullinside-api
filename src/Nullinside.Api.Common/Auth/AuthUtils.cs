@@ -3,7 +3,7 @@
 namespace Nullinside.Api.Common.Auth;
 
 /// <summary>
-/// Random utilities for authentication.
+///   Random utilities for authentication.
 /// </summary>
 public static class AuthUtils {
   /// <summary>

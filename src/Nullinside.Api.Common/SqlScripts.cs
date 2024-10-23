@@ -71,7 +71,7 @@ public static class SqlScripts {
     """;
 
   /// <summary>
-  ///   The inner function for the <see cref="LEVENSHTEIN_DISTANCE_SEARCH" />. Not meant to be called directly.
+  ///   Removes <see cref="LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION" />.
   /// </summary>
   public const string LEVENSHTEIN_DISTANCE_SEARCH_INNER_FUNCTION_REMOVE =
     """
