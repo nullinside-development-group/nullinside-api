@@ -14,6 +14,7 @@ using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Moderation.GetModerators;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using TwitchLib.Api.Interfaces;
 
 using Stream = TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream;
 
@@ -73,7 +74,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
 
   /// <inheritdoc />
   public async Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new()) {
-    TwitchAPI api = GetApi();
+    ITwitchAPI api = GetApi();
     AuthCodeResponse? response = await api.Auth.GetAccessTokenFromCodeAsync(code, ClientSecret, ClientRedirect);
     if (null == response) {
       return null;
@@ -90,7 +91,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new()) {
     try {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
       RefreshResponse? response = await api.Auth.RefreshAuthTokenAsync(OAuth?.RefreshToken, ClientSecret, ClientId);
       if (null == response) {
         return null;
@@ -116,7 +117,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<(string? id, string? username)> GetUser(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
       GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
       if (null == response) {
         return (null, null);
@@ -130,7 +131,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<string?> GetUserEmail(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
       GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
       if (null == response) {
         return null;
@@ -175,7 +176,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public async Task<IEnumerable<BannedUser>> BanChannelUsers(string channelId, string botId,
     IEnumerable<(string Id, string Username)> users, string reason, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
 
       var bannedUsers = new List<BannedUser>();
       foreach ((string Id, string Username) user in users) {
@@ -209,7 +210,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public async Task<IEnumerable<Chatter>> GetChannelUsers(string channelId, string botId,
     CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
       var chatters = new List<Chatter>();
       string? cursor = null;
       int total = 0;
@@ -231,7 +232,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
 
   /// <inheritdoc />
   public async Task<IEnumerable<string>> GetChannelsLive(IEnumerable<string> userIds) {
-    TwitchAPI api = GetApi();
+    ITwitchAPI api = GetApi();
 
     // We can only query 100 at a time, so throttle the search.
     var liveUsers = new List<Stream>();
@@ -256,7 +257,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<IEnumerable<Moderator>> GetChannelMods(string channelId, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
 
       var results = new List<Moderator>();
       GetModeratorsResponse? response = null;
@@ -283,7 +284,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<bool> AddChannelMod(string channelId, string userId, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
-      TwitchAPI api = GetApi();
+      ITwitchAPI api = GetApi();
       await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId);
       return true;
     }, Retries, token);
@@ -293,7 +294,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   ///   Gets a new instance of the <see cref="TwitchAPI" />.
   /// </summary>
   /// <returns>A new instance of the <see cref="TwitchAPI" />.</returns>
-  private TwitchAPI GetApi() {
+  protected ITwitchAPI GetApi() {
     var api = new TwitchAPI {
       Settings = {
         ClientId = ClientId,
