@@ -129,7 +129,7 @@ public class DockerProxy : IDockerProxy {
   }
 
   /// <summary>
-  /// Executes an SSH command in the given directory.
+  ///   Executes an SSH command in the given directory.
   /// </summary>
   /// <param name="command">The command to execute.</param>
   /// <param name="token">The cancellation token.</param>

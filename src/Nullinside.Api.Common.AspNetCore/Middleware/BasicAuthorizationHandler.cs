@@ -5,7 +5,8 @@ namespace Nullinside.Api.Common.AspNetCore.Middleware;
 /// <summary>
 ///   Performs a basic check on the user's roles to ensure the user is in the role required for the endpoint.
 /// </summary>
-public class BasicAuthorizationHandler : AuthorizationHandler<BasicAuthorizationRequirement>, IAuthorizationRequirement {
+public class
+  BasicAuthorizationHandler : AuthorizationHandler<BasicAuthorizationRequirement>, IAuthorizationRequirement {
   /// <summary>
   ///   Performs a basic check on the user's roles to ensure the user is in the role required for the endpoint.
   /// </summary>

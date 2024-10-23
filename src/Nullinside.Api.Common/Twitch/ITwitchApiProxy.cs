@@ -33,7 +33,7 @@ public interface ITwitchApiProxy {
   Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new());
 
   /// <summary>
-  ///   Determines if the <see cref="OAuth"/> is valid.
+  ///   Determines if the <see cref="OAuth" /> is valid.
   /// </summary>
   /// <param name="token">The cancellation token.</param>
   /// <returns>True if valid, false otherwise.</returns>
@@ -71,7 +71,7 @@ public interface ITwitchApiProxy {
   /// <returns>The users with confirmed bans.</returns>
   Task<IEnumerable<BannedUser>> BanChannelUsers(string channelId, string botId,
     IEnumerable<(string Id, string Username)> users, string reason, CancellationToken token = new());
-  
+
   /// <summary>
   ///   Gets the list of mods for the channel.
   /// </summary>

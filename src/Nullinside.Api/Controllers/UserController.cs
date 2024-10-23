@@ -95,7 +95,8 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpGet]
   [Route("twitch-login")]
-  public async Task<IActionResult> TwitchLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api, CancellationToken token) {
+  public async Task<IActionResult> TwitchLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
+    CancellationToken token) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     if (null == await api.CreateAccessToken(code, token)) {
       return Redirect($"{siteUrl}/user/login?error=3");
