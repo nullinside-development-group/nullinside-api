@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Nullinside.Api.Common;
 using Nullinside.Api.Common.AspNetCore.Middleware;
 using Nullinside.Api.Common.Docker;
+using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Model;
 
 using WebApplicationBuilder = Microsoft.AspNetCore.Builder.WebApplicationBuilder;
@@ -30,6 +31,7 @@ builder.Services.AddDbContext<INullinsideContext, NullinsideContext>(optionsBuil
       builder.EnableRetryOnFailure(3);
     }));
 builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
+builder.Services.AddScoped<ITwitchApiProxy, TwitchApiProxy>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", _ => { });
 builder.Services.AddScoped<IDockerProxy, DockerProxy>();
