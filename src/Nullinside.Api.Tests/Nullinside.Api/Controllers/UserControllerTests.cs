@@ -72,7 +72,7 @@ public class UserControllerTests : UnitTestBase {
     Assert.That(this._db.Users.Count(), Is.EqualTo(1));
     
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token), Is.True);
+    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token!), Is.True);
   }
   
   /// <summary>
@@ -92,7 +92,7 @@ public class UserControllerTests : UnitTestBase {
     Assert.That(this._db.Users.Count(), Is.EqualTo(1));
     
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token), Is.True);
+    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token!), Is.True);
   }
   
   /// <summary>
@@ -100,7 +100,7 @@ public class UserControllerTests : UnitTestBase {
   /// </summary>
   [Test]
   public async Task GoToErrorOnDbException() {
-    this._db.Users = null;
+    this._db.Users = null!;
     
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db);
@@ -157,7 +157,7 @@ public class UserControllerTests : UnitTestBase {
     Assert.That(this._db.Users.Count(), Is.EqualTo(1));
     
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token), Is.True);
+    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token!), Is.True);
   }
   
   /// <summary>
@@ -184,7 +184,7 @@ public class UserControllerTests : UnitTestBase {
     Assert.That(this._db.Users.Count(), Is.EqualTo(1));
     
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token), Is.True);
+    Assert.That(obj.Url.EndsWith(this._db.Users.First().Token!), Is.True);
   }
   
   /// <summary>
@@ -226,7 +226,7 @@ public class UserControllerTests : UnitTestBase {
   /// </summary>
   [Test]
   public async Task PerformTwitchLoginDbFailure() {
-    _db.Users = null;
+    _db.Users = null!;
     
     // Tells us twitch parsed the code successfully.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -265,9 +265,9 @@ public class UserControllerTests : UnitTestBase {
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure we got the role we put in.
-    var roles = obj.Value.GetType().GetProperty("roles").GetValue(obj.Value) as IEnumerable<string>;
-    Assert.That(roles.Count(), Is.EqualTo(1));
-    Assert.That(roles.First(), Is.EqualTo("candy"));
+    var roles = obj.Value!.GetType().GetProperty("roles")!.GetValue(obj.Value) as IEnumerable<string>;
+    Assert.That(roles!.Count(), Is.EqualTo(1));
+    Assert.That(roles!.First(), Is.EqualTo("candy"));
   }
   
   /// <summary>
@@ -303,7 +303,7 @@ public class UserControllerTests : UnitTestBase {
   /// </summary>
   [Test]
   public async Task ValidateFailOnDbFailure() {
-    this._db.Users = null;
+    this._db.Users = null!;
     
     // Make the call and ensure it fails.
     var controller = new TestableUserController(_configuration, _db);
@@ -329,7 +329,7 @@ public class TestableUserController : UserController {
   /// <inheritdoc />
   protected override Task<GoogleJsonWebSignature.Payload?> GenerateUserObject(GoogleOpenIdToken creds) {
     if (null != Email) {
-      return Task.FromResult(new GoogleJsonWebSignature.Payload() { Email = Email });
+      return Task.FromResult<GoogleJsonWebSignature.Payload?>(new GoogleJsonWebSignature.Payload() { Email = Email });
     }
 
     return Task.FromResult<GoogleJsonWebSignature.Payload?>(null);

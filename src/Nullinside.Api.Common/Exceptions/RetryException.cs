@@ -1,8 +1,11 @@
-﻿namespace Nullinside.Api.Common.Exceptions;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Nullinside.Api.Common.Exceptions;
 
 /// <summary>
 ///   An exception thrown if an action continues to fail after retrying.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class RetryException : Exception {
   /// <summary>
   ///   Initializes a new instance of the <see cref="RetryException" /> class.

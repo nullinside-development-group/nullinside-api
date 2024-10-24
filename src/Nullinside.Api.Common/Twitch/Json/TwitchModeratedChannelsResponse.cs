@@ -1,8 +1,11 @@
-﻿namespace Nullinside.Api.Common.Twitch.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Nullinside.Api.Common.Twitch.Json;
 
 /// <summary>
 ///   The response to a query for what channels a user is moderator for.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class TwitchModeratedChannelsResponse {
   /// <summary>
   ///   The list of channels the user moderates for.
@@ -18,6 +21,7 @@ public class TwitchModeratedChannelsResponse {
 /// <summary>
 ///   A channel the user moderates.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class TwitchModeratedChannel {
   /// <summary>
   ///   The twitch id.
@@ -38,6 +42,7 @@ public class TwitchModeratedChannel {
 /// <summary>
 ///   Pagination information.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class Pagination {
   /// <summary>
   ///   The cursor to pass to "after" for pagination.

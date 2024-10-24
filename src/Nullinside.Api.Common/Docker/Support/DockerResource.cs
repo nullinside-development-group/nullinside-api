@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Nullinside.Api.Common.Docker.Support;
 
 /// <summary>
 ///   A docker resource representing either a docker compose project
 ///   or a single docker container.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class DockerResource {
   /// <summary>
   ///   Initializes a new instance of the <see cref="DockerResource" /> class.

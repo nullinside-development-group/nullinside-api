@@ -106,7 +106,7 @@ public class DockerControllerTests : UnitTestBase {
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure we called the 3rd party API with a value of "Good" to turn on a compose.
-    bool deployments = (bool)obj.Value;
+    bool deployments = (bool)obj.Value!;
     Assert.That(deployments, Is.True);
   }
 
@@ -137,7 +137,7 @@ public class DockerControllerTests : UnitTestBase {
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure we called the 3rd party API with a value of "Good" to turn on a container.
-    bool deployments = (bool)obj.Value;
+    bool deployments = (bool)obj.Value!;
     Assert.That(deployments, Is.True);
   }
 

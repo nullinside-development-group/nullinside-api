@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.AspNetCore.Authorization;
 
 namespace Nullinside.Api.Common.AspNetCore.Middleware;
@@ -5,6 +7,7 @@ namespace Nullinside.Api.Common.AspNetCore.Middleware;
 /// <summary>
 ///   Represents a requirement where a user is expected to have one role.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class BasicAuthorizationRequirement : IAuthorizationRequirement {
   /// <summary>
   ///   Initializes a new instance of the <see cref="BasicAuthorizationRequirement" /> class.
