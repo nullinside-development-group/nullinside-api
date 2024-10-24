@@ -57,10 +57,10 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpPost]
   [Route("login")]
-  public async Task<IActionResult> Login([FromForm] GoogleOpenIdToken creds, CancellationToken token) {
+  public async Task<RedirectResult> Login([FromForm] GoogleOpenIdToken creds, CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     try {
-      GoogleJsonWebSignature.Payload? credentials = await GoogleJsonWebSignature.ValidateAsync(creds.credential);
+      GoogleJsonWebSignature.Payload? credentials = await this.GenerateUserObject(creds);
       if (string.IsNullOrWhiteSpace(credentials?.Email)) {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
@@ -77,7 +77,15 @@ public class UserController : ControllerBase {
     }
   }
 
-
+  /// <summary>
+  /// Converts the credential string we get from google to a representation we read information from.
+  /// </summary>
+  /// <param name="creds">The credentials from Google.</param>
+  /// <returns>The user information object.</returns>
+  protected async virtual Task<GoogleJsonWebSignature.Payload?> GenerateUserObject(GoogleOpenIdToken creds) {
+    return await GoogleJsonWebSignature.ValidateAsync(creds.credential);
+  }
+  
   /// <summary>
   ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
   ///   redirects users back to the nullinside website.
@@ -95,7 +103,7 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpGet]
   [Route("twitch-login")]
-  public async Task<IActionResult> TwitchLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
+  public async Task<RedirectResult> TwitchLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     if (null == await api.CreateAccessToken(code, token)) {
@@ -123,13 +131,13 @@ public class UserController : ControllerBase {
   [Route("roles")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public IActionResult GetRoles() {
+  public ObjectResult GetRoles() {
     return Ok(new {
       roles =
         (from identify in User.Identities
           from claim in identify.Claims
           where claim.Type == ClaimTypes.Role
-          select claim.Value).Distinct()
+          select claim.Value).Distinct().ToList()
     });
   }
 
@@ -137,15 +145,16 @@ public class UserController : ControllerBase {
   ///   Validates that the provided token is valid.
   /// </summary>
   /// <param name="token">The token to validate.</param>
+  /// <param name="cancellationToken">The cancellation token.</param>
   /// <returns>200 if successful, 401 otherwise.</returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("token/validate")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<IActionResult> Validate(AuthToken token) {
+  public async Task<IActionResult> Validate(AuthToken token, CancellationToken cancellationToken = new()) {
     try {
-      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned);
+      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned, cancellationToken);
       if (null == existing) {
         return Unauthorized();
       }

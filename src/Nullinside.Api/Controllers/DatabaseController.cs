@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using log4net;
 
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +15,7 @@ namespace Nullinside.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
+[ExcludeFromCodeCoverage(Justification = "This is only to do database migrations, nothing to test.")]
 public class DatabaseController : ControllerBase {
   /// <summary>
   ///   The nullinside database.
@@ -39,7 +42,7 @@ public class DatabaseController : ControllerBase {
   [AllowAnonymous]
   [HttpGet]
   [Route("migration")]
-  public async Task<IActionResult> Migrate() {
+  public async Task<StatusCodeResult> Migrate() {
     await _dbContext.Database.MigrateAsync();
     return Ok();
   }
