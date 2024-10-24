@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   Represents the response from google for an OpenId token.
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "JSON")]
 public class GoogleOpenIdToken {
   /// <summary>
   ///   The cross site scripting check.

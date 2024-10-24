@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Nullinside.Api.Shared.Json;
 
 /// <summary>
 ///   Represents an authentication token provided to the site via a "Bearer" token header.
 /// </summary>
+[ExcludeFromCodeCoverage(Justification = "JSON")]
 public class AuthToken {
   /// <summary>
   ///   Initializes a new instance of the <see cref="AuthToken" /> class.

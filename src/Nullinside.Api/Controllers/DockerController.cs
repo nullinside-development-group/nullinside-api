@@ -52,7 +52,7 @@ public class DockerController : ControllerBase {
   [HttpGet]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<IActionResult> GetDockerResources(CancellationToken token) {
+  public async Task<ObjectResult> GetDockerResources(CancellationToken token = new()) {
     // Get all existing docker containers and docker projects.
     Task<IEnumerable<DockerResource>> containers = _docker.GetContainers(token);
     Task<IEnumerable<DockerResource>> projects = _docker.GetDockerComposeProjects(token);
@@ -93,8 +93,8 @@ public class DockerController : ControllerBase {
   [HttpPost("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<IActionResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request,
-    CancellationToken token) {
+  public async Task<ObjectResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request,
+    CancellationToken token = new()) {
     DockerDeployments? recognizedProjects = await _dbContext.DockerDeployments
       .FirstOrDefaultAsync(d => d.Id == id, token);
     if (null == recognizedProjects) {

@@ -32,7 +32,6 @@
     <ItemGroup>
         <Folder Include="Nullinside.Api.Common.AspNetCore\"/>
         <Folder Include="Nullinside.Api.Common\"/>
-        <Folder Include="Nullinside.Api\"/>
     </ItemGroup>
 
     <ItemGroup>

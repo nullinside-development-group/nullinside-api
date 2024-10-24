@@ -39,10 +39,7 @@ public class FeatureToggleController : ControllerBase {
   /// <returns>The collection of feature toggles.</returns>
   [AllowAnonymous]
   [HttpGet]
-  public async Task<IActionResult> GetAll(CancellationToken token) {
-    return Ok((await _dbContext.FeatureToggle
-        .ToListAsync(token))
-      .Select(r => new { r.Feature, r.IsEnabled })
-    );
+  public async Task<ObjectResult> GetAll(CancellationToken token = new()) {
+    return Ok(await _dbContext.FeatureToggle.ToListAsync(token));
   }
 }

@@ -1,31 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-
-using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Model.Shared;
 
 namespace Nullinside.Api.Tests.Nullinside.Api.Model.Shared;
 
-public class UserHelpersTests {
-  private INullinsideContext _db;
-
-  [SetUp]
-  public void Setup() {
-    // Create an in-memory database to fake the SQL queries. Note that we generate a random GUID for the name
-    // here. If you use the same name more than once you'll get collisions between tests.
-    DbContextOptions<NullinsideContext> contextOptions = new DbContextOptionsBuilder<NullinsideContext>()
-      .UseInMemoryDatabase(Guid.NewGuid().ToString())
-      .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning))
-      .Options;
-    _db = new NullinsideContext(contextOptions);
-  }
-
-  [TearDown]
-  public async Task TearDown() {
-    await _db.DisposeAsync();
-  }
-
+/// <summary>
+///   Tests for the <see cref="UserHelpers" /> class.
+/// </summary>
+public class UserHelpersTests : UnitTestBase {
   /// <summary>
   ///   The case where a user is generating a new token to replace their existing one.
   /// </summary>
