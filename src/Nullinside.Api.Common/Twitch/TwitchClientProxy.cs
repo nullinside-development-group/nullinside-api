@@ -300,6 +300,21 @@ public class TwitchClientProxy : ITwitchClientProxy {
             client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
             client.OnUserBanned += TwitchChatClient_OnUserBanned;
             client.OnRaidNotification += TwitchChatClient_OnRaidNotification;
+            client.OnDisconnected += (sender, args) => {
+              LOG.Error("Twitch Client Disconnected");
+            };
+            client.OnConnectionError += (sender, args) => {
+              LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
+            };
+            client.OnError += (sender, args) => {
+              LOG.Error($"Twitch Client Error: {args.Exception.Message}");
+            };
+            client.OnIncorrectLogin += (sender, args) => {
+              LOG.Error($"Twitch Client Incorrect Login: {args.Exception.Message}");
+            };
+            client.OnNoPermissionError += (sender, args) => {
+              LOG.Error("Twitch Client No Permission Error");
+            };
           }
 
           try {
