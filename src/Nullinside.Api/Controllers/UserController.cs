@@ -122,6 +122,33 @@ public class UserController : ControllerBase {
 
     return Redirect($"{siteUrl}/user/login?token={bearerToken}");
   }
+  
+  /// <summary>
+  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
+  ///   redirects users back to the nullinside website.
+  /// </summary>
+  /// <param name="code">The credentials provided by twitch.</param>
+  /// <param name="api">The twitch api.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
+  /// </returns>
+  [AllowAnonymous]
+  [HttpGet]
+  [Route("twitch-login/twitch-streaming-tools")]
+  public async Task<RedirectResult> TwitchStreamingToolsLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
+    CancellationToken token = new()) {
+    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    if (null == await api.CreateAccessToken(code, token)) {
+      return Redirect($"{siteUrl}/user/login?error=3");
+    }
+
+    return Redirect($"{siteUrl}/user/login?token={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}&desktop=true");
+  }
 
   /// <summary>
   ///   Gets the roles of the current user.
