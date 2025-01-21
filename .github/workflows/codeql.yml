@@ -34,7 +34,7 @@ jobs:
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.x.x
+          dotnet-version: 9.x.x
       
       # Execute the build
       - name: Execute Release Build
@@ -54,7 +54,7 @@ jobs:
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.x.x
+          dotnet-version: 9.x.x
 
       # Execute the tests
       - name: Execute Tests
@@ -114,7 +114,7 @@ jobs:
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.x.x
+          dotnet-version: 9.x.x
       
       # Execute the build
       - name: Execute Build
