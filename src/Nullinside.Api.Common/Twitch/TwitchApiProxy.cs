@@ -32,17 +32,17 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <summary>
   ///   The, public, twitch client id.
   /// </summary>
-  private static readonly string ClientId = Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_ID")!;
+  protected readonly string? _clientId;
 
   /// <summary>
   ///   The, private, twitch client secret.
   /// </summary>
-  private static readonly string ClientSecret = Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_SECRET")!;
+  protected readonly string? _clientSecret;
 
   /// <summary>
   ///   The redirect url.
   /// </summary>
-  private static readonly string ClientRedirect = Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_REDIRECT")!;
+  protected readonly string? _clientRedirect;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchApiProxy" /> class.
@@ -56,7 +56,18 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <param name="token">The access token.</param>
   /// <param name="refreshToken">The refresh token.</param>
   /// <param name="tokenExpires">When the token expires (utc).</param>
-  public TwitchApiProxy(string token, string refreshToken, DateTime tokenExpires) {
+  /// <param name="clientId">The client id of the registered twitch app, uses environment variable
+  /// "TWITCH_BOT_CLIENT_ID" when null.</param>
+  /// <param name="clientSecret">The client secret of the registered twitch app, uses environment variable
+  /// "TWITCH_BOT_CLIENT_SECRET" when null.</param>
+  /// <param name="clientRedirect">The url to redirect to from the registered twitch app, uses environment variable
+  /// "TWITCH_BOT_CLIENT_REDIRECT" when null.</param>
+  public TwitchApiProxy(string token, string refreshToken, DateTime tokenExpires, string? clientId = null, 
+    string? clientSecret = null, string? clientRedirect = null) {
+    _clientId = clientId ?? Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_ID");
+    _clientSecret = clientSecret ?? Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_SECRET");
+    _clientRedirect = clientRedirect ?? Environment.GetEnvironmentVariable("TWITCH_BOT_CLIENT_REDIRECT");
+    
     OAuth = new TwitchAccessToken {
       AccessToken = token,
       RefreshToken = refreshToken,
@@ -73,9 +84,9 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public TwitchAccessToken? OAuth { get; set; }
 
   /// <inheritdoc />
-  public async Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new()) {
+  public virtual async Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new()) {
     ITwitchAPI api = GetApi();
-    AuthCodeResponse? response = await api.Auth.GetAccessTokenFromCodeAsync(code, ClientSecret, ClientRedirect);
+    AuthCodeResponse? response = await api.Auth.GetAccessTokenFromCodeAsync(code, _clientSecret, _clientRedirect);
     if (null == response) {
       return null;
     }
@@ -89,10 +100,14 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new()) {
+  public virtual async Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new()) {
     try {
+      if (string.IsNullOrWhiteSpace(_clientSecret) || string.IsNullOrWhiteSpace(_clientId)) {
+        return null;
+      }
+      
       ITwitchAPI api = GetApi();
-      RefreshResponse? response = await api.Auth.RefreshAuthTokenAsync(OAuth?.RefreshToken, ClientSecret, ClientId);
+      RefreshResponse? response = await api.Auth.RefreshAuthTokenAsync(OAuth?.RefreshToken, _clientSecret, _clientId);
       if (null == response) {
         return null;
       }
@@ -111,11 +126,16 @@ public class TwitchApiProxy : ITwitchApiProxy {
 
   /// <inheritdoc />
   public async Task<bool> GetAccessTokenIsValid(CancellationToken token = new()) {
-    return !string.IsNullOrWhiteSpace((await GetUser(token)).id);
+    try {
+      return !string.IsNullOrWhiteSpace((await GetUser(token)).id);
+    }
+    catch {
+      return false;
+    }
   }
 
   /// <inheritdoc />
-  public async Task<(string? id, string? username)> GetUser(CancellationToken token = new()) {
+  public virtual async Task<(string? id, string? username)> GetUser(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
       GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
@@ -129,7 +149,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<string?> GetUserEmail(CancellationToken token = new()) {
+  public virtual  async Task<string?> GetUserEmail(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
       GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
@@ -142,7 +162,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<IEnumerable<TwitchModeratedChannel>> GetUserModChannels(string userId) {
+  public virtual  async Task<IEnumerable<TwitchModeratedChannel>> GetUserModChannels(string userId) {
     using var client = new HttpClient();
 
     var ret = new List<TwitchModeratedChannel>();
@@ -155,7 +175,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
 
       var request = new HttpRequestMessage(HttpMethod.Get, url);
       request.Headers.Add("Authorization", $"Bearer {OAuth?.AccessToken}");
-      request.Headers.Add("Client-Id", ClientId);
+      request.Headers.Add("Client-Id", _clientId);
 
       using HttpResponseMessage response = await client.SendAsync(request);
       response.EnsureSuccessStatusCode();
@@ -173,7 +193,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<IEnumerable<BannedUser>> BanChannelUsers(string channelId, string botId,
+  public virtual  async Task<IEnumerable<BannedUser>> BanChannelUsers(string channelId, string botId,
     IEnumerable<(string Id, string Username)> users, string reason, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
@@ -207,7 +227,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<IEnumerable<Chatter>> GetChannelUsers(string channelId, string botId,
+  public virtual  async Task<IEnumerable<Chatter>> GetChannelUsers(string channelId, string botId,
     CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
@@ -231,7 +251,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<IEnumerable<string>> GetChannelsLive(IEnumerable<string> userIds) {
+  public virtual  async Task<IEnumerable<string>> GetChannelsLive(IEnumerable<string> userIds) {
     ITwitchAPI api = GetApi();
 
     // We can only query 100 at a time, so throttle the search.
@@ -255,7 +275,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<IEnumerable<Moderator>> GetChannelMods(string channelId, CancellationToken token = new()) {
+  public virtual  async Task<IEnumerable<Moderator>> GetChannelMods(string channelId, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
 
@@ -282,7 +302,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public async Task<bool> AddChannelMod(string channelId, string userId, CancellationToken token = new()) {
+  public virtual  async Task<bool> AddChannelMod(string channelId, string userId, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
       await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId);
@@ -294,10 +314,10 @@ public class TwitchApiProxy : ITwitchApiProxy {
   ///   Gets a new instance of the <see cref="TwitchAPI" />.
   /// </summary>
   /// <returns>A new instance of the <see cref="TwitchAPI" />.</returns>
-  protected ITwitchAPI GetApi() {
+  protected virtual ITwitchAPI GetApi() {
     var api = new TwitchAPI {
       Settings = {
-        ClientId = ClientId,
+        ClientId = _clientId,
         AccessToken = OAuth?.AccessToken
       }
     };
