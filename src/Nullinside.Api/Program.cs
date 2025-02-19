@@ -31,7 +31,7 @@ builder.Services.AddDbContext<INullinsideContext, NullinsideContext>(optionsBuil
       builder.EnableRetryOnFailure(3);
     }));
 builder.Services.AddScoped<IAuthorizationHandler, BasicAuthorizationHandler>();
-builder.Services.AddScoped<ITwitchApiProxy, TwitchApiProxy>();
+builder.Services.AddTransient<ITwitchApiProxy, TwitchApiProxy>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", _ => { });
 builder.Services.AddScoped<IDockerProxy, DockerProxy>();

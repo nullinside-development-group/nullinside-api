@@ -14,6 +14,11 @@ public interface ITwitchApiProxy {
   ///   The Twitch access token. These are the credentials used for all requests.
   /// </summary>
   TwitchAccessToken? OAuth { get; set; }
+  
+  /// <summary>
+  ///   The Twitch app configuration. These are used for all requests.
+  /// </summary>
+  TwitchAppConfig? TwitchAppConfig { get; set; }
 
   /// <summary>
   ///   Creates a new access token from a code using Twitch's OAuth workflow.

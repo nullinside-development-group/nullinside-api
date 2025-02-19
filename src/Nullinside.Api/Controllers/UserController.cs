@@ -122,6 +122,69 @@ public class UserController : ControllerBase {
 
     return Redirect($"{siteUrl}/user/login?token={bearerToken}");
   }
+  
+  /// <summary>
+  ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
+  ///   redirects users back to the nullinside website.
+  /// </summary>
+  /// <param name="code">The credentials provided by twitch.</param>
+  /// <param name="api">The twitch api.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
+  /// </returns>
+  [AllowAnonymous]
+  [HttpGet]
+  [Route("twitch-login/twitch-streaming-tools")]
+  public async Task<RedirectResult> TwitchStreamingToolsLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
+    CancellationToken token = new()) {
+    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    if (null == await api.CreateAccessToken(code, token)) {
+      return Redirect($"{siteUrl}/user/login/desktop?error=3");
+    }
+
+    return Redirect($"{siteUrl}/user/login/desktop?bearer={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}");
+  }
+  
+  /// <summary>
+  ///   Used to refresh OAuth tokens from the desktop application.
+  /// </summary>
+  /// <param name="refreshToken">The oauth refresh token provided by twitch.</param>
+  /// <param name="api">The twitch api.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
+  /// </returns>
+  [AllowAnonymous]
+  [HttpPost]
+  [Route("twitch-login/twitch-streaming-tools")]
+  public async Task<IActionResult> TwitchStreamingToolsRefreshToken(string refreshToken, [FromServices] ITwitchApiProxy api,
+    CancellationToken token = new()) {
+    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    api.OAuth = new() {
+      AccessToken = null,
+      RefreshToken = refreshToken,
+      ExpiresUtc = DateTime.MinValue
+    };
+    
+    if (null == await api.RefreshAccessToken(token)) {
+      return this.BadRequest();
+    }
+
+    return Ok(new {
+      bearer = api.OAuth.AccessToken,
+      refresh = api.OAuth.RefreshToken,
+      expiresUtc = api.OAuth.ExpiresUtc
+    });
+  }
 
   /// <summary>
   ///   Gets the roles of the current user.
