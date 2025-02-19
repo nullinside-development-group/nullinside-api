@@ -144,10 +144,46 @@ public class UserController : ControllerBase {
     CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     if (null == await api.CreateAccessToken(code, token)) {
-      return Redirect($"{siteUrl}/user/login?error=3");
+      return Redirect($"{siteUrl}/user/login/desktop?error=3");
     }
 
-    return Redirect($"{siteUrl}/user/login?token={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}&desktop=true");
+    return Redirect($"{siteUrl}/user/login/desktop?bearer={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}");
+  }
+  
+  /// <summary>
+  ///   Used to refresh OAuth tokens from the desktop application.
+  /// </summary>
+  /// <param name="refreshToken">The oauth refresh token provided by twitch.</param>
+  /// <param name="api">The twitch api.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>
+  ///   A redirect to the nullinside website.
+  ///   Errors:
+  ///   2 = Internal error generating token.
+  ///   3 = Code was invalid
+  ///   4 = Twitch account has no email
+  /// </returns>
+  [AllowAnonymous]
+  [HttpPost]
+  [Route("twitch-login/twitch-streaming-tools")]
+  public async Task<IActionResult> TwitchStreamingToolsRefreshToken(string refreshToken, [FromServices] ITwitchApiProxy api,
+    CancellationToken token = new()) {
+    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    api.OAuth = new() {
+      AccessToken = null,
+      RefreshToken = refreshToken,
+      ExpiresUtc = DateTime.MinValue
+    };
+    
+    if (null == await api.RefreshAccessToken(token)) {
+      return this.BadRequest();
+    }
+
+    return Ok(new {
+      bearer = api.OAuth.AccessToken,
+      refresh = api.OAuth.RefreshToken,
+      expiresUtc = api.OAuth.ExpiresUtc
+    });
   }
 
   /// <summary>
