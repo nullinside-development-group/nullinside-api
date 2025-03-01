@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Nullinside.Api.Model.Ddl;
@@ -60,6 +62,7 @@ public class User : ITableModel {
   /// <summary>
   ///   The last timestamp of when the user logged into the site.
   /// </summary>
+  [Timestamp]
   public DateTime UpdatedOn { get; set; }
 
   /// <summary>
@@ -92,6 +95,8 @@ public class User : ITableModel {
         .HasMaxLength(255);
       entity.Property(e => e.Token)
         .HasMaxLength(255);
+      entity.Property(e => e.UpdatedOn)
+        .IsRowVersion();
       // TODO: Add the other strings in this file with lengths
     });
   }
