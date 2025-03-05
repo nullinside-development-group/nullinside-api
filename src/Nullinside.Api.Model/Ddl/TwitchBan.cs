@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using MySql.EntityFrameworkCore.Extensions;
+
 namespace Nullinside.Api.Model.Ddl;
 
 /// <summary>
@@ -39,6 +41,8 @@ public class TwitchBan : ITableModel {
   public void OnModelCreating(ModelBuilder modelBuilder) {
     modelBuilder.Entity<TwitchBan>(entity => {
       entity.HasKey(e => e.Id);
+      entity.Property(e => e.Id)
+        .UseMySQLAutoIncrementColumn("int");
       entity.Property(e => e.ChannelId)
         .HasMaxLength(255);
       entity.Property(e => e.BannedUserTwitchId)
