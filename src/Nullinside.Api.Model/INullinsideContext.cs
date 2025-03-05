@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 using Nullinside.Api.Model.Ddl;
@@ -77,23 +76,4 @@ public interface INullinsideContext : IAsyncDisposable {
   ///   The number of state entries written to the database.
   /// </returns>
   int SaveChanges();
-
-  /// <summary>
-  ///     Gets an <see cref="EntityEntry" /> for the given entity. The entry provides
-  ///     access to change tracking information and operations for the entity.
-  /// </summary>
-  /// <remarks>
-  ///     <para>
-  ///         This method may be called on an entity that is not tracked. You can then
-  ///         set the <see cref="EntityEntry.State" /> property on the returned entry
-  ///         to have the context begin tracking the entity in the specified state.
-  ///     </para>
-  ///     <para>
-  ///         See <see href="https://aka.ms/efcore-docs-entity-entries">Accessing tracked entities in EF Core</see> for more information and
-  ///         examples.
-  ///     </para>
-  /// </remarks>
-  /// <param name="entity">The entity to get the entry for.</param>
-  /// <returns>The entry for the given entity.</returns>
-  EntityEntry Entry(object entity);
 }
