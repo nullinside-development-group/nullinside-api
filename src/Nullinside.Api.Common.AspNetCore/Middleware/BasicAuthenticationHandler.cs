@@ -60,7 +60,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         .Include(i => i.Roles)
         .AsNoTracking()
         .FirstOrDefaultAsync(u => !string.IsNullOrWhiteSpace(u.Token) &&
-                                  u.Token.Equals(token, StringComparison.InvariantCultureIgnoreCase) &&
+                                  u.Token == token &&
                                   !u.IsBanned);
 
       if (null == dbUser) {
