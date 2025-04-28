@@ -23,8 +23,8 @@
 
     <ItemGroup>
         <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.68.0.1869"/>
-        <PackageReference Include="log4net" Version="2.0.17" />
-        <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" />
+        <PackageReference Include="log4net" Version="3.0.4" />
+        <PackageReference Include="log4net.Ext.Json" Version="3.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
