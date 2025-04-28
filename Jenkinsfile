@@ -23,9 +23,12 @@ pipeline {
 					string(credentialsId: 'TwitchBotClientSecret', variable: 'TWITCH_BOT_CLIENT_SECRET'),
 					string(credentialsId: 'TwitchBotClientRedirect', variable: 'TWITCH_BOT_CLIENT_REDIRECT')
 				]) {
-					sh """
-						bash go.sh 
-					"""
+					script {
+						def statusCode = sh script: "bash go.sh", returnStatus:true
+						if (statusCode != 0) {
+							error "Build Failed"
+						}
+					}
 				}
             }
         }
