@@ -67,6 +67,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The callback(s) to invoke when a channel receives a ban message.
   /// </summary>
   private Action<OnUserBannedArgs>? onUserBanReceived;
+  
+  /// <summary>
+  ///   The callback(s) to invoke when a new instance is created.
+  /// </summary>
+  private static Action<TwitchClientProxy>? onInstanceCreated;
 
   /// <summary>
   ///   The web socket to connect to twitch chat with.
@@ -93,6 +98,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     get {
       if (null == instance) {
         instance = new TwitchClientProxy();
+        onInstanceCreated?.Invoke(instance);
       }
 
       return instance;
@@ -163,6 +169,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <inheritdoc />
   public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
     onMessageReceived -= callback;
+  }
+  
+  /// <inheritdoc />
+  public void AddInstanceCallback(Action<TwitchClientProxy> callback) {
+    onInstanceCreated -= callback;
+    onInstanceCreated += callback;
+  }
+
+  /// <inheritdoc />
+  public void RemoveInstanceCallback(Action<TwitchClientProxy> callback) {
+    onInstanceCreated -= callback;
   }
 
   /// <inheritdoc />
@@ -408,8 +425,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="disposing">True if called directly, false if called from the destructor.</param>
   protected virtual void Dispose(bool disposing) {
     if (disposing) {
+      client?.Disconnect();
       twitchChatClientReconnect?.Dispose();
       socket?.Dispose();
     }
+    
+    instance = null;
   }
 }
