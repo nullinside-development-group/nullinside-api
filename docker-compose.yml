@@ -1,6 +1,10 @@
 name: nullinside-api
 services:
     nullinside-api:
+        build:
+            context: .
+            tags:
+                - "nullinside-api:latest"
         logging:
             driver: loki
             options:
