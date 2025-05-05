@@ -39,9 +39,10 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <summary>
   ///   Removes a callback for when the channel receives a new chat message.
   /// </summary>
+  /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
-  void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback);
+  void RemoveMessageCallback(string channel, Action<OnMessageReceivedArgs> callback);
 
   /// <summary>
   ///   Adds a callback for when users are banned from the chat.
@@ -53,8 +54,9 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <summary>
   ///   Removes a callback for when users are banned from the chat.
   /// </summary>
+  /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove from when a user is banned.</param>
-  void RemoveBannedCallback(Action<OnUserBannedArgs> callback);
+  void RemoveBannedCallback(string channel, Action<OnUserBannedArgs> callback);
 
   /// <summary>
   ///   Adds a callback for when the channel receives a raid.
@@ -67,7 +69,8 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <summary>
   ///   Removes a callback for when the channel receives a raid.
   /// </summary>
+  /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
-  void RemoveRaidCallback(Action<OnRaidNotificationArgs> callback);
+  void RemoveRaidCallback(string channel, Action<OnRaidNotificationArgs> callback);
 }
