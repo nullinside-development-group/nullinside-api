@@ -61,12 +61,12 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <summary>
   ///   The callback(s) to invoke when a channel is raided.
   /// </summary>
-  private Dictionary<string, Action<OnRaidNotificationArgs>?> onRaid;
+  private Dictionary<string, Action<OnRaidNotificationArgs>?> onRaid = new();
 
   /// <summary>
   ///   The callback(s) to invoke when a channel receives a ban message.
   /// </summary>
-  private Dictionary<string, Action<OnUserBannedArgs>?> onUserBanReceived;
+  private Dictionary<string, Action<OnUserBannedArgs>?> onUserBanReceived = new();
 
   /// <summary>
   ///   The web socket to connect to twitch chat with.
