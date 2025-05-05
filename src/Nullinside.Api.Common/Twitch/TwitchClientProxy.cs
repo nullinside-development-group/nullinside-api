@@ -30,11 +30,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private static TwitchClientProxy? instance;
 
   /// <summary>
-  ///   The callback(s) to invoke when a new instance is created.
-  /// </summary>
-  private static Action<TwitchClientProxy>? onInstanceCreated;
-
-  /// <summary>
   ///   The list of chats we attempted to join with the bot.
   /// </summary>
   /// <remarks>
@@ -61,17 +56,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <summary>
   ///   The callback(s) to invoke when a channel receives a chat message.
   /// </summary>
-  private Action<OnMessageReceivedArgs>? onMessageReceived;
+  private Dictionary<string, Action<OnMessageReceivedArgs>?> _onMessageReceived = new();
 
   /// <summary>
   ///   The callback(s) to invoke when a channel is raided.
   /// </summary>
-  private Action<OnRaidNotificationArgs>? onRaid;
+  private Dictionary<string, Action<OnRaidNotificationArgs>?> onRaid;
 
   /// <summary>
   ///   The callback(s) to invoke when a channel receives a ban message.
   /// </summary>
-  private Action<OnUserBannedArgs>? onUserBanReceived;
+  private Dictionary<string, Action<OnUserBannedArgs>?> onUserBanReceived;
 
   /// <summary>
   ///   The web socket to connect to twitch chat with.
@@ -98,7 +93,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
     get {
       if (null == instance) {
         instance = new TwitchClientProxy();
-        onInstanceCreated?.Invoke(instance);
       }
 
       return instance;
@@ -162,56 +156,66 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <inheritdoc />
   public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
     await JoinChannel(channel);
-    onMessageReceived -= callback;
-    onMessageReceived += callback;
+    var channelSan = channel.ToLowerInvariant();
+    lock (_onMessageReceived) {
+      _onMessageReceived[channelSan] = callback;
+    }
   }
 
   /// <inheritdoc />
-  public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
-    onMessageReceived -= callback;
+  public void RemoveMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
+    bool shouldRemove = false;
+    var channelSan = channel.ToLowerInvariant();
+    lock (_onMessageReceived) {
+      _onMessageReceived.Remove(channel);
+    }
+
+    if (shouldRemove) {
+      client?.LeaveChannel(channelSan);
+      
+      // First add the channel to the master list.
+      lock (joinedChannels) {
+        joinedChannels.Add(channelSan);
+      }
+    }
   }
 
   /// <inheritdoc />
   public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
     await JoinChannel(channel);
 
-    onUserBanReceived -= callback;
-    onUserBanReceived += callback;
+    lock (onUserBanReceived) {
+      onUserBanReceived[channel] = callback;
+    }
   }
 
   /// <inheritdoc />
-  public void RemoveBannedCallback(Action<OnUserBannedArgs> callback) {
-    onUserBanReceived -= callback;
+  public void RemoveBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
+    lock (onUserBanReceived) {
+      onUserBanReceived.Remove(channel);
+    }
   }
 
   /// <inheritdoc />
   public async Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
     await JoinChannel(channel);
 
-    onRaid -= callback;
-    onRaid += callback;
+    lock (onRaid) {
+      onRaid[channel] = callback;
+    }
   }
 
   /// <inheritdoc />
-  public void RemoveRaidCallback(Action<OnRaidNotificationArgs> callback) {
-    onRaid -= callback;
+  public void RemoveRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
+    lock (onRaid) {
+      onRaid.Remove(channel);
+    }
   }
 
   /// <inheritdoc />
   public ValueTask DisposeAsync() {
     Dispose();
     return ValueTask.CompletedTask;
-  }
-
-  /// <inheritdoc />
-  public void AddInstanceCallback(Action<TwitchClientProxy> callback) {
-    onInstanceCreated -= callback;
-    onInstanceCreated += callback;
-  }
-
-  /// <inheritdoc />
-  public void RemoveInstanceCallback(Action<TwitchClientProxy> callback) {
-    onInstanceCreated -= callback;
   }
 
   /// <summary>
@@ -303,6 +307,10 @@ public class TwitchClientProxy : ITwitchClientProxy {
       try {
         bool isConnected = false;
         lock (twitchClientLock) {
+          if (client?.IsConnected ?? false) {
+            return true;
+          }
+          
           // If this is a first time initialization, create a brand-new client.
           bool haveNoClient = null == client;
           if (haveNoClient) {
@@ -377,7 +385,13 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="sender">The twitch client.</param>
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnRaidNotification(object? sender, OnRaidNotificationArgs e) {
-    Delegate[]? invokeList = onRaid?.GetInvocationList();
+    Action<OnRaidNotificationArgs>? callback;
+    var channel = e.Channel.ToLowerInvariant();
+    lock (onRaid) {
+      onRaid.TryGetValue(channel, out callback);
+    }
+    
+    Delegate[]? invokeList = callback?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
@@ -393,7 +407,19 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="sender">The twitch client.</param>
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnMessageReceived(object? sender, OnMessageReceivedArgs e) {
-    Delegate[]? invokeList = onMessageReceived?.GetInvocationList();
+    Action<OnMessageReceivedArgs>? callbacks = null;
+    var channelSan = e.ChatMessage.Channel.ToLowerInvariant();
+    lock (_onMessageReceived) {
+      if (_onMessageReceived.TryGetValue(channelSan, out Action<OnMessageReceivedArgs>? messageReceivedCallback)) {
+        callbacks = messageReceivedCallback;
+      }
+    }
+
+    if (null == callbacks) {
+      return;
+    }
+
+    Delegate[]? invokeList = callbacks?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
@@ -409,7 +435,13 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="sender">The twitch client.</param>
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnUserBanned(object? sender, OnUserBannedArgs e) {
-    Delegate[]? invokeList = onUserBanReceived?.GetInvocationList();
+    Action<OnUserBannedArgs>? callback;
+    var channel = e.UserBan.Channel.ToLowerInvariant();
+    lock (onUserBanReceived) {
+      onUserBanReceived.TryGetValue(channel, out callback);
+    }
+    
+    Delegate[]? invokeList = callback?.GetInvocationList();
     if (null == invokeList) {
       return;
     }
