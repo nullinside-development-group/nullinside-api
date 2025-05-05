@@ -30,6 +30,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private static TwitchClientProxy? instance;
 
   /// <summary>
+  ///   The callback(s) to invoke when a new instance is created.
+  /// </summary>
+  private static Action<TwitchClientProxy>? onInstanceCreated;
+
+  /// <summary>
   ///   The list of chats we attempted to join with the bot.
   /// </summary>
   /// <remarks>
@@ -67,11 +72,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The callback(s) to invoke when a channel receives a ban message.
   /// </summary>
   private Action<OnUserBannedArgs>? onUserBanReceived;
-  
-  /// <summary>
-  ///   The callback(s) to invoke when a new instance is created.
-  /// </summary>
-  private static Action<TwitchClientProxy>? onInstanceCreated;
 
   /// <summary>
   ///   The web socket to connect to twitch chat with.
@@ -170,17 +170,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   public void RemoveMessageCallback(Action<OnMessageReceivedArgs> callback) {
     onMessageReceived -= callback;
   }
-  
-  /// <inheritdoc />
-  public void AddInstanceCallback(Action<TwitchClientProxy> callback) {
-    onInstanceCreated -= callback;
-    onInstanceCreated += callback;
-  }
-
-  /// <inheritdoc />
-  public void RemoveInstanceCallback(Action<TwitchClientProxy> callback) {
-    onInstanceCreated -= callback;
-  }
 
   /// <inheritdoc />
   public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
@@ -212,6 +201,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
   public ValueTask DisposeAsync() {
     Dispose();
     return ValueTask.CompletedTask;
+  }
+
+  /// <inheritdoc />
+  public void AddInstanceCallback(Action<TwitchClientProxy> callback) {
+    onInstanceCreated -= callback;
+    onInstanceCreated += callback;
+  }
+
+  /// <inheritdoc />
+  public void RemoveInstanceCallback(Action<TwitchClientProxy> callback) {
+    onInstanceCreated -= callback;
   }
 
   /// <summary>
@@ -429,7 +429,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
       twitchChatClientReconnect?.Dispose();
       socket?.Dispose();
     }
-    
+
     instance = null;
   }
 }
