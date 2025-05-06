@@ -27,9 +27,9 @@ public static class UserHelpers {
     string? twitchUsername = null, string? twitchId = null) {
     string bearerToken = AuthUtils.GenerateBearerToken();
     try {
-      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, token);
       if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
-        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername, token);
+        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername && !u.IsBanned, token);
       }
       
       if (null == existing) {
