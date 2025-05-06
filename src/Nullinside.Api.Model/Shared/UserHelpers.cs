@@ -28,6 +28,10 @@ public static class UserHelpers {
     string bearerToken = AuthUtils.GenerateBearerToken();
     try {
       User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+      if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
+        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername, token);
+      }
+      
       if (null == existing) {
         dbContext.Users.Add(new User {
           Email = email,
