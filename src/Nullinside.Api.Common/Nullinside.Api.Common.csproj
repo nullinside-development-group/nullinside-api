@@ -17,8 +17,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="log4net" Version="3.0.4"/>
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.4"/>
+        <PackageReference Include="log4net" Version="3.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
         <PackageReference Include="SSH.NET" Version="2025.0.0"/>
         <PackageReference Include="TwitchLib.Api" Version="3.9.0"/>
