@@ -166,7 +166,7 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpPost]
   [Route("twitch-login/twitch-streaming-tools")]
-  public async Task<IActionResult> TwitchStreamingToolsRefreshToken(string refreshToken, [FromServices] ITwitchApiProxy api,
+  public async Task<IActionResult> TwitchStreamingToolsRefreshToken([FromForm]string refreshToken, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     api.OAuth = new() {
