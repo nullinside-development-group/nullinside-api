@@ -158,7 +158,9 @@ public class TwitchClientProxy : ITwitchClientProxy {
     await JoinChannel(channel);
     var channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
-      _onMessageReceived[channelSan] = callback;
+      if (!_onMessageReceived.TryAdd(channelSan, callback)) {
+        _onMessageReceived[channelSan] += callback;
+      }
     }
   }
 
@@ -167,7 +169,16 @@ public class TwitchClientProxy : ITwitchClientProxy {
     bool shouldRemove = false;
     var channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
-      _onMessageReceived.Remove(channel);
+      if (_onMessageReceived.ContainsKey(channelSan)) {
+        var item = _onMessageReceived[channelSan];
+        item -= callback;
+        if (null == item) {
+          _onMessageReceived.Remove(channelSan);
+        }
+        else {
+          _onMessageReceived[channelSan] = item;
+        }
+      }
     }
 
     if (shouldRemove) {
@@ -233,33 +244,31 @@ public class TwitchClientProxy : ITwitchClientProxy {
     if (!await Connect()) {
       return false;
     }
-
-    return await Task.Run(() => {
-      try {
-        // If we don't have a client, give up.
-        if (null == client) {
-          return false;
-        }
-
-        lock (twitchClientLock) {
-          // If we are already in the channel, we are done.
-          if (null != client.JoinedChannels.FirstOrDefault(c =>
-                channel.Equals(c.Channel, StringComparison.InvariantCultureIgnoreCase))) {
-            return true;
-          }
-
-          // Otherwise, join the channel. At one point we waited here on the "OnJoinedChannel" to ensure the
-          // connection before moving onto the next channel. However, it was causing a massive slowdown in
-          // the application, and we've been working fine without it...so for now...we try this...
-          client.JoinChannel(channel);
-        }
-
-        return true;
-      }
-      catch {
+    
+    try {
+      // If we don't have a client, give up.
+      if (null == client) {
         return false;
       }
-    });
+
+      lock (twitchClientLock) {
+        // If we are already in the channel, we are done.
+        if (null != client.JoinedChannels.FirstOrDefault(c =>
+              channel.Equals(c.Channel, StringComparison.InvariantCultureIgnoreCase))) {
+          return true;
+        }
+
+        // Otherwise, join the channel. At one point we waited here on the "OnJoinedChannel" to ensure the
+        // connection before moving onto the next channel. However, it was causing a massive slowdown in
+        // the application, and we've been working fine without it...so for now...we try this...
+        client.JoinChannel(channel);
+      }
+
+      return true;
+    }
+    catch {
+      return false;
+    }
   }
 
   /// <summary>
@@ -290,93 +299,92 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   Connects to twitch chat.
   /// </summary>
   /// <returns>True if successful, false otherwise.</returns>
-  private async Task<bool> Connect() {
+  private Task<bool> Connect() {
     // If we're already connected, we are good to go.
     lock (twitchClientLock) {
       if (client?.IsConnected ?? false) {
-        return true;
+        return Task.FromResult(true);
       }
     }
 
     // If we don't have the ability to connect, we can leave early.
     if (string.IsNullOrWhiteSpace(TwitchUsername) || string.IsNullOrWhiteSpace(TwitchOAuthToken)) {
-      return false;
+      return Task.FromResult(false);
     }
 
-    return await Task.Run(() => {
-      try {
-        bool isConnected = false;
-        lock (twitchClientLock) {
-          if (client?.IsConnected ?? false) {
-            return true;
-          }
-          
-          // If this is a first time initialization, create a brand-new client.
-          bool haveNoClient = null == client;
-          if (haveNoClient) {
-            var clientOptions = new ClientOptions
-              { MessagesAllowedInPeriod = 750, ThrottlingPeriod = TimeSpan.FromSeconds(30) };
-
-            socket = new WebSocketClient(clientOptions);
-            client = new TwitchClient(socket);
-            var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
-            client.Initialize(credentials);
-            client.AutoReListenOnException = true;
-            client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
-            client.OnUserBanned += TwitchChatClient_OnUserBanned;
-            client.OnRaidNotification += TwitchChatClient_OnRaidNotification;
-            client.OnDisconnected += (sender, args) => {
-              LOG.Error("Twitch Client Disconnected");
-            };
-            client.OnConnectionError += (sender, args) => {
-              LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
-            };
-            client.OnError += (sender, args) => {
-              LOG.Error($"Twitch Client Error: {args.Exception.Message}");
-            };
-            client.OnIncorrectLogin += (sender, args) => {
-              LOG.Error($"Twitch Client Incorrect Login: {args.Exception.Message}");
-            };
-            client.OnNoPermissionError += (sender, args) => {
-              LOG.Error("Twitch Client No Permission Error");
-            };
-          }
-
-          try {
-            // If we are not connect, connect.
-            if (null != client && !client.IsConnected) {
-              // If this is a new chat client, connect for the first time, otherwise reconnect.
-              Action connect = haveNoClient ? () => client.Connect() : () => client.Reconnect();
-              using var connectedEvent = new ManualResetEventSlim(false);
-              EventHandler<OnConnectedArgs> onConnected = (_, _) => connectedEvent.Set();
-              EventHandler<OnReconnectedEventArgs> onReconnect = (_, _) => connectedEvent.Set();
-              try {
-                client!.OnConnected += onConnected;
-                client!.OnReconnected += onReconnect;
-                connect();
-                if (!connectedEvent.Wait(30 * 1000)) {
-                  return false;
-                }
-              }
-              finally {
-                client.OnConnected -= onConnected;
-                client.OnReconnected -= onReconnect;
-              }
-            }
-          }
-          catch {
-          }
-
-          // Determine if we successfully connected.
-          isConnected = client?.IsConnected ?? false;
+    try {
+      bool isConnected = false;
+      lock (twitchClientLock) {
+        if (client?.IsConnected ?? false) {
+          return Task.FromResult(true);
         }
 
-        return isConnected;
+        // If this is a first time initialization, create a brand-new client.
+        bool haveNoClient = null == client;
+        if (haveNoClient) {
+          var clientOptions = new ClientOptions
+            { MessagesAllowedInPeriod = 750, ThrottlingPeriod = TimeSpan.FromSeconds(30) };
+
+          socket = new WebSocketClient(clientOptions);
+          client = new TwitchClient(socket);
+          var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
+          client.Initialize(credentials);
+          client.AutoReListenOnException = true;
+          client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
+          client.OnUserBanned += TwitchChatClient_OnUserBanned;
+          client.OnRaidNotification += TwitchChatClient_OnRaidNotification;
+          client.OnDisconnected += (sender, args) => {
+            LOG.Error("Twitch Client Disconnected");
+          };
+          client.OnConnectionError += (sender, args) => {
+            LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
+          };
+          client.OnError += (sender, args) => {
+            LOG.Error($"Twitch Client Error: {args.Exception.Message}");
+          };
+          client.OnIncorrectLogin += (sender, args) => {
+            LOG.Error($"Twitch Client Incorrect Login: {args.Exception.Message}");
+          };
+          client.OnNoPermissionError += (sender, args) => {
+            LOG.Error("Twitch Client No Permission Error");
+          };
+        }
+
+        try {
+          // If we are not connect, connect.
+          if (null != client && !client.IsConnected) {
+            // If this is a new chat client, connect for the first time, otherwise reconnect.
+            Action connect = haveNoClient ? () => client.Connect() : () => client.Reconnect();
+            using var connectedEvent = new ManualResetEventSlim(false);
+            EventHandler<OnConnectedArgs> onConnected = (_, _) => connectedEvent.Set();
+            EventHandler<OnReconnectedEventArgs> onReconnect = (_, _) => connectedEvent.Set();
+            try {
+              client!.OnConnected += onConnected;
+              client!.OnReconnected += onReconnect;
+              connect();
+              if (!connectedEvent.Wait(30 * 1000)) {
+                return Task.FromResult(false);
+              }
+            }
+            finally {
+              client.OnConnected -= onConnected;
+              client.OnReconnected -= onReconnect;
+            }
+          }
+        }
+        catch {
+          // Do nothing, just try.
+        }
+
+        // Determine if we successfully connected.
+        isConnected = client?.IsConnected ?? false;
       }
-      catch {
-        return false;
-      }
-    });
+
+      return Task.FromResult(isConnected);
+    }
+    catch {
+      return Task.FromResult(false);
+    }
   }
 
   /// <summary>
