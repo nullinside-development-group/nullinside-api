@@ -108,10 +108,15 @@ public class TwitchClientProxy : ITwitchClientProxy {
   public string? TwitchOAuthToken {
     get => _twitchOAuthToken;
     set {
+      if (value == _twitchOAuthToken) {
+        return;
+      }
+      
       _twitchOAuthToken = value;
 
       // If we have a client, try to connect.
       if (null != _client) {
+        _client.Disconnect();
         _client.SetConnectionCredentials(new ConnectionCredentials(TwitchUsername, value));
         Connect();
       }
