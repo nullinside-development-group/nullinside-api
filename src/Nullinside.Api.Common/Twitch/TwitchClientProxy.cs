@@ -117,8 +117,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
       // If we have a client, try to connect.
       if (null != _client) {
         _client.Disconnect();
-        _client.SetConnectionCredentials(new ConnectionCredentials(TwitchUsername, value));
-        Connect();
+
+        if (null != value) {
+          _client.SetConnectionCredentials(new ConnectionCredentials(TwitchUsername, value));
+          Connect();
+        }
       }
     }
   }
