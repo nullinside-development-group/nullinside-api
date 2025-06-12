@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.IO.Compression;
+using System.Net;
+
+using Microsoft.VisualBasic.FileIO;
 
 using Newtonsoft.Json;
 
@@ -35,5 +39,89 @@ public static class GitHubUpdateManager {
 
     string body = await response.Content.ReadAsStringAsync();
     return JsonConvert.DeserializeObject<GithubLatestReleaseJson>(body);
+  }
+
+  /// <summary>
+  ///   Prepares to update this application before this application is closed.
+  /// </summary>
+  public static async Task PrepareUpdate() {
+    // To prepare the update, we just need to back up our files
+    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+    string backupFolder = Path.Combine(ourFolder, "..", "backup");
+    await DeleteRetry(backupFolder);
+
+    Directory.CreateDirectory(backupFolder);
+    FileSystem.CopyDirectory(ourFolder, backupFolder);
+  }
+
+  /// <summary>
+  ///   Runs this application from the backup folder to initiate the update on the installed folder.
+  /// </summary>
+  public static void ExitApplicationToUpdate() {
+    // Since we have a backup folder from PrepareUpdate() we can just run the backup executable
+    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+    string backupFolder = Path.Combine(ourFolder, "..", "backup");
+    if (!Directory.Exists(backupFolder)) {
+      return;
+    }
+
+    string ourExecutable = $"{AppDomain.CurrentDomain.FriendlyName}.exe";
+
+    // we must pass the installation folder to the executable so it knows where to install
+    Process.Start(Path.Combine(backupFolder, ourExecutable), $"--update \"{ourFolder}\"");
+    Environment.Exit(0);
+  }
+
+  /// <summary>
+  ///   Performs the application update. This involves downloading the latest release from GitHub, extracting its contents
+  ///   to the installation folder, and closing the currently running application while running the new one.
+  /// </summary>
+  public static async Task PerformUpdateAndRestart(string owner, string repo, string installFolder, string assetName) {
+    // Delete the old install folder.
+    await DeleteRetry(installFolder);
+
+    // Get the latest version of the application from GitHub.
+    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+    string zipLocation = Path.Combine(ourFolder, assetName);
+    GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo);
+    using (var client = new HttpClient()) {
+      using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}");
+      await using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
+      await using var fileStream = new FileStream(zipLocation, FileMode.Create);
+      await streamToReadFrom.CopyToAsync(fileStream);
+    }
+
+    // Extract the zip file to the installation folder.
+    ZipFile.ExtractToDirectory(zipLocation, installFolder);
+
+    // Run the new version of the application.
+    Process.Start(Path.Combine(installFolder, $"{AppDomain.CurrentDomain.FriendlyName}.exe"), "--justUpdated");
+    
+    // Close this version of the application.
+    Environment.Exit(0);
+  }
+
+  /// <summary>
+  ///   Cleans up the previous update's files.
+  /// </summary>
+  public static async Task CleanupUpdate() {
+    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+    string backupFolder = Path.Combine(ourFolder, "..", "backup");
+
+    await DeleteRetry(backupFolder);
+  }
+
+  /// <summary>
+  /// Retries deleting a folder multiple times.
+  /// </summary>
+  /// <param name="folder">The folder to delete.</param>
+  private static async Task DeleteRetry(string folder) {
+    await Retry.Execute<bool>(() => {
+      if (Directory.Exists(folder)) {
+        Directory.Delete(folder, true);
+      }
+
+      return Task.FromResult(true);
+    }, 30, waitTime: TimeSpan.FromSeconds(1));
   }
 }
