@@ -30,6 +30,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private static TwitchClientProxy? instance;
 
   /// <summary>
+  ///   The callback(s) to invoke when a channel receives a chat message.
+  /// </summary>
+  private readonly Dictionary<string, Action<OnMessageReceivedArgs>?> _onMessageReceived = new();
+
+  /// <summary>
   ///   The list of chats we attempted to join with the bot.
   /// </summary>
   /// <remarks>
@@ -37,6 +42,16 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   in the <see cref="TwitchChatClientReconnectOnElapsed" /> method.
   /// </remarks>
   private readonly HashSet<string> joinedChannels;
+
+  /// <summary>
+  ///   The callback(s) to invoke when a channel is raided.
+  /// </summary>
+  private readonly Dictionary<string, Action<OnRaidNotificationArgs>?> onRaid = new();
+
+  /// <summary>
+  ///   The callback(s) to invoke when a channel receives a ban message.
+  /// </summary>
+  private readonly Dictionary<string, Action<OnUserBannedArgs>?> onUserBanReceived = new();
 
   /// <summary>
   ///   A timer used to re-connect the Twitch chat client.
@@ -48,32 +63,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// </summary>
   private readonly object twitchClientLock = new();
 
+  private string? _twitchOAuthToken;
+
   /// <summary>
   ///   The twitch client to send and receive messages with.
   /// </summary>
   private TwitchClient? client;
 
   /// <summary>
-  ///   The callback(s) to invoke when a channel receives a chat message.
-  /// </summary>
-  private Dictionary<string, Action<OnMessageReceivedArgs>?> _onMessageReceived = new();
-
-  /// <summary>
-  ///   The callback(s) to invoke when a channel is raided.
-  /// </summary>
-  private Dictionary<string, Action<OnRaidNotificationArgs>?> onRaid = new();
-
-  /// <summary>
-  ///   The callback(s) to invoke when a channel receives a ban message.
-  /// </summary>
-  private Dictionary<string, Action<OnUserBannedArgs>?> onUserBanReceived = new();
-
-  /// <summary>
   ///   The web socket to connect to twitch chat with.
   /// </summary>
   private WebSocketClient? socket;
-
-  private string? _twitchOAuthToken;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
@@ -109,7 +109,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     get => _twitchOAuthToken;
     set {
       _twitchOAuthToken = value;
-      
+
       // If we have a client, try to connect.
       if (null != client) {
         client.SetConnectionCredentials(new ConnectionCredentials(TwitchUsername, value));
@@ -169,7 +169,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <inheritdoc />
   public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
     await JoinChannel(channel);
-    var channelSan = channel.ToLowerInvariant();
+    string channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
       if (!_onMessageReceived.TryAdd(channelSan, callback)) {
         _onMessageReceived[channelSan] += callback;
@@ -180,10 +180,10 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <inheritdoc />
   public void RemoveMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
     bool shouldRemove = false;
-    var channelSan = channel.ToLowerInvariant();
+    string channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
       if (_onMessageReceived.ContainsKey(channelSan)) {
-        var item = _onMessageReceived[channelSan];
+        Action<OnMessageReceivedArgs>? item = _onMessageReceived[channelSan];
         item -= callback;
         if (null == item) {
           _onMessageReceived.Remove(channelSan);
@@ -196,7 +196,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
     if (shouldRemove) {
       client?.LeaveChannel(channelSan);
-      
+
       // First add the channel to the master list.
       lock (joinedChannels) {
         joinedChannels.Add(channelSan);
@@ -257,7 +257,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     if (!await Connect()) {
       return false;
     }
-    
+
     try {
       // If we don't have a client, give up.
       if (null == client) {
@@ -407,11 +407,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnRaidNotification(object? sender, OnRaidNotificationArgs e) {
     Action<OnRaidNotificationArgs>? callback;
-    var channel = e.Channel.ToLowerInvariant();
+    string channel = e.Channel.ToLowerInvariant();
     lock (onRaid) {
       onRaid.TryGetValue(channel, out callback);
     }
-    
+
     Delegate[]? invokeList = callback?.GetInvocationList();
     if (null == invokeList) {
       return;
@@ -429,7 +429,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnMessageReceived(object? sender, OnMessageReceivedArgs e) {
     Action<OnMessageReceivedArgs>? callbacks = null;
-    var channelSan = e.ChatMessage.Channel.ToLowerInvariant();
+    string channelSan = e.ChatMessage.Channel.ToLowerInvariant();
     lock (_onMessageReceived) {
       if (_onMessageReceived.TryGetValue(channelSan, out Action<OnMessageReceivedArgs>? messageReceivedCallback)) {
         callbacks = messageReceivedCallback;
@@ -457,11 +457,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="e">The event arguments.</param>
   private void TwitchChatClient_OnUserBanned(object? sender, OnUserBannedArgs e) {
     Action<OnUserBannedArgs>? callback;
-    var channel = e.UserBan.Channel.ToLowerInvariant();
+    string channel = e.UserBan.Channel.ToLowerInvariant();
     lock (onUserBanReceived) {
       onUserBanReceived.TryGetValue(channel, out callback);
     }
-    
+
     Delegate[]? invokeList = callback?.GetInvocationList();
     if (null == invokeList) {
       return;

@@ -75,8 +75,8 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     try {
       //auth logic
       List<Claim> claims = [
-        new Claim(ClaimTypes.Email, dbUser.Email ?? string.Empty),
-        new Claim(ClaimTypes.UserData, dbUser.Id.ToString())
+        new(ClaimTypes.Email, dbUser.Email ?? string.Empty),
+        new(ClaimTypes.UserData, dbUser.Id.ToString())
       ];
 
       if (null != dbUser.Roles) {
