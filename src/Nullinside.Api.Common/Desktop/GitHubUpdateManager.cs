@@ -48,7 +48,7 @@ public static class GitHubUpdateManager {
     // To prepare the update, we just need to back up our files
     string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
     string backupFolder = Path.Combine(ourFolder, "..", "backup");
-    await DeleteRetry(backupFolder);
+    await DeleteFolderRetry(backupFolder);
 
     Directory.CreateDirectory(backupFolder);
     FileSystem.CopyDirectory(ourFolder, backupFolder);
@@ -78,7 +78,7 @@ public static class GitHubUpdateManager {
   /// </summary>
   public static async Task PerformUpdateAndRestart(string owner, string repo, string installFolder, string assetName) {
     // Delete the old install folder.
-    await DeleteRetry(installFolder);
+    await DeleteFolderContentsRetry(installFolder);
 
     // Get the latest version of the application from GitHub.
     string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
@@ -96,7 +96,7 @@ public static class GitHubUpdateManager {
 
     // Run the new version of the application.
     Process.Start(Path.Combine(installFolder, $"{AppDomain.CurrentDomain.FriendlyName}.exe"), "--justUpdated");
-    
+
     // Close this version of the application.
     Environment.Exit(0);
   }
@@ -108,17 +108,35 @@ public static class GitHubUpdateManager {
     string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
     string backupFolder = Path.Combine(ourFolder, "..", "backup");
 
-    await DeleteRetry(backupFolder);
+    await DeleteFolderRetry(backupFolder);
   }
 
   /// <summary>
-  /// Retries deleting a folder multiple times.
+  ///   Retries deleting a folder multiple times.
   /// </summary>
   /// <param name="folder">The folder to delete.</param>
-  private static async Task DeleteRetry(string folder) {
-    await Retry.Execute<bool>(() => {
+  private static async Task DeleteFolderRetry(string folder) {
+    await Retry.Execute(() => {
       if (Directory.Exists(folder)) {
         Directory.Delete(folder, true);
+      }
+
+      return Task.FromResult(true);
+    }, 30, waitTime: TimeSpan.FromSeconds(1));
+  }
+
+  /// <summary>
+  ///   Retries deleting the contents of a folder multiple times.
+  /// </summary>
+  /// <param name="folder">The folder to delete the contents of.</param>
+  private static async Task DeleteFolderContentsRetry(string folder) {
+    await Retry.Execute(() => {
+      if (!Directory.Exists(folder)) {
+        return Task.FromResult(true);
+      }
+
+      foreach (string file in Directory.GetFiles(folder)) {
+        File.Delete(file);
       }
 
       return Task.FromResult(true);
