@@ -53,7 +53,7 @@ public static class UserHelpers {
         }
 
         dbContext.UserRoles.Add(new UserRole {
-          Role = UserRoles.User,
+          Role = UserRoles.USER,
           UserId = existing.Id,
           RoleAdded = DateTime.UtcNow
         });

@@ -27,7 +27,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private static readonly ILog Log = LogManager.GetLogger(typeof(TwitchApiProxy));
+  private static readonly ILog LOG = LogManager.GetLogger(typeof(TwitchApiProxy));
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchApiProxy" /> class.
@@ -213,14 +213,14 @@ public class TwitchApiProxy : ITwitchApiProxy {
           }
 
           bannedUsers.AddRange(response.Data);
-          Log.Info($"Banned {user.Username} ({user.Id}) in {channelId}: {reason}");
+          LOG.Info($"Banned {user.Username} ({user.Id}) in {channelId}: {reason}");
         }
         catch (HttpResponseException ex) {
           string exceptionReason = await ex.HttpResponse.Content.ReadAsStringAsync(token);
-          Log.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}: {exceptionReason}", ex);
+          LOG.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}: {exceptionReason}", ex);
         }
         catch (Exception ex) {
-          Log.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}", ex);
+          LOG.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}", ex);
         }
       }
 
