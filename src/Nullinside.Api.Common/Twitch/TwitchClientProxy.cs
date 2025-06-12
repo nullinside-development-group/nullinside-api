@@ -30,11 +30,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private static TwitchClientProxy? s_instance;
 
   /// <summary>
-  ///   The callback(s) to invoke when a channel receives a chat message.
-  /// </summary>
-  private readonly Dictionary<string, Action<OnMessageReceivedArgs>?> _onMessageReceived = new();
-
-  /// <summary>
   ///   The list of chats we attempted to join with the bot.
   /// </summary>
   /// <remarks>
@@ -42,6 +37,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   in the <see cref="TwitchChatClientReconnectOnElapsed" /> method.
   /// </remarks>
   private readonly HashSet<string> _joinedChannels;
+
+  /// <summary>
+  ///   The callback(s) to invoke when a channel receives a chat message.
+  /// </summary>
+  private readonly Dictionary<string, Action<OnMessageReceivedArgs>?> _onMessageReceived = new();
 
   /// <summary>
   ///   The callback(s) to invoke when a channel is raided.
@@ -63,8 +63,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// </summary>
   private readonly object _twitchClientLock = new();
 
-  private string? _twitchOAuthToken;
-
   /// <summary>
   ///   The twitch client to send and receive messages with.
   /// </summary>
@@ -74,6 +72,8 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The web socket to connect to twitch chat with.
   /// </summary>
   private WebSocketClient? _socket;
+
+  private string? _twitchOAuthToken;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
