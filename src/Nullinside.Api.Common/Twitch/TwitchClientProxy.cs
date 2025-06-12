@@ -73,6 +73,8 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// </summary>
   private WebSocketClient? socket;
 
+  private string? _twitchOAuthToken;
+
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
   /// </summary>
@@ -103,7 +105,18 @@ public class TwitchClientProxy : ITwitchClientProxy {
   public string? TwitchUsername { get; set; }
 
   /// <inheritdoc />
-  public string? TwitchOAuthToken { get; set; }
+  public string? TwitchOAuthToken {
+    get => _twitchOAuthToken;
+    set {
+      _twitchOAuthToken = value;
+      
+      // If we have a client, try to connect.
+      if (null != client) {
+        client.SetConnectionCredentials(new ConnectionCredentials(TwitchUsername, value));
+        Connect();
+      }
+    }
+  }
 
   /// <inheritdoc />
   public void Dispose() {
