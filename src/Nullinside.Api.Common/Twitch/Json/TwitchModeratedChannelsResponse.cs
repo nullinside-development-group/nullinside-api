@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿// ReSharper disable All
+
+using System.Diagnostics.CodeAnalysis;
 
 namespace Nullinside.Api.Common.Twitch.Json;
 

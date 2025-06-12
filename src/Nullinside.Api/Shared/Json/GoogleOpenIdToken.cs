@@ -1,3 +1,5 @@
+// ReSharper disable All
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace Nullinside.Api.Shared.Json;

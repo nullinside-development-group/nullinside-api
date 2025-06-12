@@ -31,7 +31,7 @@ public static class UserHelpers {
       if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
         existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername && !u.IsBanned, token);
       }
-      
+
       if (null == existing) {
         dbContext.Users.Add(new User {
           Email = email,
@@ -53,7 +53,7 @@ public static class UserHelpers {
         }
 
         dbContext.UserRoles.Add(new UserRole {
-          Role = UserRoles.User,
+          Role = UserRoles.USER,
           UserId = existing.Id,
           RoleAdded = DateTime.UtcNow
         });

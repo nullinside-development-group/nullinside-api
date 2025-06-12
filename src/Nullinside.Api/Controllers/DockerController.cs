@@ -16,7 +16,7 @@ namespace Nullinside.Api.Controllers;
 /// <summary>
 ///   Provides insights and management options for the virtual machines hosted by the website.
 /// </summary>
-[Authorize(nameof(UserRoles.VmAdmin))]
+[Authorize(nameof(UserRoles.VM_ADMIN))]
 [ApiController]
 [Route("[controller]")]
 public class DockerController : ControllerBase {
@@ -48,7 +48,7 @@ public class DockerController : ControllerBase {
   /// <summary>
   ///   Gets the docker resources that can be configured.
   /// </summary>
-  [Authorize(nameof(UserRoles.VmAdmin))]
+  [Authorize(nameof(UserRoles.VM_ADMIN))]
   [HttpGet]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -89,7 +89,7 @@ public class DockerController : ControllerBase {
   /// <param name="id">The id of the docker resource.</param>
   /// <param name="request">The request to turn on or off a resource.</param>
   /// <param name="token">The cancellation token.</param>
-  [Authorize(nameof(UserRoles.VmAdmin))]
+  [Authorize(nameof(UserRoles.VM_ADMIN))]
   [HttpPost("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]

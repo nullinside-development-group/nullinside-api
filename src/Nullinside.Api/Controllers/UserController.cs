@@ -60,7 +60,7 @@ public class UserController : ControllerBase {
   public async Task<RedirectResult> Login([FromForm] GoogleOpenIdToken creds, CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     try {
-      GoogleJsonWebSignature.Payload? credentials = await this.GenerateUserObject(creds);
+      GoogleJsonWebSignature.Payload? credentials = await GenerateUserObject(creds);
       if (string.IsNullOrWhiteSpace(credentials?.Email)) {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
@@ -78,14 +78,14 @@ public class UserController : ControllerBase {
   }
 
   /// <summary>
-  /// Converts the credential string we get from google to a representation we read information from.
+  ///   Converts the credential string we get from google to a representation we read information from.
   /// </summary>
   /// <param name="creds">The credentials from Google.</param>
   /// <returns>The user information object.</returns>
-  protected async virtual Task<GoogleJsonWebSignature.Payload?> GenerateUserObject(GoogleOpenIdToken creds) {
+  protected virtual async Task<GoogleJsonWebSignature.Payload?> GenerateUserObject(GoogleOpenIdToken creds) {
     return await GoogleJsonWebSignature.ValidateAsync(creds.credential);
   }
-  
+
   /// <summary>
   ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
   ///   redirects users back to the nullinside website.
@@ -122,7 +122,7 @@ public class UserController : ControllerBase {
 
     return Redirect($"{siteUrl}/user/login?token={bearerToken}");
   }
-  
+
   /// <summary>
   ///   **NOT CALLED BY SITE OR USERS** This endpoint is called by twitch as part of their oauth workflow. It
   ///   redirects users back to the nullinside website.
@@ -149,7 +149,7 @@ public class UserController : ControllerBase {
 
     return Redirect($"{siteUrl}/user/login/desktop?bearer={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}");
   }
-  
+
   /// <summary>
   ///   Used to refresh OAuth tokens from the desktop application.
   /// </summary>
@@ -166,17 +166,17 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpPost]
   [Route("twitch-login/twitch-streaming-tools")]
-  public async Task<IActionResult> TwitchStreamingToolsRefreshToken([FromForm]string refreshToken, [FromServices] ITwitchApiProxy api,
+  public async Task<IActionResult> TwitchStreamingToolsRefreshToken([FromForm] string refreshToken, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
-    api.OAuth = new() {
+    api.OAuth = new TwitchAccessToken {
       AccessToken = null,
       RefreshToken = refreshToken,
       ExpiresUtc = DateTime.MinValue
     };
-    
+
     if (null == await api.RefreshAccessToken(token)) {
-      return this.BadRequest();
+      return BadRequest();
     }
 
     return Ok(new {
