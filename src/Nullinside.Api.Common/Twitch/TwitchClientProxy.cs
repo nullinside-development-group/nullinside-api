@@ -111,7 +111,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
       if (value == _twitchOAuthToken) {
         return;
       }
-      
+
       _twitchOAuthToken = value;
 
       // If we have a client, try to connect.
