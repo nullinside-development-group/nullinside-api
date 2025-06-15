@@ -167,7 +167,7 @@ public static class GitHubUpdateManager {
           File.Delete(file);
         }
 
-        foreach (var directory in Directory.GetDirectories(folder)) {
+        foreach (string directory in Directory.GetDirectories(folder)) {
           Directory.Delete(directory, true);
         }
 
