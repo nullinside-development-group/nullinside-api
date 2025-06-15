@@ -167,6 +167,10 @@ public static class GitHubUpdateManager {
           File.Delete(file);
         }
 
+        foreach (var directory in Directory.GetDirectories(folder)) {
+          Directory.Delete(directory, true);
+        }
+
         return Task.FromResult(true);
       }, 30, waitTime: TimeSpan.FromSeconds(1));
     }
