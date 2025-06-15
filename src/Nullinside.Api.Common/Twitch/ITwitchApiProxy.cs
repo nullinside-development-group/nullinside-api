@@ -48,8 +48,16 @@ public interface ITwitchApiProxy {
   ///   Gets the twitch id and username of the owner of the <see cref="OAuth" />.
   /// </summary>
   /// <param name="token">The cancellation token.</param>
-  /// <returns>The twitch username if successful, null otherwise.</returns>
+  /// <returns>The twitch user information if successful, null otherwise.</returns>
   Task<(string? id, string? username)> GetUser(CancellationToken token = new());
+
+  /// <summary>
+  ///   Gets the twitch id and username of the username provided.
+  /// </summary>
+  /// <param name="username">The username to look up.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>The twitch information if successful, null otherwise.</returns>
+  Task<(string? id, string? username)> GetUser(string username, CancellationToken token = new());
 
   /// <summary>
   ///   Gets the email address of the owner of the <see cref="OAuth" />.

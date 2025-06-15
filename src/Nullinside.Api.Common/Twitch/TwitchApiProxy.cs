@@ -151,6 +151,20 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
+  public virtual async Task<(string? id, string? username)> GetUser(string username, CancellationToken token = new()) {
+    return await Retry.Execute(async () => {
+      ITwitchAPI api = GetApi();
+      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync(logins: [username]);
+      if (null == response) {
+        return (null, null);
+      }
+
+      User? user = response.Users.FirstOrDefault();
+      return (user?.Id, user?.Login);
+    }, Retries, token);
+  }
+
+  /// <inheritdoc />
   public virtual async Task<string?> GetUserEmail(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
