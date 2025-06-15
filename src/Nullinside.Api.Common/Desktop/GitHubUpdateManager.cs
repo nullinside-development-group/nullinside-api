@@ -2,6 +2,8 @@
 using System.IO.Compression;
 using System.Net;
 
+using log4net;
+
 using Microsoft.VisualBasic.FileIO;
 
 using Newtonsoft.Json;
@@ -12,6 +14,11 @@ namespace Nullinside.Api.Common.Desktop;
 ///   Handles checking for updates to the application via GitHub releases.
 /// </summary>
 public static class GitHubUpdateManager {
+  /// <summary>
+  ///   The logger.
+  /// </summary>
+  private static readonly ILog Log = LogManager.GetLogger(typeof(GitHubUpdateManager));
+
   /// <summary>
   ///   Gets the latest version number of the release.
   /// </summary>
@@ -45,31 +52,41 @@ public static class GitHubUpdateManager {
   ///   Prepares to update this application before this application is closed.
   /// </summary>
   public static async Task PrepareUpdate() {
-    // To prepare the update, we just need to back up our files
-    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-    string backupFolder = Path.Combine(ourFolder, "..", "backup");
-    await DeleteFolderRetry(backupFolder);
+    try {
+      // To prepare the update, we just need to back up our files
+      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+      string backupFolder = Path.Combine(ourFolder, "..", "backup");
+      await DeleteFolderRetry(backupFolder);
 
-    Directory.CreateDirectory(backupFolder);
-    FileSystem.CopyDirectory(ourFolder, backupFolder);
+      Directory.CreateDirectory(backupFolder);
+      FileSystem.CopyDirectory(ourFolder, backupFolder);
+    }
+    catch (Exception ex) {
+      Log.Error(ex);
+    }
   }
 
   /// <summary>
   ///   Runs this application from the backup folder to initiate the update on the installed folder.
   /// </summary>
   public static void ExitApplicationToUpdate() {
-    // Since we have a backup folder from PrepareUpdate() we can just run the backup executable
-    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-    string backupFolder = Path.Combine(ourFolder, "..", "backup");
-    if (!Directory.Exists(backupFolder)) {
-      return;
+    try {
+      // Since we have a backup folder from PrepareUpdate() we can just run the backup executable
+      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+      string backupFolder = Path.Combine(ourFolder, "..", "backup");
+      if (!Directory.Exists(backupFolder)) {
+        return;
+      }
+
+      string ourExecutable = $"{AppDomain.CurrentDomain.FriendlyName}.exe";
+
+      // we must pass the installation folder to the executable so it knows where to install
+      Process.Start(Path.Combine(backupFolder, ourExecutable), $"--update \"{ourFolder}\"");
+      Environment.Exit(0);
     }
-
-    string ourExecutable = $"{AppDomain.CurrentDomain.FriendlyName}.exe";
-
-    // we must pass the installation folder to the executable so it knows where to install
-    Process.Start(Path.Combine(backupFolder, ourExecutable), $"--update \"{ourFolder}\"");
-    Environment.Exit(0);
+    catch (Exception ex) {
+      Log.Error(ex);
+    }
   }
 
   /// <summary>
@@ -77,28 +94,33 @@ public static class GitHubUpdateManager {
   ///   to the installation folder, and closing the currently running application while running the new one.
   /// </summary>
   public static async Task PerformUpdateAndRestart(string owner, string repo, string installFolder, string assetName) {
-    // Delete the old install folder.
-    await DeleteFolderContentsRetry(installFolder);
+    try {
+      // Delete the old install folder.
+      await DeleteFolderContentsRetry(installFolder);
 
-    // Get the latest version of the application from GitHub.
-    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-    string zipLocation = Path.Combine(ourFolder, assetName);
-    GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo);
-    using (var client = new HttpClient()) {
-      using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}");
-      await using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
-      await using var fileStream = new FileStream(zipLocation, FileMode.Create);
-      await streamToReadFrom.CopyToAsync(fileStream);
+      // Get the latest version of the application from GitHub.
+      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
+      string zipLocation = Path.Combine(ourFolder, assetName);
+      GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo);
+      using (var client = new HttpClient()) {
+        using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}");
+        await using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
+        await using var fileStream = new FileStream(zipLocation, FileMode.Create);
+        await streamToReadFrom.CopyToAsync(fileStream);
+      }
+
+      // Extract the zip file to the installation folder.
+      ZipFile.ExtractToDirectory(zipLocation, installFolder);
+
+      // Run the new version of the application.
+      Process.Start(Path.Combine(installFolder, $"{AppDomain.CurrentDomain.FriendlyName}.exe"), "--justUpdated");
+
+      // Close this version of the application.
+      Environment.Exit(0);
     }
-
-    // Extract the zip file to the installation folder.
-    ZipFile.ExtractToDirectory(zipLocation, installFolder);
-
-    // Run the new version of the application.
-    Process.Start(Path.Combine(installFolder, $"{AppDomain.CurrentDomain.FriendlyName}.exe"), "--justUpdated");
-
-    // Close this version of the application.
-    Environment.Exit(0);
+    catch (Exception ex) {
+      Log.Error(ex);
+    }
   }
 
   /// <summary>
@@ -116,13 +138,18 @@ public static class GitHubUpdateManager {
   /// </summary>
   /// <param name="folder">The folder to delete.</param>
   private static async Task DeleteFolderRetry(string folder) {
-    await Retry.Execute(() => {
-      if (Directory.Exists(folder)) {
-        Directory.Delete(folder, true);
-      }
+    try {
+      await Retry.Execute(() => {
+        if (Directory.Exists(folder)) {
+          Directory.Delete(folder, true);
+        }
 
-      return Task.FromResult(true);
-    }, 30, waitTime: TimeSpan.FromSeconds(1));
+        return Task.FromResult(true);
+      }, 30, waitTime: TimeSpan.FromSeconds(1));
+    }
+    catch (Exception ex) {
+      Log.Error(ex);
+    }
   }
 
   /// <summary>
@@ -130,16 +157,21 @@ public static class GitHubUpdateManager {
   /// </summary>
   /// <param name="folder">The folder to delete the contents of.</param>
   private static async Task DeleteFolderContentsRetry(string folder) {
-    await Retry.Execute(() => {
-      if (!Directory.Exists(folder)) {
+    try {
+      await Retry.Execute(() => {
+        if (!Directory.Exists(folder)) {
+          return Task.FromResult(true);
+        }
+
+        foreach (string file in Directory.GetFiles(folder)) {
+          File.Delete(file);
+        }
+
         return Task.FromResult(true);
-      }
-
-      foreach (string file in Directory.GetFiles(folder)) {
-        File.Delete(file);
-      }
-
-      return Task.FromResult(true);
-    }, 30, waitTime: TimeSpan.FromSeconds(1));
+      }, 30, waitTime: TimeSpan.FromSeconds(1));
+    }
+    catch (Exception ex) {
+      Log.Error(ex);
+    }
   }
 }
