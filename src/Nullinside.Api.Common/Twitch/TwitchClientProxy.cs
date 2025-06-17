@@ -356,15 +356,21 @@ public class TwitchClientProxy : ITwitchClientProxy {
           _client.OnRaidNotification += TwitchChatClient_OnRaidNotification;
           _client.OnDisconnected += (sender, args) => {
             LOG.Error("Twitch Client Disconnected");
+            try {
+              _client.Reconnect();
+            }
+            catch (Exception ex) {
+              LOG.Error("Twitch Client Reconnect Error", ex);
+            }
           };
           _client.OnConnectionError += (sender, args) => {
             LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
           };
           _client.OnError += (sender, args) => {
-            LOG.Error($"Twitch Client Error: {args.Exception.Message}");
+            LOG.Error("Twitch Client Error", args.Exception);
           };
           _client.OnIncorrectLogin += (sender, args) => {
-            LOG.Error($"Twitch Client Incorrect Login: {args.Exception.Message}");
+            LOG.Error("Twitch Client Incorrect Login", args.Exception);
           };
           _client.OnNoPermissionError += (sender, args) => {
             LOG.Error("Twitch Client No Permission Error");
