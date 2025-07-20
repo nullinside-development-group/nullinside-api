@@ -52,11 +52,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The callback(s) to invoke when a channel receives a ban message.
   /// </summary>
   private readonly Dictionary<string, Action<OnUserBannedArgs>?> _onUserBanReceived = new();
-  
-  /// <summary>
-  ///   The callback(s) to invoke when the twitch chat client is disconnected from twitch chat.
-  /// </summary>
-  private Action? _onDisconnected;
 
   /// <summary>
   ///   A timer used to re-connect the Twitch chat client.
@@ -74,12 +69,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private TwitchClient? _client;
 
   /// <summary>
+  ///   The callback(s) to invoke when the twitch chat client is disconnected from twitch chat.
+  /// </summary>
+  private Action? _onDisconnected;
+
+  /// <summary>
   ///   The web socket to connect to twitch chat with.
   /// </summary>
   private WebSocketClient? _socket;
 
   /// <summary>
-  /// The twitch OAuth token to use to connect.
+  ///   The twitch OAuth token to use to connect.
   /// </summary>
   private string? _twitchOAuthToken;
 
@@ -235,7 +235,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
       _onUserBanReceived.Remove(channel);
     }
   }
-  
+
   /// <inheritdoc />
   public void AddDisconnectedCallback(Action callback) {
     _onDisconnected -= callback;
