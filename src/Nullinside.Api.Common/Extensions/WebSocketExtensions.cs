@@ -31,8 +31,9 @@ public static class WebSocketExtensions {
       var data = new ArraySegment<byte>(new byte[1024]);
       response = await webSocket.ReceiveAsync(data, cancelToken);
       fullMessage.AddRange(data);
-    } while (null == response.CloseStatus);
+    } while (null == response.CloseStatus && !response.EndOfMessage);
 
-    return Encoding.ASCII.GetString(fullMessage.ToArray());
+    // Remove the null character from the end of the string, this happens when the buffer is only partially filled.
+    return Encoding.ASCII.GetString(fullMessage.ToArray()).TrimEnd('\0');
   }
 }
