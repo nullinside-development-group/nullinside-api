@@ -73,7 +73,7 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
   void RemoveRaidCallback(string channel, Action<OnRaidNotificationArgs> callback);
-  
+
   /// <summary>
   ///   Adds a callback for being disconnected from the twitch chat server.
   /// </summary>
