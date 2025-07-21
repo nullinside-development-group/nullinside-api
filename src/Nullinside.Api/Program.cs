@@ -10,10 +10,19 @@ using Nullinside.Api.Common.AspNetCore.Middleware;
 using Nullinside.Api.Common.Docker;
 using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Model;
+using Nullinside.Api.Shared;
 
 using WebApplicationBuilder = Microsoft.AspNetCore.Builder.WebApplicationBuilder;
 
 const string corsKey = "_customAllowedSpecificOrigins";
+string[] domains = [
+  "https://www.nullinside.com",
+  "https://nullinside.com",
+#if DEBUG
+  "http://localhost:4200",
+  "http://127.0.0.1:4200"
+#endif
+];
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -35,6 +44,7 @@ builder.Services.AddTransient<ITwitchApiProxy, TwitchApiProxy>();
 builder.Services.AddAuthentication()
   .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Bearer", _ => { });
 builder.Services.AddScoped<IDockerProxy, DockerProxy>();
+builder.Services.AddSingleton<IWebSocketPersister, WebSocketPersister>();
 
 builder.Services.AddAuthorization(options => {
   // Dynamically add all of the user roles that exist in the application.
@@ -91,8 +101,7 @@ builder.Services.AddSwaggerGen(c => {
 builder.Services.AddCors(options => {
   options.AddPolicy(corsKey,
     policyBuilder => {
-      policyBuilder.WithOrigins("https://www.nullinside.com", "https://nullinside.com", "http://localhost:4200",
-          "http://127.0.0.1:4200")
+      policyBuilder.WithOrigins(domains)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
@@ -117,6 +126,16 @@ if (app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.UseCors(corsKey);
 app.UseAuthorization();
+
+var webSocketOptions = new WebSocketOptions {
+  KeepAliveInterval = TimeSpan.FromMinutes(2)
+};
+
+foreach (string domain in domains) {
+  webSocketOptions.AllowedOrigins.Add(domain);
+}
+
+app.UseWebSockets(webSocketOptions);
 
 app.MapControllers();
 

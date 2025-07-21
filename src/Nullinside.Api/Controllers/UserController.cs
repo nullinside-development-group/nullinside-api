@@ -1,4 +1,6 @@
+using System.Net.WebSockets;
 using System.Security.Claims;
+using System.Text;
 
 using Google.Apis.Auth;
 
@@ -8,10 +10,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using Newtonsoft.Json;
+
+using Nullinside.Api.Common.Extensions;
 using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Model.Shared;
+using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
 namespace Nullinside.Api.Controllers;
@@ -38,13 +44,20 @@ public class UserController : ControllerBase {
   private readonly ILog _logger = LogManager.GetLogger(typeof(UserController));
 
   /// <summary>
+  ///   A collection of web sockets key'd by an id representing the request for the information.
+  /// </summary>
+  private readonly IWebSocketPersister _webSockets;
+
+  /// <summary>
   ///   Initializes a new instance of the <see cref="UserController" /> class.
   /// </summary>
   /// <param name="configuration">The application's configuration file.</param>
   /// <param name="dbContext">The nullinside database.</param>
-  public UserController(IConfiguration configuration, INullinsideContext dbContext) {
+  /// <param name="webSocketPersister">The web socket persistence service.</param>
+  public UserController(IConfiguration configuration, INullinsideContext dbContext, IWebSocketPersister webSocketPersister) {
     _configuration = configuration;
     _dbContext = dbContext;
+    _webSockets = webSocketPersister;
   }
 
   /// <summary>
@@ -128,6 +141,7 @@ public class UserController : ControllerBase {
   ///   redirects users back to the nullinside website.
   /// </summary>
   /// <param name="code">The credentials provided by twitch.</param>
+  /// <param name="state">An identifier for the request allowing for retrieval of the login information.</param>
   /// <param name="api">The twitch api.</param>
   /// <param name="token">The cancellation token.</param>
   /// <returns>
@@ -140,14 +154,73 @@ public class UserController : ControllerBase {
   [AllowAnonymous]
   [HttpGet]
   [Route("twitch-login/twitch-streaming-tools")]
-  public async Task<RedirectResult> TwitchStreamingToolsLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
+  public async Task<RedirectResult> TwitchStreamingToolsLogin([FromQuery] string code, [FromQuery] string state, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
+    // The first thing we need to do is make sure someone subscribed to a web socket waiting for the answer to the
+    // credentials question we're being asked.
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
+    if (!_webSockets.WebSockets.ContainsKey(state)) {
+      return Redirect($"{siteUrl}/user/login/desktop?error=2");
+    }
+
+    // Since someone already warned us this request was coming, create an oauth token from the code we received.
     if (null == await api.CreateAccessToken(code, token)) {
       return Redirect($"{siteUrl}/user/login/desktop?error=3");
     }
 
-    return Redirect($"{siteUrl}/user/login/desktop?bearer={api.OAuth?.AccessToken}&refresh={api.OAuth?.RefreshToken}&expiresUtc={api.OAuth?.ExpiresUtc?.ToString()}");
+    // The "someone" that warned us this request was coming has been sitting around waiting for an answer on a web
+    // socket so we will pull up that socket and give them their oauth information. 
+    try {
+      WebSocket socket = _webSockets.WebSockets[state];
+      var oAuth = new TwitchAccessToken {
+        AccessToken = api.OAuth?.AccessToken ?? string.Empty,
+        RefreshToken = api.OAuth?.RefreshToken ?? string.Empty,
+        ExpiresUtc = api.OAuth?.ExpiresUtc ?? DateTime.MinValue
+      };
+
+      await socket.SendTextAsync(JsonConvert.SerializeObject(oAuth), token);
+      await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Completed Successfully!", token);
+      _webSockets.WebSockets.TryRemove(state, out _);
+      socket.Dispose();
+    }
+    catch {
+      return Redirect($"{siteUrl}/user/login/desktop?error=2");
+    }
+
+    return Redirect($"{siteUrl}/user/login/desktop");
+  }
+
+  /// <summary>
+  ///   A websocket used by clients to wait for their login token after twitch authenticates.
+  /// </summary>
+  /// <param name="token">The cancellation token.</param>
+  [AllowAnonymous]
+  [HttpGet]
+  [Route("twitch-login/twitch-streaming-tools/ws")]
+  public async Task TwitchStreamingToolsRefreshToken(CancellationToken token = new()) {
+    if (HttpContext.WebSockets.IsWebSocketRequest) {
+      // Connect with the client
+      using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+
+      // The first communication over the web socket is always the id that we will later get from the
+      // twitch api with the associated credentials.
+      string id = await webSocket.ReceiveTextAsync(token);
+      id = id.Trim();
+
+      // Add the web socket to web socket persistant service. It will be sitting there until the twitch api calls our
+      // api later on.
+      _webSockets.WebSockets.TryAdd(id, webSocket);
+
+      // Regardless of whether you have a using statement above, the minute we leave the controller method we will
+      // lose the connection. That's just the way web sockets are implemented in .NET Core Web APIs. So we have to sit
+      // here in an await (specifically in an await so we don't mess up the thread pool) until twitch calls us.
+      while (null == webSocket.CloseStatus) {
+        await Task.Delay(1000, token);
+      }
+    }
+    else {
+      HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
   }
 
   /// <summary>
@@ -156,19 +229,11 @@ public class UserController : ControllerBase {
   /// <param name="refreshToken">The oauth refresh token provided by twitch.</param>
   /// <param name="api">The twitch api.</param>
   /// <param name="token">The cancellation token.</param>
-  /// <returns>
-  ///   A redirect to the nullinside website.
-  ///   Errors:
-  ///   2 = Internal error generating token.
-  ///   3 = Code was invalid
-  ///   4 = Twitch account has no email
-  /// </returns>
   [AllowAnonymous]
   [HttpPost]
   [Route("twitch-login/twitch-streaming-tools")]
   public async Task<IActionResult> TwitchStreamingToolsRefreshToken([FromForm] string refreshToken, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
-    string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     api.OAuth = new TwitchAccessToken {
       AccessToken = null,
       RefreshToken = refreshToken,
@@ -179,10 +244,10 @@ public class UserController : ControllerBase {
       return BadRequest();
     }
 
-    return Ok(new {
-      bearer = api.OAuth.AccessToken,
-      refresh = api.OAuth.RefreshToken,
-      expiresUtc = api.OAuth.ExpiresUtc
+    return Ok(new TwitchAccessToken {
+      AccessToken = api.OAuth.AccessToken ?? string.Empty,
+      RefreshToken = api.OAuth.RefreshToken ?? string.Empty,
+      ExpiresUtc = api.OAuth.ExpiresUtc ?? DateTime.MinValue
     });
   }
 
