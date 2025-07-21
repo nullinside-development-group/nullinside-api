@@ -147,9 +147,8 @@ public class UserController : ControllerBase {
   /// <returns>
   ///   A redirect to the nullinside website.
   ///   Errors:
-  ///   2 = Internal error generating token.
-  ///   3 = Code was invalid
-  ///   4 = Twitch account has no email
+  ///   1 = Internal error
+  ///   2 = Error with twitch
   /// </returns>
   [AllowAnonymous]
   [HttpGet]
@@ -160,12 +159,12 @@ public class UserController : ControllerBase {
     // credentials question we're being asked.
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     if (!_webSockets.WebSockets.ContainsKey(state)) {
-      return Redirect($"{siteUrl}/user/login/desktop?error=2");
+      return Redirect($"{siteUrl}/user/login/desktop?error=1");
     }
 
     // Since someone already warned us this request was coming, create an oauth token from the code we received.
     if (null == await api.CreateAccessToken(code, token)) {
-      return Redirect($"{siteUrl}/user/login/desktop?error=3");
+      return Redirect($"{siteUrl}/user/login/desktop?error=2");
     }
 
     // The "someone" that warned us this request was coming has been sitting around waiting for an answer on a web
@@ -184,7 +183,7 @@ public class UserController : ControllerBase {
       socket.Dispose();
     }
     catch {
-      return Redirect($"{siteUrl}/user/login/desktop?error=2");
+      return Redirect($"{siteUrl}/user/login/desktop?error=1");
     }
 
     return Redirect($"{siteUrl}/user/login/desktop");
