@@ -13,6 +13,7 @@ using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Controllers;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
+using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
 namespace Nullinside.Api.Tests.Nullinside.Api.Controllers;
@@ -31,6 +32,11 @@ public class UserControllerTests : UnitTestBase {
   /// </summary>
   private Mock<ITwitchApiProxy> _twitchApi;
 
+  /// <summary>
+  ///   The web socket persister.
+  /// </summary>
+  private Mock<IWebSocketPersister> _webSocketPersister;
+
   /// <inheritdoc />
   public override void Setup() {
     base.Setup();
@@ -45,6 +51,7 @@ public class UserControllerTests : UnitTestBase {
       .Build();
 
     _twitchApi = new Mock<ITwitchApiProxy>();
+    _webSocketPersister = new Mock<IWebSocketPersister>();
   }
 
   /// <summary>
@@ -61,7 +68,7 @@ public class UserControllerTests : UnitTestBase {
     await _db.SaveChangesAsync();
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
     RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
 
@@ -81,7 +88,7 @@ public class UserControllerTests : UnitTestBase {
   [Test]
   public async Task PerformGoogleLoginNewUser() {
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
     RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
 
@@ -103,7 +110,7 @@ public class UserControllerTests : UnitTestBase {
     _db.Users = null!;
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
     RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
 
@@ -117,7 +124,7 @@ public class UserControllerTests : UnitTestBase {
   [Test]
   public async Task GoToErrorOnBadGmailResponse() {
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = null;
     RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
 
@@ -147,7 +154,7 @@ public class UserControllerTests : UnitTestBase {
     await _db.SaveChangesAsync();
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
 
     // We should have been redirected to the successful route.
@@ -174,7 +181,7 @@ public class UserControllerTests : UnitTestBase {
       .Returns(() => Task.FromResult<string?>("hi"));
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
 
     // We should have been redirected to the successful route.
@@ -197,7 +204,7 @@ public class UserControllerTests : UnitTestBase {
       .Returns(() => Task.FromResult<TwitchAccessToken?>(null));
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
 
     // We should have gone down the bad route
@@ -214,7 +221,7 @@ public class UserControllerTests : UnitTestBase {
       .Returns(() => Task.FromResult<TwitchAccessToken?>(new TwitchAccessToken()));
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
 
     // We should have gone down the bad route because no email was associated with the twitch account.
@@ -237,7 +244,7 @@ public class UserControllerTests : UnitTestBase {
       .Returns(() => Task.FromResult<string?>("hi"));
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
 
     // We should have been redirected to the error route because of an exception in DB processing.
@@ -256,7 +263,7 @@ public class UserControllerTests : UnitTestBase {
     var identity = new ClaimsIdentity(claims, "icecream");
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.ControllerContext = new ControllerContext();
     controller.ControllerContext.HttpContext = new DefaultHttpContext();
     controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
@@ -279,7 +286,7 @@ public class UserControllerTests : UnitTestBase {
     await _db.SaveChangesAsync();
 
     // Make the call and ensure it's successful.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     IActionResult obj = await controller.Validate(new AuthToken("123"));
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(200));
 
@@ -293,7 +300,7 @@ public class UserControllerTests : UnitTestBase {
   [Test]
   public async Task ValidateFailWithoutToken() {
     // Make the call and ensure it fails.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     IActionResult obj = await controller.Validate(new AuthToken("123"));
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(401));
   }
@@ -306,7 +313,7 @@ public class UserControllerTests : UnitTestBase {
     _db.Users = null!;
 
     // Make the call and ensure it fails.
-    var controller = new TestableUserController(_configuration, _db);
+    var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     IActionResult obj = await controller.Validate(new AuthToken("123"));
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(500));
   }
@@ -317,7 +324,7 @@ public class UserControllerTests : UnitTestBase {
 /// </summary>
 public class TestableUserController : UserController {
   /// <inheritdoc />
-  public TestableUserController(IConfiguration configuration, INullinsideContext dbContext) : base(configuration, dbContext) {
+  public TestableUserController(IConfiguration configuration, INullinsideContext dbContext, IWebSocketPersister webSocketPersister) : base(configuration, dbContext, webSocketPersister) {
   }
 
   /// <summary>
