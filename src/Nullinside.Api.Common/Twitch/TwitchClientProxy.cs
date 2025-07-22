@@ -188,6 +188,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     string channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
       if (!_onMessageReceived.TryAdd(channelSan, callback)) {
+        _onMessageReceived[channelSan] -= callback;
         _onMessageReceived[channelSan] += callback;
       }
     }
