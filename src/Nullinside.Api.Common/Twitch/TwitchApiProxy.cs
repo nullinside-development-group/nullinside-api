@@ -129,7 +129,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<bool> GetAccessTokenIsValid(CancellationToken token = new()) {
     try {
-      return !string.IsNullOrWhiteSpace((await GetUser(token)).id);
+      return !string.IsNullOrWhiteSpace((await GetUser(token))?.Id);
     }
     catch {
       return false;
@@ -137,16 +137,15 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public virtual async Task<(string? id, string? username)> GetUser(CancellationToken token = new()) {
+  public virtual async Task<User?> GetUser(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
       GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
       if (null == response) {
-        return (null, null);
+        return null;
       }
 
-      User? user = response.Users.FirstOrDefault();
-      return (user?.Id, user?.Login);
+      return response.Users.FirstOrDefault();
     }, Retries, token);
   }
 
