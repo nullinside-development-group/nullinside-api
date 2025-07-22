@@ -54,12 +54,11 @@ public static class GitHubUpdateManager {
   public static async Task PrepareUpdate() {
     try {
       // To prepare the update, we just need to back up our files
-      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-      string backupFolder = Path.Combine(ourFolder, "..", "backup");
+      string backupFolder = Path.Combine(AppContext.BaseDirectory, "..", "backup");
       await DeleteFolderRetry(backupFolder);
 
       Directory.CreateDirectory(backupFolder);
-      FileSystem.CopyDirectory(ourFolder, backupFolder);
+      FileSystem.CopyDirectory(AppContext.BaseDirectory, backupFolder);
     }
     catch (Exception ex) {
       Log.Error(ex);
@@ -72,8 +71,7 @@ public static class GitHubUpdateManager {
   public static void ExitApplicationToUpdate() {
     try {
       // Since we have a backup folder from PrepareUpdate() we can just run the backup executable
-      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-      string backupFolder = Path.Combine(ourFolder, "..", "backup");
+      string backupFolder = Path.Combine(AppContext.BaseDirectory, "..", "backup");
       if (!Directory.Exists(backupFolder)) {
         return;
       }
@@ -81,7 +79,7 @@ public static class GitHubUpdateManager {
       string ourExecutable = $"{AppDomain.CurrentDomain.FriendlyName}.exe";
 
       // we must pass the installation folder to the executable so it knows where to install
-      Process.Start(Path.Combine(backupFolder, ourExecutable), $"--update \"{ourFolder}\"");
+      Process.Start(Path.Combine(backupFolder, ourExecutable), $"--update \"{AppContext.BaseDirectory}\"");
       Environment.Exit(0);
     }
     catch (Exception ex) {
@@ -99,8 +97,7 @@ public static class GitHubUpdateManager {
       await DeleteFolderContentsRetry(installFolder);
 
       // Get the latest version of the application from GitHub.
-      string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-      string zipLocation = Path.Combine(ourFolder, assetName);
+      string zipLocation = Path.Combine(AppContext.BaseDirectory, assetName);
       GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo);
       using (var client = new HttpClient()) {
         using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}");
@@ -127,8 +124,7 @@ public static class GitHubUpdateManager {
   ///   Cleans up the previous update's files.
   /// </summary>
   public static async Task CleanupUpdate() {
-    string ourFolder = Path.GetDirectoryName(typeof(GitHubUpdateManager).Assembly.Location) ?? "";
-    string backupFolder = Path.Combine(ourFolder, "..", "backup");
+    string backupFolder = Path.Combine(AppContext.BaseDirectory, "..", "backup");
 
     await DeleteFolderRetry(backupFolder);
   }
