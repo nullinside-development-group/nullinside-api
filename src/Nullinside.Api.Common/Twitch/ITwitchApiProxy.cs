@@ -3,6 +3,7 @@
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Moderation.GetModerators;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace Nullinside.Api.Common.Twitch;
 
@@ -49,7 +50,7 @@ public interface ITwitchApiProxy {
   /// </summary>
   /// <param name="token">The cancellation token.</param>
   /// <returns>The twitch user information if successful, null otherwise.</returns>
-  Task<(string? id, string? username)> GetUser(CancellationToken token = new());
+  Task<User?> GetUser(CancellationToken token = new());
 
   /// <summary>
   ///   Gets the twitch id and username of the username provided.
