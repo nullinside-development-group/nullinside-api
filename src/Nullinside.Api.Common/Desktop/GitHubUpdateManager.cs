@@ -39,12 +39,12 @@ public static class GitHubUpdateManager {
     using var httpClient = new HttpClient(handler);
     using var request = new HttpRequestMessage(HttpMethod.Get, string.Format(Constants.APP_UPDATE_API, owner, repo));
     request.Headers.TryAddWithoutValidation("user-agent", Constants.FAKE_USER_AGENT);
-    HttpResponseMessage response = await httpClient.SendAsync(request);
+    HttpResponseMessage response = await httpClient.SendAsync(request).ConfigureAwait(false);
     if (!response.IsSuccessStatusCode) {
       return null;
     }
 
-    string body = await response.Content.ReadAsStringAsync();
+    string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
     return JsonConvert.DeserializeObject<GithubLatestReleaseJson>(body);
   }
 
@@ -55,7 +55,7 @@ public static class GitHubUpdateManager {
     try {
       // To prepare the update, we just need to back up our files
       string backupFolder = Path.Combine(AppContext.BaseDirectory, "..", "backup");
-      await DeleteFolderRetry(backupFolder);
+      await DeleteFolderRetry(backupFolder).ConfigureAwait(false);
 
       Directory.CreateDirectory(backupFolder);
       FileSystem.CopyDirectory(AppContext.BaseDirectory, backupFolder);
@@ -94,16 +94,16 @@ public static class GitHubUpdateManager {
   public static async Task PerformUpdateAndRestart(string owner, string repo, string installFolder, string assetName) {
     try {
       // Delete the old install folder.
-      await DeleteFolderContentsRetry(installFolder);
+      await DeleteFolderContentsRetry(installFolder).ConfigureAwait(false);
 
       // Get the latest version of the application from GitHub.
       string zipLocation = Path.Combine(AppContext.BaseDirectory, assetName);
-      GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo);
+      GithubLatestReleaseJson? latestVersion = await GetLatestVersion(owner, repo).ConfigureAwait(false);
       using (var client = new HttpClient()) {
-        using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}");
-        await using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
+        using HttpResponseMessage response = await client.GetAsync($"https://github.com/{owner}/{repo}/releases/download/{latestVersion?.name}/{assetName}").ConfigureAwait(false);
+        await using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         await using var fileStream = new FileStream(zipLocation, FileMode.Create);
-        await streamToReadFrom.CopyToAsync(fileStream);
+        await streamToReadFrom.CopyToAsync(fileStream).ConfigureAwait(false);
       }
 
       // Extract the zip file to the installation folder.
@@ -126,7 +126,7 @@ public static class GitHubUpdateManager {
   public static async Task CleanupUpdate() {
     string backupFolder = Path.Combine(AppContext.BaseDirectory, "..", "backup");
 
-    await DeleteFolderRetry(backupFolder);
+    await DeleteFolderRetry(backupFolder).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -141,7 +141,7 @@ public static class GitHubUpdateManager {
         }
 
         return Task.FromResult(true);
-      }, 30, waitTime: TimeSpan.FromSeconds(1));
+      }, 30, waitTime: TimeSpan.FromSeconds(1)).ConfigureAwait(false);
     }
     catch (Exception ex) {
       Log.Error(ex);
@@ -168,7 +168,7 @@ public static class GitHubUpdateManager {
         }
 
         return Task.FromResult(true);
-      }, 30, waitTime: TimeSpan.FromSeconds(1));
+      }, 30, waitTime: TimeSpan.FromSeconds(1)).ConfigureAwait(false);
     }
     catch (Exception ex) {
       Log.Error(ex);
