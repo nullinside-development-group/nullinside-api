@@ -14,6 +14,7 @@
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <DocumentationFile>bin\Release\Nullinside.Api.Common.xml</DocumentationFile>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
