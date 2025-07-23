@@ -47,7 +47,7 @@ public class DockerControllerTests : UnitTestBase {
         Notes = "Should be in output"
       }
     );
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Create two entries "in the server" for what is actually running. We should only match on the "good" one. The bad
     // one is different enough that it shouldn't match.
@@ -66,7 +66,7 @@ public class DockerControllerTests : UnitTestBase {
 
     // Make the call and ensure it's successful.
     var controller = new DockerController(_db, _docker.Object);
-    ObjectResult obj = await controller.GetDockerResources();
+    ObjectResult obj = await controller.GetDockerResources().ConfigureAwait(false);
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // There should be three results. One that was actively running "Good" and the others weren't actively running.
@@ -92,7 +92,7 @@ public class DockerControllerTests : UnitTestBase {
         Id = 2, DisplayName = "Bad", IsDockerComposeProject = true, Name = "Bad", Notes = "Should not be in output"
       }
     );
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Only a call with "Good" will work.
     _docker.Setup(d =>
@@ -102,7 +102,7 @@ public class DockerControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new DockerController(_db, _docker.Object);
     ObjectResult obj =
-      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true });
+      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true }).ConfigureAwait(false);
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure we called the 3rd party API with a value of "Good" to turn on a compose.
@@ -124,7 +124,7 @@ public class DockerControllerTests : UnitTestBase {
         Id = 2, DisplayName = "Bad", IsDockerComposeProject = false, Name = "Bad", Notes = "Should not be in output"
       }
     );
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Only a call with "Good" will work.
     _docker.Setup(d => d.TurnOnOffDockerContainer("Good", It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -133,7 +133,7 @@ public class DockerControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new DockerController(_db, _docker.Object);
     ObjectResult obj =
-      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true });
+      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true }).ConfigureAwait(false);
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure we called the 3rd party API with a value of "Good" to turn on a container.
@@ -152,7 +152,7 @@ public class DockerControllerTests : UnitTestBase {
         Id = 2, DisplayName = "Bad", IsDockerComposeProject = false, Name = "Bad", Notes = "Should not be in output"
       }
     );
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Only a call with "Good" will get true.
     _docker.Setup(d => d.TurnOnOffDockerContainer("Good", It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -161,7 +161,7 @@ public class DockerControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new DockerController(_db, _docker.Object);
     ObjectResult obj =
-      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true });
+      await controller.TurnOnOrOffDockerResources(1, new TurnOnOrOffDockerResourcesRequest { TurnOn = true }).ConfigureAwait(false);
     Assert.That(obj.StatusCode, Is.EqualTo(400));
 
     // Bad request is returned to user with a generic error message.

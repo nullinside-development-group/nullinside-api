@@ -40,6 +40,6 @@ public class FeatureToggleController : ControllerBase {
   [AllowAnonymous]
   [HttpGet]
   public async Task<ObjectResult> GetAll(CancellationToken token = new()) {
-    return Ok(await _dbContext.FeatureToggle.ToListAsync(token));
+    return Ok(await _dbContext.FeatureToggle.ToListAsync(token).ConfigureAwait(false));
   }
 }

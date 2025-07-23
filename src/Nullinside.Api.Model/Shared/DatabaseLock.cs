@@ -48,7 +48,7 @@ public class DatabaseLock : IDisposable {
 
     // This is only used with hard coded names.
 #pragma warning disable EF1002
-    await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT GET_LOCK('{name}', -1)", cancellationToken);
+    await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT GET_LOCK('{name}', -1)", cancellationToken).ConfigureAwait(false);
 #pragma warning restore EF1002
     _name = name;
     return true;
@@ -63,13 +63,13 @@ public class DatabaseLock : IDisposable {
     if (!string.IsNullOrWhiteSpace(name) && !name.Equals(_name, StringComparison.InvariantCultureIgnoreCase)) {
       // This is only used with hard coded names.
 #pragma warning disable EF1002
-      await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT RELEASE_LOCK('{_name}')", cancellationToken);
+      await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT RELEASE_LOCK('{_name}')", cancellationToken).ConfigureAwait(false);
 #pragma warning restore EF1002
     }
 
     // This is only used with hard coded names.
 #pragma warning disable EF1002
-    await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT RELEASE_LOCK('{name}')", cancellationToken);
+    await _mysqlDbContext.Database.ExecuteSqlRawAsync($"SELECT RELEASE_LOCK('{name}')", cancellationToken).ConfigureAwait(false);
 #pragma warning restore EF1002
     _name = null;
   }

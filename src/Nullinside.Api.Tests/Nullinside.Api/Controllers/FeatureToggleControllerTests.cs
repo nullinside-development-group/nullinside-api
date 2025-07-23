@@ -23,11 +23,11 @@ public class FeatureToggleControllerTests : UnitTestBase {
         Id = 2, Feature = "bye", IsEnabled = false
       }
     );
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Make the call and ensure it's successful.
     var controller = new FeatureToggleController(_db);
-    ObjectResult obj = await controller.GetAll();
+    ObjectResult obj = await controller.GetAll().ConfigureAwait(false);
     Assert.That(obj.StatusCode, Is.EqualTo(200));
 
     // Ensure they passed through cleanly.

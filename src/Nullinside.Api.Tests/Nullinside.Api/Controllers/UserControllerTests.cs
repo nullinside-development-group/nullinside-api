@@ -65,12 +65,12 @@ public class UserControllerTests : UnitTestBase {
       Email = "hi"
     });
 
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
-    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
+    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" }).ConfigureAwait(false);
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
@@ -90,7 +90,7 @@ public class UserControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
-    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
+    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" }).ConfigureAwait(false);
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
@@ -112,7 +112,7 @@ public class UserControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = "hi";
-    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
+    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" }).ConfigureAwait(false);
 
     // We should have been redirected to the error.
     Assert.That(obj.Url.StartsWith("/user/login?error="), Is.True);
@@ -126,7 +126,7 @@ public class UserControllerTests : UnitTestBase {
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     controller.Email = null;
-    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" });
+    RedirectResult obj = await controller.Login(new GoogleOpenIdToken { credential = "stuff" }).ConfigureAwait(false);
 
     // We should have been redirected to the error.
     Assert.That(obj.Url.StartsWith("/user/login?error="), Is.True);
@@ -151,11 +151,11 @@ public class UserControllerTests : UnitTestBase {
       Email = "hi"
     });
 
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
+    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object).ConfigureAwait(false);
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
@@ -182,7 +182,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
+    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object).ConfigureAwait(false);
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
@@ -205,7 +205,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
+    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object).ConfigureAwait(false);
 
     // We should have gone down the bad route
     Assert.That(obj.Url.StartsWith("/user/login?error="), Is.True);
@@ -222,7 +222,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
+    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object).ConfigureAwait(false);
 
     // We should have gone down the bad route because no email was associated with the twitch account.
     Assert.That(obj.Url.StartsWith("/user/login?error="), Is.True);
@@ -245,7 +245,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object);
+    RedirectResult obj = await controller.TwitchLogin("things", _twitchApi.Object).ConfigureAwait(false);
 
     // We should have been redirected to the error route because of an exception in DB processing.
     Assert.That(obj.Url.StartsWith("/user/login?error="), Is.True);
@@ -283,11 +283,11 @@ public class UserControllerTests : UnitTestBase {
   [Test]
   public async Task ValidateTokenExists() {
     _db.Users.Add(new User { Token = "123" });
-    await _db.SaveChangesAsync();
+    await _db.SaveChangesAsync().ConfigureAwait(false);
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    IActionResult obj = await controller.Validate(new AuthToken("123"));
+    IActionResult obj = await controller.Validate(new AuthToken("123")).ConfigureAwait(false);
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(200));
 
     // Ensure we returned that the token was correct.
@@ -301,7 +301,7 @@ public class UserControllerTests : UnitTestBase {
   public async Task ValidateFailWithoutToken() {
     // Make the call and ensure it fails.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    IActionResult obj = await controller.Validate(new AuthToken("123"));
+    IActionResult obj = await controller.Validate(new AuthToken("123")).ConfigureAwait(false);
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(401));
   }
 
@@ -314,7 +314,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Make the call and ensure it fails.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
-    IActionResult obj = await controller.Validate(new AuthToken("123"));
+    IActionResult obj = await controller.Validate(new AuthToken("123")).ConfigureAwait(false);
     Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(500));
   }
 }

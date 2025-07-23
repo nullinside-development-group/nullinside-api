@@ -1,6 +1,5 @@
 using System.Net.WebSockets;
 using System.Security.Claims;
-using System.Text;
 
 using Google.Apis.Auth;
 
@@ -73,12 +72,12 @@ public class UserController : ControllerBase {
   public async Task<RedirectResult> Login([FromForm] GoogleOpenIdToken creds, CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
     try {
-      GoogleJsonWebSignature.Payload? credentials = await GenerateUserObject(creds);
+      GoogleJsonWebSignature.Payload? credentials = await GenerateUserObject(creds).ConfigureAwait(false);
       if (string.IsNullOrWhiteSpace(credentials?.Email)) {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, token);
+      string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, token).ConfigureAwait(false);
       if (string.IsNullOrWhiteSpace(bearerToken)) {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
@@ -96,7 +95,7 @@ public class UserController : ControllerBase {
   /// <param name="creds">The credentials from Google.</param>
   /// <returns>The user information object.</returns>
   protected virtual async Task<GoogleJsonWebSignature.Payload?> GenerateUserObject(GoogleOpenIdToken creds) {
-    return await GoogleJsonWebSignature.ValidateAsync(creds.credential);
+    return await GoogleJsonWebSignature.ValidateAsync(creds.credential).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -119,16 +118,16 @@ public class UserController : ControllerBase {
   public async Task<RedirectResult> TwitchLogin([FromQuery] string code, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
     string? siteUrl = _configuration.GetValue<string>("Api:SiteUrl");
-    if (null == await api.CreateAccessToken(code, token)) {
+    if (null == await api.CreateAccessToken(code, token).ConfigureAwait(false)) {
       return Redirect($"{siteUrl}/user/login?error=3");
     }
 
-    string? email = await api.GetUserEmail(token);
+    string? email = await api.GetUserEmail(token).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(email)) {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, token);
+    string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, token).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(bearerToken)) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
@@ -163,7 +162,7 @@ public class UserController : ControllerBase {
     }
 
     // Since someone already warned us this request was coming, create an oauth token from the code we received.
-    if (null == await api.CreateAccessToken(code, token)) {
+    if (null == await api.CreateAccessToken(code, token).ConfigureAwait(false)) {
       return Redirect($"{siteUrl}/user/login/desktop?error=2");
     }
 
@@ -177,8 +176,8 @@ public class UserController : ControllerBase {
         ExpiresUtc = api.OAuth?.ExpiresUtc ?? DateTime.MinValue
       };
 
-      await socket.SendTextAsync(JsonConvert.SerializeObject(oAuth), token);
-      await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Completed Successfully!", token);
+      await socket.SendTextAsync(JsonConvert.SerializeObject(oAuth), token).ConfigureAwait(false);
+      await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Completed Successfully!", token).ConfigureAwait(false);
       _webSockets.WebSockets.TryRemove(state, out _);
       socket.Dispose();
     }
@@ -199,11 +198,11 @@ public class UserController : ControllerBase {
   public async Task TwitchStreamingToolsRefreshToken(CancellationToken token = new()) {
     if (HttpContext.WebSockets.IsWebSocketRequest) {
       // Connect with the client
-      using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+      using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
 
       // The first communication over the web socket is always the id that we will later get from the
       // twitch api with the associated credentials.
-      string id = await webSocket.ReceiveTextAsync(token);
+      string id = await webSocket.ReceiveTextAsync(token).ConfigureAwait(false);
       id = id.Trim();
 
       // Add the web socket to web socket persistant service. It will be sitting there until the twitch api calls our
@@ -214,7 +213,7 @@ public class UserController : ControllerBase {
       // lose the connection. That's just the way web sockets are implemented in .NET Core Web APIs. So we have to sit
       // here in an await (specifically in an await so we don't mess up the thread pool) until twitch calls us.
       while (null == webSocket.CloseStatus) {
-        await Task.Delay(1000, token);
+        await Task.Delay(1000, token).ConfigureAwait(false);
       }
     }
     else {
@@ -239,7 +238,7 @@ public class UserController : ControllerBase {
       ExpiresUtc = DateTime.MinValue
     };
 
-    if (null == await api.RefreshAccessToken(token)) {
+    if (null == await api.RefreshAccessToken(token).ConfigureAwait(false)) {
       return BadRequest();
     }
 
@@ -281,7 +280,7 @@ public class UserController : ControllerBase {
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
   public async Task<IActionResult> Validate(AuthToken token, CancellationToken cancellationToken = new()) {
     try {
-      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned, cancellationToken);
+      User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned, cancellationToken).ConfigureAwait(false);
       if (null == existing) {
         return Unauthorized();
       }

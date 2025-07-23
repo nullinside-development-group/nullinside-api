@@ -43,7 +43,7 @@ public class DatabaseController : ControllerBase {
   [HttpGet]
   [Route("migration")]
   public async Task<StatusCodeResult> Migrate() {
-    await _dbContext.Database.MigrateAsync();
+    await _dbContext.Database.MigrateAsync().ConfigureAwait(false);
     return Ok();
   }
 }

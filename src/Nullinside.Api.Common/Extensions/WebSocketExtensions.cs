@@ -14,7 +14,7 @@ public static class WebSocketExtensions {
   /// <param name="message">The message to send.</param>
   /// <param name="cancelToken">The cancellation token.</param>
   public static async Task SendTextAsync(this WebSocket webSocket, string message, CancellationToken cancelToken = new()) {
-    await webSocket.SendAsync(Encoding.ASCII.GetBytes(message), WebSocketMessageType.Text, true, cancelToken);
+    await webSocket.SendAsync(Encoding.ASCII.GetBytes(message), WebSocketMessageType.Text, true, cancelToken).ConfigureAwait(false);
   }
 
   /// <summary>
@@ -29,7 +29,7 @@ public static class WebSocketExtensions {
 
     do {
       var data = new ArraySegment<byte>(new byte[1024]);
-      response = await webSocket.ReceiveAsync(data, cancelToken);
+      response = await webSocket.ReceiveAsync(data, cancelToken).ConfigureAwait(false);
       fullMessage.AddRange(data);
     } while (null == response.CloseStatus && !response.EndOfMessage);
 

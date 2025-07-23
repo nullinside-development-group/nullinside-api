@@ -27,9 +27,9 @@ public static class UserHelpers {
     string? twitchUsername = null, string? twitchId = null) {
     string bearerToken = AuthUtils.GenerateBearerToken();
     try {
-      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, token);
+      User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, token).ConfigureAwait(false);
       if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
-        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername && !u.IsBanned, token);
+        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername && !u.IsBanned, token).ConfigureAwait(false);
       }
 
       if (null == existing) {
@@ -45,9 +45,9 @@ public static class UserHelpers {
           CreatedOn = DateTime.UtcNow
         });
 
-        await dbContext.SaveChangesAsync(token);
+        await dbContext.SaveChangesAsync(token).ConfigureAwait(false);
 
-        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token);
+        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, token).ConfigureAwait(false);
         if (null == existing) {
           return null;
         }
@@ -68,7 +68,7 @@ public static class UserHelpers {
         existing.UpdatedOn = DateTime.UtcNow;
       }
 
-      await dbContext.SaveChangesAsync(token);
+      await dbContext.SaveChangesAsync(token).ConfigureAwait(false);
       return bearerToken;
     }
     catch {
