@@ -88,7 +88,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public virtual async Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new()) {
     ITwitchAPI api = GetApi();
     AuthCodeResponse? response = await api.Auth.GetAccessTokenFromCodeAsync(code, TwitchAppConfig?.ClientSecret,
-      TwitchAppConfig?.ClientRedirect);
+      TwitchAppConfig?.ClientRedirect).ConfigureAwait(false);
     if (null == response) {
       return null;
     }
@@ -109,7 +109,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       }
 
       ITwitchAPI api = GetApi();
-      RefreshResponse? response = await api.Auth.RefreshAuthTokenAsync(OAuth?.RefreshToken, TwitchAppConfig?.ClientSecret, TwitchAppConfig?.ClientId);
+      RefreshResponse? response = await api.Auth.RefreshAuthTokenAsync(OAuth?.RefreshToken, TwitchAppConfig?.ClientSecret, TwitchAppConfig?.ClientId).ConfigureAwait(false);
       if (null == response) {
         return null;
       }
@@ -129,7 +129,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// <inheritdoc />
   public async Task<bool> GetAccessTokenIsValid(CancellationToken token = new()) {
     try {
-      return !string.IsNullOrWhiteSpace((await GetUser(token))?.Id);
+      return !string.IsNullOrWhiteSpace((await GetUser(token).ConfigureAwait(false))?.Id);
     }
     catch {
       return false;
@@ -140,40 +140,40 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public virtual async Task<User?> GetUser(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
-      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
+      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync().ConfigureAwait(false);
       if (null == response) {
         return null;
       }
 
       return response.Users.FirstOrDefault();
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
   public virtual async Task<(string? id, string? username)> GetUser(string username, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
-      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync(logins: [username]);
+      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync(logins: [username]).ConfigureAwait(false);
       if (null == response) {
         return (null, null);
       }
 
       User? user = response.Users.FirstOrDefault();
       return (user?.Id, user?.Login);
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
   public virtual async Task<string?> GetUserEmail(CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
-      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync();
+      GetUsersResponse? response = await api.Helix.Users.GetUsersAsync().ConfigureAwait(false);
       if (null == response) {
         return null;
       }
 
       return response.Users.FirstOrDefault()?.Email;
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
@@ -192,9 +192,9 @@ public class TwitchApiProxy : ITwitchApiProxy {
       request.Headers.Add("Authorization", $"Bearer {OAuth?.AccessToken}");
       request.Headers.Add("Client-Id", TwitchAppConfig?.ClientId);
 
-      using HttpResponseMessage response = await client.SendAsync(request);
+      using HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
       response.EnsureSuccessStatusCode();
-      string responseBody = await response.Content.ReadAsStringAsync();
+      string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
       var moderatedChannels = JsonConvert.DeserializeObject<TwitchModeratedChannelsResponse>(responseBody);
       if (null == moderatedChannels) {
         break;
@@ -219,7 +219,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
           BanUserResponse? response = await api.Helix.Moderation.BanUserAsync(channelId, botId, new BanUserRequest {
             UserId = user.Id,
             Reason = reason
-          });
+          }).ConfigureAwait(false);
 
           if (null == response || null == response.Data) {
             continue;
@@ -229,7 +229,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
           LOG.Info($"Banned {user.Username} ({user.Id}) in {channelId}: {reason}");
         }
         catch (HttpResponseException ex) {
-          string exceptionReason = await ex.HttpResponse.Content.ReadAsStringAsync(token);
+          string exceptionReason = await ex.HttpResponse.Content.ReadAsStringAsync(token).ConfigureAwait(false);
           LOG.Debug($"Failed to ban {user.Username} ({user.Id}) in {channelId}: {exceptionReason}", ex);
         }
         catch (Exception ex) {
@@ -238,7 +238,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       }
 
       return bannedUsers;
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
@@ -250,7 +250,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       string? cursor = null;
       int total = 0;
       do {
-        GetChattersResponse? response = await api.Helix.Chat.GetChattersAsync(channelId, botId, 1000, cursor);
+        GetChattersResponse? response = await api.Helix.Chat.GetChattersAsync(channelId, botId, 1000, cursor).ConfigureAwait(false);
         if (null == response) {
           break;
         }
@@ -262,7 +262,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
 
       Debug.Assert(chatters.Count == total);
       return chatters;
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
@@ -279,7 +279,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       }
 
       GetStreamsResponse? response =
-        await api.Helix.Streams.GetStreamsAsync(userIds: twitchIdsArray[i..lastIndex].ToList());
+        await api.Helix.Streams.GetStreamsAsync(userIds: twitchIdsArray[i..lastIndex].ToList()).ConfigureAwait(false);
       if (null != response) {
         liveUsers.AddRange(response.Streams.Where(s =>
           "live".Equals(s.Type, StringComparison.InvariantCultureIgnoreCase)));
@@ -298,7 +298,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       GetModeratorsResponse? response = null;
       do {
         response = await api.Helix.Moderation.GetModeratorsAsync(channelId, first: 100,
-          after: response?.Pagination?.Cursor);
+          after: response?.Pagination?.Cursor).ConfigureAwait(false);
         if (null == response || null == response.Data) {
           break;
         }
@@ -313,16 +313,16 @@ public class TwitchApiProxy : ITwitchApiProxy {
       } while (null != response.Pagination?.Cursor);
 
       return results;
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <inheritdoc />
   public virtual async Task<bool> AddChannelMod(string channelId, string userId, CancellationToken token = new()) {
     return await Retry.Execute(async () => {
       ITwitchAPI api = GetApi();
-      await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId);
+      await api.Helix.Moderation.AddChannelModeratorAsync(channelId, userId).ConfigureAwait(false);
       return true;
-    }, Retries, token);
+    }, Retries, token).ConfigureAwait(false);
   }
 
   /// <summary>

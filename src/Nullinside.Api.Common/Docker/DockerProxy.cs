@@ -40,7 +40,7 @@ public class DockerProxy : IDockerProxy {
   /// <inheritdoc />
   public async Task<IEnumerable<DockerResource>> GetContainers(CancellationToken cancellationToken) {
     (string output, string error) response =
-      await ExecuteCommand("docker container ls -a --format '{{.Names}}|{{.Status}}'", cancellationToken);
+      await ExecuteCommand("docker container ls -a --format '{{.Names}}|{{.Status}}'", cancellationToken).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(response.output)) {
       return Enumerable.Empty<DockerResource>();
     }
@@ -69,7 +69,7 @@ public class DockerProxy : IDockerProxy {
   /// <inheritdoc />
   public async Task<IEnumerable<DockerResource>> GetDockerComposeProjects(CancellationToken cancellationToken) {
     (string output, string error) responseJson =
-      await ExecuteCommand("docker compose ls -a --format 'json'", cancellationToken);
+      await ExecuteCommand("docker compose ls -a --format 'json'", cancellationToken).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(responseJson.output)) {
       return Enumerable.Empty<DockerResource>();
     }
@@ -89,7 +89,7 @@ public class DockerProxy : IDockerProxy {
   public async Task<bool> TurnOnOffDockerContainer(string name, bool turnOn, CancellationToken cancellationToken) {
     string command = turnOn ? "start" : "stop";
     (string output, string error) responseJson =
-      await ExecuteCommand($"docker container {command} {name}", cancellationToken);
+      await ExecuteCommand($"docker container {command} {name}", cancellationToken).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(responseJson.error)) {
       return false;
     }
@@ -101,11 +101,11 @@ public class DockerProxy : IDockerProxy {
   /// <inheritdoc />
   public async Task<bool> TurnOnOffDockerCompose(string name, bool turnOn, CancellationToken cancellationToken,
     string? backupFolder) {
-    IEnumerable<DockerResource> existing = await GetDockerComposeProjects(cancellationToken);
+    IEnumerable<DockerResource> existing = await GetDockerComposeProjects(cancellationToken).ConfigureAwait(false);
     if (null != existing.FirstOrDefault(e => name.Equals(e.Name))) {
       string command = turnOn ? "start" : "stop";
       (string output, string error) stdout =
-        await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken);
+        await ExecuteCommand($"docker compose -p {name} {command}", cancellationToken).ConfigureAwait(false);
       if (string.IsNullOrWhiteSpace(stdout.error)) {
         return false;
       }
@@ -119,7 +119,7 @@ public class DockerProxy : IDockerProxy {
     }
 
     (string output, string error)
-      output = await ExecuteCommand("docker compose up -d", cancellationToken, backupFolder);
+      output = await ExecuteCommand("docker compose up -d", cancellationToken, backupFolder).ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(output.error)) {
       return false;
     }
@@ -138,7 +138,7 @@ public class DockerProxy : IDockerProxy {
   private async Task<(string output, string error)> ExecuteCommand(string command, CancellationToken token = new(),
     string? dir = null) {
     using SshClient client = new(_server!, _username!, _password!);
-    await client.ConnectAsync(token);
+    await client.ConnectAsync(token).ConfigureAwait(false);
     using SshCommand? responseJson = client.RunCommand($"cd {dir}; echo {_password2} | sudo -S {command}");
     return (responseJson.Result, responseJson.Error);
   }

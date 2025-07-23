@@ -61,7 +61,7 @@ public class DockerController : ControllerBase {
     Task<List<DockerDeployments>> recognizedProjects = _dbContext.DockerDeployments.ToListAsync(token);
 
     // Wait for all the async calls to finish.
-    await Task.WhenAll(containers, projects, recognizedProjects);
+    await Task.WhenAll(containers, projects, recognizedProjects).ConfigureAwait(false);
 
     // Map the output
     var response = new List<DockerResource>();
@@ -96,7 +96,7 @@ public class DockerController : ControllerBase {
   public async Task<ObjectResult> TurnOnOrOffDockerResources(int id, TurnOnOrOffDockerResourcesRequest request,
     CancellationToken token = new()) {
     DockerDeployments? recognizedProjects = await _dbContext.DockerDeployments
-      .FirstOrDefaultAsync(d => d.Id == id, token);
+      .FirstOrDefaultAsync(d => d.Id == id, token).ConfigureAwait(false);
     if (null == recognizedProjects) {
       return BadRequest(new BasicServerFailure("'id' is invalid"));
     }
@@ -104,10 +104,10 @@ public class DockerController : ControllerBase {
     bool result;
     if (recognizedProjects.IsDockerComposeProject) {
       result = await _docker.TurnOnOffDockerCompose(recognizedProjects.Name, request.TurnOn, token,
-        recognizedProjects.ServerDir);
+        recognizedProjects.ServerDir).ConfigureAwait(false);
     }
     else {
-      result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, request.TurnOn, token);
+      result = await _docker.TurnOnOffDockerContainer(recognizedProjects.Name, request.TurnOn, token).ConfigureAwait(false);
     }
 
     return Ok(result);

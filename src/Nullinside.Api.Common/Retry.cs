@@ -32,7 +32,7 @@ public static class Retry {
     Exception? exceptionToThrow = null;
     while (tries <= numberOfRetries && !token.IsCancellationRequested) {
       try {
-        return await action();
+        return await action().ConfigureAwait(false);
       }
       catch (Exception ex) {
         exceptionToThrow = ex;
@@ -40,7 +40,7 @@ public static class Retry {
 
         // Why did I do as delay THEN method? Honestly...I don't have a good reason. You can change it if you want, just
         // update the documentation if you do.
-        await Task.Delay(waitTime.HasValue ? (int)waitTime.Value.TotalMilliseconds : 1000, token);
+        await Task.Delay(waitTime.HasValue ? (int)waitTime.Value.TotalMilliseconds : 1000, token).ConfigureAwait(false);
         if (null != runOnFailure) {
           runOnFailure(ex);
         }

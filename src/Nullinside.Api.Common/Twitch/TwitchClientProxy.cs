@@ -150,7 +150,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     // Try to connect and join the channel.
     bool connectedAndJoined = false;
     for (int i = 0; i < retryConnection; i++) {
-      if (await JoinChannel(channel)) {
+      if (await JoinChannel(channel).ConfigureAwait(false)) {
         connectedAndJoined = true;
         break;
       }
@@ -184,7 +184,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
   /// <inheritdoc />
   public async Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback) {
-    await JoinChannel(channel);
+    await JoinChannel(channel).ConfigureAwait(false);
     string channelSan = channel.ToLowerInvariant();
     lock (_onMessageReceived) {
       if (!_onMessageReceived.TryAdd(channelSan, callback)) {
@@ -223,7 +223,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
   /// <inheritdoc />
   public async Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback) {
-    await JoinChannel(channel);
+    await JoinChannel(channel).ConfigureAwait(false);
 
     lock (_onUserBanReceived) {
       _onUserBanReceived[channel] = callback;
@@ -250,7 +250,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
   /// <inheritdoc />
   public async Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback) {
-    await JoinChannel(channel);
+    await JoinChannel(channel).ConfigureAwait(false);
 
     lock (_onRaid) {
       _onRaid[channel] = callback;
@@ -282,7 +282,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     }
 
     // Try to connect.
-    if (!await Connect()) {
+    if (!await Connect().ConfigureAwait(false)) {
       return false;
     }
 
@@ -319,7 +319,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="e">The event arguments.</param>
   private async void TwitchChatClientReconnectOnElapsed(object? sender, ElapsedEventArgs e) {
     // Connect the chat client.
-    await Connect();
+    await Connect().ConfigureAwait(false);
 
     // Pull the master list of channels we should be connected to the stack.
     string[]? allChannels = null;
@@ -329,7 +329,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
     // Join all the channels.
     foreach (string channel in allChannels) {
-      await JoinChannel(channel);
+      await JoinChannel(channel).ConfigureAwait(false);
     }
 
     // Restart the timer.
