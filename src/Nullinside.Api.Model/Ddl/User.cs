@@ -27,6 +27,16 @@ public class User : ITableModel {
   ///   The user's auth token for interacting with the site's API.
   /// </summary>
   public string? Token { get; set; }
+  
+  /// <summary>
+  ///   The user's auth token for interacting with the site's API.
+  /// </summary>
+  public string? RefreshToken { get; set; }
+  
+  /// <summary>
+  ///   The user's auth token for interacting with the site's API.
+  /// </summary>
+  public DateTime? TokenExpires { get; set; }
 
   /// <summary>
   ///   The id of the user on twitch.
@@ -94,6 +104,8 @@ public class User : ITableModel {
       entity.Property(e => e.Email)
         .HasMaxLength(255);
       entity.Property(e => e.Token)
+        .HasMaxLength(255);
+      entity.Property(e => e.RefreshToken)
         .HasMaxLength(255);
       entity.Property(e => e.UpdatedOn)
         .IsRowVersion();
