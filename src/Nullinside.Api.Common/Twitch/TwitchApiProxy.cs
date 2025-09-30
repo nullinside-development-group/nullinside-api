@@ -4,6 +4,7 @@ using log4net;
 
 using Newtonsoft.Json;
 
+using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Twitch.Json;
 
 using TwitchLib.Api;
@@ -60,7 +61,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   /// </param>
   public TwitchApiProxy(string token, string refreshToken, DateTime tokenExpires, string? clientId = null,
     string? clientSecret = null, string? clientRedirect = null) {
-    OAuth = new TwitchAccessToken {
+    OAuth = new OAuthToken {
       AccessToken = token,
       RefreshToken = refreshToken,
       ExpiresUtc = tokenExpires
@@ -79,13 +80,13 @@ public class TwitchApiProxy : ITwitchApiProxy {
   public int Retries { get; set; } = 3;
 
   /// <inheritdoc />
-  public virtual TwitchAccessToken? OAuth { get; set; }
+  public virtual OAuthToken? OAuth { get; set; }
 
   /// <inheritdoc />
   public virtual TwitchAppConfig? TwitchAppConfig { get; set; }
 
   /// <inheritdoc />
-  public virtual async Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new()) {
+  public virtual async Task<OAuthToken?> CreateAccessToken(string code, CancellationToken token = new()) {
     ITwitchAPI api = GetApi();
     AuthCodeResponse? response = await api.Auth.GetAccessTokenFromCodeAsync(code, TwitchAppConfig?.ClientSecret,
       TwitchAppConfig?.ClientRedirect).ConfigureAwait(false);
@@ -93,7 +94,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       return null;
     }
 
-    OAuth = new TwitchAccessToken {
+    OAuth = new OAuthToken {
       AccessToken = response.AccessToken,
       RefreshToken = response.RefreshToken,
       ExpiresUtc = DateTime.UtcNow + TimeSpan.FromSeconds(response.ExpiresIn)
@@ -102,7 +103,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public virtual async Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new()) {
+  public virtual async Task<OAuthToken?> RefreshAccessToken(CancellationToken token = new()) {
     try {
       if (string.IsNullOrWhiteSpace(TwitchAppConfig?.ClientSecret) || string.IsNullOrWhiteSpace(TwitchAppConfig?.ClientId)) {
         return null;
@@ -114,7 +115,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
         return null;
       }
 
-      OAuth = new TwitchAccessToken {
+      OAuth = new OAuthToken {
         AccessToken = response.AccessToken,
         RefreshToken = response.RefreshToken,
         ExpiresUtc = DateTime.UtcNow + TimeSpan.FromSeconds(response.ExpiresIn)

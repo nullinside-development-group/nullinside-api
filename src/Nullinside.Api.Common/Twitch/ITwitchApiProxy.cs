@@ -1,4 +1,5 @@
-﻿using Nullinside.Api.Common.Twitch.Json;
+﻿using Nullinside.Api.Common.Auth;
+using Nullinside.Api.Common.Twitch.Json;
 
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
@@ -14,7 +15,7 @@ public interface ITwitchApiProxy {
   /// <summary>
   ///   The Twitch access token. These are the credentials used for all requests.
   /// </summary>
-  TwitchAccessToken? OAuth { get; set; }
+  OAuthToken? OAuth { get; set; }
 
   /// <summary>
   ///   The Twitch app configuration. These are used for all requests.
@@ -28,7 +29,7 @@ public interface ITwitchApiProxy {
   /// <param name="token">The cancellation token.</param>
   /// <remarks>The object will have its <see cref="OAuth" /> updated with the new settings for the token.</remarks>
   /// <returns>The OAuth details if successful, null otherwise.</returns>
-  Task<TwitchAccessToken?> CreateAccessToken(string code, CancellationToken token = new());
+  Task<OAuthToken?> CreateAccessToken(string code, CancellationToken token = new());
 
   /// <summary>
   ///   Refreshes the access token.
@@ -36,7 +37,7 @@ public interface ITwitchApiProxy {
   /// <param name="token">The cancellation token.</param>
   /// <remarks>The object will have its <see cref="OAuth" /> updated with the new settings for the token.</remarks>
   /// <returns>The OAuth details if successful, null otherwise.</returns>
-  Task<TwitchAccessToken?> RefreshAccessToken(CancellationToken token = new());
+  Task<OAuthToken?> RefreshAccessToken(CancellationToken token = new());
 
   /// <summary>
   ///   Determines if the <see cref="OAuth" /> is valid.

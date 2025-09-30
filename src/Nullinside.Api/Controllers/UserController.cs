@@ -1,5 +1,6 @@
 using System.Net.WebSockets;
 using System.Security.Claims;
+using System.Text;
 
 using Google.Apis.Auth;
 
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json;
 
+using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Extensions;
 using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Model;
@@ -18,6 +20,8 @@ using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Model.Shared;
 using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
+
+using Org.BouncyCastle.Utilities.Encoders;
 
 namespace Nullinside.Api.Controllers;
 
@@ -77,12 +81,13 @@ public class UserController : ControllerBase {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
-      if (string.IsNullOrWhiteSpace(bearerToken)) {
+      var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
+      if (null == bearerToken) {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
-
-      return Redirect($"{siteUrl}/user/login?token={bearerToken}");
+      
+      var json = JsonConvert.SerializeObject(bearerToken);
+      return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
     }
     catch (InvalidJwtException) {
       return Redirect($"{siteUrl}/user/login?error=1");
@@ -127,12 +132,13 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    string? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
-    if (string.IsNullOrWhiteSpace(bearerToken)) {
+    var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
+    if (null == bearerToken) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
 
-    return Redirect($"{siteUrl}/user/login?token={bearerToken}");
+    var json = JsonConvert.SerializeObject(bearerToken);
+    return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
   }
 
   /// <summary>
@@ -170,7 +176,7 @@ public class UserController : ControllerBase {
     // socket so we will pull up that socket and give them their oauth information. 
     try {
       WebSocket socket = _webSockets.WebSockets[state];
-      var oAuth = new TwitchAccessToken {
+      var oAuth = new OAuthToken {
         AccessToken = api.OAuth?.AccessToken ?? string.Empty,
         RefreshToken = api.OAuth?.RefreshToken ?? string.Empty,
         ExpiresUtc = api.OAuth?.ExpiresUtc ?? DateTime.MinValue
@@ -232,7 +238,7 @@ public class UserController : ControllerBase {
   [Route("twitch-login/twitch-streaming-tools")]
   public async Task<IActionResult> TwitchStreamingToolsRefreshToken([FromForm] string refreshToken, [FromServices] ITwitchApiProxy api,
     CancellationToken token = new()) {
-    api.OAuth = new TwitchAccessToken {
+    api.OAuth = new OAuthToken {
       AccessToken = null,
       RefreshToken = refreshToken,
       ExpiresUtc = DateTime.MinValue
@@ -242,7 +248,7 @@ public class UserController : ControllerBase {
       return BadRequest();
     }
 
-    return Ok(new TwitchAccessToken {
+    return Ok(new OAuthToken {
       AccessToken = api.OAuth.AccessToken ?? string.Empty,
       RefreshToken = api.OAuth.RefreshToken ?? string.Empty,
       ExpiresUtc = api.OAuth.ExpiresUtc ?? DateTime.MinValue
