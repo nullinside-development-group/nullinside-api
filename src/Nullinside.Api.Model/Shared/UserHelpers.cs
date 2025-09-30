@@ -23,11 +23,12 @@ public static class UserHelpers {
   /// <param name="twitchUsername">The username of the user on twitch.</param>
   /// <param name="twitchId">The id of the user on twitch.</param>
   /// <returns>The bearer token if successful, null otherwise.</returns>
-  public static async Task<string?> GenerateTokenAndSaveToDatabase(INullinsideContext dbContext, string email, 
+  public static async Task<OAuthToken?> GenerateTokenAndSaveToDatabase(INullinsideContext dbContext, string email, 
     TimeSpan tokenExpires, string? authToken = null, string? refreshToken = null, DateTime? expires = null,
     string? twitchUsername = null, string? twitchId = null, CancellationToken cancellationToken = new()) {
     string bearerToken = AuthUtils.GenerateToken();
     string bearerRefreshToken = AuthUtils.GenerateToken();
+    DateTime expiresUtc = DateTime.UtcNow + tokenExpires;
     try {
       User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, cancellationToken).ConfigureAwait(false);
       if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
@@ -75,7 +76,11 @@ public static class UserHelpers {
       }
 
       await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-      return bearerToken;
+      return new() {
+        AccessToken = bearerToken, 
+        RefreshToken = bearerRefreshToken, 
+        ExpiresUtc = expiresUtc
+      };
     }
     catch {
       return null;

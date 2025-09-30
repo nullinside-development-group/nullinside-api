@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Text;
+using System.Text.Unicode;
 
 using Google.Apis.Auth;
 
@@ -9,12 +11,17 @@ using Microsoft.Extensions.Configuration;
 
 using Moq;
 
+using Newtonsoft.Json;
+
+using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Twitch;
 using Nullinside.Api.Controllers;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
+
+using Org.BouncyCastle.Utilities.Encoders;
 
 namespace Nullinside.Api.Tests.Nullinside.Api.Controllers;
 
@@ -74,12 +81,15 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
+    var queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
-    // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(_db.Users.First().Token!), Is.True);
+    // We should have saved the token in the existing user's database.
+    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
+    Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
 
   /// <summary>
@@ -94,12 +104,15 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
+    var queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(_db.Users.First().Token!), Is.True);
+    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
+    Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
 
   /// <summary>
@@ -139,7 +152,7 @@ public class UserControllerTests : UnitTestBase {
   public async Task PerformTwitchLoginExisting() {
     // Tells us twitch parsed the code successfully.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Returns(() => Task.FromResult<TwitchAccessToken?>(new TwitchAccessToken()));
+      .Returns(() => Task.FromResult<OAuthToken?>(new OAuthToken()));
 
     // Gets a matching email address from our database
     _twitchApi.Setup(a => a.GetUserEmail(It.IsAny<CancellationToken>()))
@@ -159,12 +172,15 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
+    var queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(_db.Users.First().Token!), Is.True);
+    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
+    Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
 
   /// <summary>
@@ -174,7 +190,7 @@ public class UserControllerTests : UnitTestBase {
   public async Task PerformTwitchLoginNewUser() {
     // Tells us twitch parsed the code successfully.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Returns(() => Task.FromResult<TwitchAccessToken?>(new TwitchAccessToken()));
+      .Returns(() => Task.FromResult<OAuthToken?>(new OAuthToken()));
 
     // Gets a matching email address from our database
     _twitchApi.Setup(a => a.GetUserEmail(It.IsAny<CancellationToken>()))
@@ -186,12 +202,15 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
+    var queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    Assert.That(obj.Url.EndsWith(_db.Users.First().Token!), Is.True);
+    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
+    Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
 
   /// <summary>
@@ -201,7 +220,7 @@ public class UserControllerTests : UnitTestBase {
   public async Task PerformTwitchLoginBadTwitchResponse() {
     // Tells us twitch thinks it was a bad code.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Returns(() => Task.FromResult<TwitchAccessToken?>(null));
+      .Returns(() => Task.FromResult<OAuthToken?>(null));
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
@@ -218,7 +237,7 @@ public class UserControllerTests : UnitTestBase {
   public async Task PerformTwitchLoginWithNoEmailAccount() {
     // Tells us twitch parsed the code successfully.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Returns(() => Task.FromResult<TwitchAccessToken?>(new TwitchAccessToken()));
+      .Returns(() => Task.FromResult<OAuthToken?>(new OAuthToken()));
 
     // Make the call and ensure it's successful.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
@@ -237,7 +256,7 @@ public class UserControllerTests : UnitTestBase {
 
     // Tells us twitch parsed the code successfully.
     _twitchApi.Setup(a => a.CreateAccessToken(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Returns(() => Task.FromResult<TwitchAccessToken?>(new TwitchAccessToken()));
+      .Returns(() => Task.FromResult<OAuthToken?>(new OAuthToken()));
 
     // Gets an email address from twitch
     _twitchApi.Setup(a => a.GetUserEmail(It.IsAny<CancellationToken>()))

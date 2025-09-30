@@ -61,6 +61,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         .AsNoTracking()
         .FirstOrDefaultAsync(u => !string.IsNullOrWhiteSpace(u.Token) &&
                                   u.Token == token &&
+                                  u.TokenExpires > DateTime.UtcNow &&
                                   !u.IsBanned)
         .ConfigureAwait(false);
 

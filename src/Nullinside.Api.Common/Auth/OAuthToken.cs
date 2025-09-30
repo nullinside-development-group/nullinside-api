@@ -1,9 +1,9 @@
-namespace Nullinside.Api.Common.Twitch;
+namespace Nullinside.Api.Common.Auth;
 
 /// <summary>
 ///   Represents an OAuth token in the Twitch workflow.
 /// </summary>
-public class TwitchAccessToken {
+public class OAuthToken {
   /// <summary>
   ///   The Twitch access token.
   /// </summary>
