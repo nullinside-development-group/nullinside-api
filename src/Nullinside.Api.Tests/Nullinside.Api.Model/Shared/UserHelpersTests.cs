@@ -23,7 +23,7 @@ public class UserHelpersTests : UnitTestBase {
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // Generate a new token
-    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(_db, "email").ConfigureAwait(false);
+    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(_db, "email", Constants.OAUTH_TOKEN_TIME_LIMIT).ConfigureAwait(false);
     Assert.That(token, Is.Not.Null);
 
     // Verify we still only have one user
@@ -48,7 +48,7 @@ public class UserHelpersTests : UnitTestBase {
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // Generate a new token
-    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(_db, "email").ConfigureAwait(false);
+    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(_db, "email", Constants.OAUTH_TOKEN_TIME_LIMIT).ConfigureAwait(false);
     Assert.That(token, Is.Not.Null);
 
     // Verify we have a new user
@@ -65,7 +65,7 @@ public class UserHelpersTests : UnitTestBase {
   [Test]
   public async Task HandleUnexpectedErrors() {
     // Force an error to occur.
-    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(null!, "email").ConfigureAwait(false);
+    string? token = await UserHelpers.GenerateTokenAndSaveToDatabase(null!, "email", Constants.OAUTH_TOKEN_TIME_LIMIT).ConfigureAwait(false);
     Assert.That(token, Is.Null);
   }
 }
