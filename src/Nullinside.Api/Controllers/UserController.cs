@@ -93,6 +93,29 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=1");
     }
   }
+  
+  /// <summary>
+  ///   Called to generate a new oauth token using the refresh token we previously provided.
+  /// </summary>
+  /// <param name="token">The refresh token we provided.</param>
+  /// <param name="cancellationToken">The cancellation token.</param>
+  /// <returns>A redirect to the nullinside website.</returns>
+  [AllowAnonymous]
+  [HttpPost]
+  [Route("token/refresh")]
+  public async Task<ActionResult> Refresh(AuthToken token, CancellationToken cancellationToken = new()) {
+    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token.Token, cancellationToken).ConfigureAwait(false);
+    if (null == user?.Email) {
+      return Unauthorized();
+    }
+    
+    var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, user.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: cancellationToken).ConfigureAwait(false);
+    if (null == bearerToken) {
+      return StatusCode(500);
+    }
+    
+    return Ok(bearerToken);
+  }
 
   /// <summary>
   ///   Converts the credential string we get from google to a representation we read information from.
