@@ -45,6 +45,11 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// </summary>
   /// <returns>The user and their roles if successful, <see cref="AuthenticateResult.Fail(string)" /> otherwise.</returns>
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
+    // Skip options requests
+    if (Request.Method == "OPTIONS") {
+      return AuthenticateResult.NoResult();
+    }
+
     // Read token from HTTP request header
     string? authorizationHeader = Request.Headers.Authorization;
     if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer ")) {
@@ -87,18 +92,27 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         }
       }
 
-      ClaimsIdentity identity = new(claims, "BasicBearerToken");
-      ClaimsPrincipal user = new(identity);
-      AuthenticationProperties authProperties = new() {
-        IsPersistent = true
-      };
-
-      AuthenticationTicket ticket = new(user, authProperties, "BasicBearerToken");
-      return AuthenticateResult.Success(ticket);
+      return CreateAuth(claims);
     }
     catch (Exception ex) {
       _logger.Error("Failed to create an auth ticket after successful token validation", ex);
       return AuthenticateResult.Fail(ex);
     }
+  }
+
+  /// <summary>
+  ///   Creates the authorization ticket.
+  /// </summary>
+  /// <param name="claims">The list of claims to provide.</param>
+  /// <returns>The authorization ticket.</returns>
+  private static AuthenticateResult CreateAuth(List<Claim> claims) {
+    ClaimsIdentity identity = new(claims, "BasicBearerToken");
+    ClaimsPrincipal user = new(identity);
+    AuthenticationProperties authProperties = new() {
+      IsPersistent = true
+    };
+
+    AuthenticationTicket ticket = new(user, authProperties, "BasicBearerToken");
+    return AuthenticateResult.Success(ticket);
   }
 }
