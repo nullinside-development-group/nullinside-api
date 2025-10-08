@@ -27,12 +27,12 @@ public class User : ITableModel {
   ///   The user's auth token for interacting with the site's API.
   /// </summary>
   public string? Token { get; set; }
-  
+
   /// <summary>
   ///   The user's auth token for interacting with the site's API.
   /// </summary>
   public string? RefreshToken { get; set; }
-  
+
   /// <summary>
   ///   The user's auth token for interacting with the site's API.
   /// </summary>

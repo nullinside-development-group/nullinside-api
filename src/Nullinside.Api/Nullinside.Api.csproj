@@ -23,7 +23,7 @@
 
     <ItemGroup>
         <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.68.0.1869"/>
-        <PackageReference Include="log4net" Version="3.2.0" />
+        <PackageReference Include="log4net" Version="3.2.0"/>
         <PackageReference Include="log4net.Ext.Json" Version="3.0.3"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,10 +31,10 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0"/>
         <PackageReference Include="Nullinside.MySql.EntityFrameworkCore" Version="9.0.3"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
         <PackageReference Include="SSH.NET" Version="2025.0.0"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.5" />
-        <PackageReference Include="System.Text.Json" Version="9.0.9" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.5"/>
+        <PackageReference Include="System.Text.Json" Version="9.0.9"/>
         <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1"/>
         <PackageReference Include="TwitchLib.Api" Version="3.9.0"/>
     </ItemGroup>

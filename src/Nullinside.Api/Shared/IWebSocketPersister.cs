@@ -11,5 +11,5 @@ public interface IWebSocketPersister {
   /// <summary>
   ///   A collection of web sockets key'd by an identifier for the web socket connection.
   /// </summary>
-  public ConcurrentDictionary<string, WebSocket> WebSockets { get; set; }
+  ConcurrentDictionary<string, WebSocket> WebSockets { get; set; }
 }

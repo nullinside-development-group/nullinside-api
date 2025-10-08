@@ -10,5 +10,5 @@ public interface ITableModel {
   ///   The method used to configure the POCOs of the table.
   /// </summary>
   /// <param name="modelBuilder">The model builder.</param>
-  public void OnModelCreating(ModelBuilder modelBuilder);
+  void OnModelCreating(ModelBuilder modelBuilder);
 }
