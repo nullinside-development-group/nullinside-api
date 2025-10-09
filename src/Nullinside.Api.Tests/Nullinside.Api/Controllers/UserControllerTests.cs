@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Text;
-using System.Text.Unicode;
 
 using Google.Apis.Auth;
 
@@ -20,8 +19,6 @@ using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
-
-using Org.BouncyCastle.Utilities.Encoders;
 
 namespace Nullinside.Api.Tests.Nullinside.Api.Controllers;
 
@@ -81,13 +78,13 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
-    var queryParam = obj.Url["/user/login?token=".Length..];
+    string queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database.
-    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    string json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
     var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
     Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
@@ -104,13 +101,13 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
-    var queryParam = obj.Url["/user/login?token=".Length..];
+    string queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    string json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
     var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
     Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
@@ -172,13 +169,13 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
-    var queryParam = obj.Url["/user/login?token=".Length..];
+    string queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    string json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
     var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
     Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }
@@ -202,13 +199,13 @@ public class UserControllerTests : UnitTestBase {
 
     // We should have been redirected to the successful route.
     Assert.That(obj.Url.StartsWith("/user/login?token="), Is.True);
-    var queryParam = obj.Url["/user/login?token=".Length..];
+    string queryParam = obj.Url["/user/login?token=".Length..];
 
     // No additional users should have been created.
     Assert.That(_db.Users.Count(), Is.EqualTo(1));
 
     // We should have saved the token in the existing user's database. 
-    var json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
+    string json = Encoding.UTF8.GetString(Convert.FromBase64String(queryParam));
     var oauth = JsonConvert.DeserializeObject<OAuthToken>(json);
     Assert.That(oauth?.AccessToken!, Is.EqualTo(_db.Users.First().Token!));
   }

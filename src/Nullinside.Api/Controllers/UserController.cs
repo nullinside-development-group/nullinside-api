@@ -21,8 +21,6 @@ using Nullinside.Api.Model.Shared;
 using Nullinside.Api.Shared;
 using Nullinside.Api.Shared.Json;
 
-using Org.BouncyCastle.Utilities.Encoders;
-
 namespace Nullinside.Api.Controllers;
 
 /// <summary>
@@ -81,19 +79,19 @@ public class UserController : ControllerBase {
         return Redirect($"{siteUrl}/user/login?error=1");
       }
 
-      var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
+      OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, credentials.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
       if (null == bearerToken) {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
-      
-      var json = JsonConvert.SerializeObject(bearerToken);
+
+      string json = JsonConvert.SerializeObject(bearerToken);
       return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
     }
     catch (InvalidJwtException) {
       return Redirect($"{siteUrl}/user/login?error=1");
     }
   }
-  
+
   /// <summary>
   ///   Called to generate a new oauth token using the refresh token we previously provided.
   /// </summary>
@@ -104,16 +102,16 @@ public class UserController : ControllerBase {
   [HttpPost]
   [Route("token/refresh")]
   public async Task<ActionResult> Refresh(AuthToken token, CancellationToken cancellationToken = new()) {
-    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token.Token, cancellationToken).ConfigureAwait(false);
+    User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token.Token, cancellationToken).ConfigureAwait(false);
     if (null == user?.Email) {
       return Unauthorized();
     }
-    
-    var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, user.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+    OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, user.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: cancellationToken).ConfigureAwait(false);
     if (null == bearerToken) {
       return StatusCode(500);
     }
-    
+
     return Ok(bearerToken);
   }
 
@@ -155,12 +153,12 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    var bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
+    OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
     if (null == bearerToken) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
 
-    var json = JsonConvert.SerializeObject(bearerToken);
+    string json = JsonConvert.SerializeObject(bearerToken);
     return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
   }
 
