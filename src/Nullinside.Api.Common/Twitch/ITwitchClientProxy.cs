@@ -1,3 +1,5 @@
+using Nullinside.Api.Common.Twitch.Support;
+
 using TwitchLib.Client.Events;
 
 namespace Nullinside.Api.Common.Twitch;
@@ -34,7 +36,7 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to invoke.</param>
   /// <returns>An asynchronous task.</returns>
-  Task AddMessageCallback(string channel, Action<OnMessageReceivedArgs> callback);
+  Task AddMessageCallback(string channel, Action<TwitchChatMessage> callback);
 
   /// <summary>
   ///   Removes a callback for when the channel receives a new chat message.
@@ -42,37 +44,22 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
-  void RemoveMessageCallback(string channel, Action<OnMessageReceivedArgs> callback);
+  void RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback);
 
   /// <summary>
   ///   Adds a callback for when users are banned from the chat.
   /// </summary>
   /// <param name="channel">The channel to subscribe to notifications for.</param>
   /// <param name="callback">The callback to invoke when a user is banned.</param>
-  Task AddBannedCallback(string channel, Action<OnUserBannedArgs> callback);
+  Task AddBannedCallback(string channel, Action<TwitchChatBan> callback);
 
   /// <summary>
   ///   Removes a callback for when users are banned from the chat.
   /// </summary>
   /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove from when a user is banned.</param>
-  void RemoveBannedCallback(string channel, Action<OnUserBannedArgs> callback);
+  void RemoveBannedCallback(string channel, Action<TwitchChatBan> callback);
 
-  /// <summary>
-  ///   Adds a callback for when the channel receives a raid.
-  /// </summary>
-  /// <param name="channel">The channel to subscribe to callbacks for.</param>
-  /// <param name="callback">The callback to invoke.</param>
-  /// <returns>An asynchronous task.</returns>
-  Task AddRaidCallback(string channel, Action<OnRaidNotificationArgs> callback);
-
-  /// <summary>
-  ///   Removes a callback for when the channel receives a raid.
-  /// </summary>
-  /// <param name="channel">The name of the channel to add the callback for.</param>
-  /// <param name="callback">The callback to remove.</param>
-  /// <returns>An asynchronous task.</returns>
-  void RemoveRaidCallback(string channel, Action<OnRaidNotificationArgs> callback);
 
   /// <summary>
   ///   Adds a callback for being disconnected from the twitch chat server.
