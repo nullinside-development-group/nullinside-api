@@ -9,7 +9,9 @@ using Nullinside.Api.Common.Twitch.Support;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
+using TwitchLib.Communication.Events;
 
+using OnConnectedEventArgs = TwitchLib.Communication.Events.OnConnectedEventArgs;
 using Timer = System.Timers.Timer;
 
 namespace Nullinside.Api.Common.Twitch;
@@ -33,7 +35,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <summary>
   ///   The twitch client to send and receive messages with.
   /// </summary>
-  private readonly TwitchClient _client;
+  private TwitchClient _client;
 
   /// <summary>
   ///   The list of chats we attempted to join with the bot.
@@ -74,16 +76,32 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// </summary>
   private string? _twitchUsername;
 
+  private ILoggerFactory _loggerFactory;
+
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
   /// </summary>
   protected TwitchClientProxy() {
     _joinedChannels = new HashSet<string>();
-    ILoggerFactory loggerFactory = LoggerFactory.Create(c => c
+    _loggerFactory = LoggerFactory.Create(c => c
         .AddConsole()
 		//    .SetMinimumLevel(LogLevel.Trace) // uncomment to view raw messages received from twitch
     );
-    _client = new TwitchClient(loggerFactory: loggerFactory);
+    
+    _client = new TwitchClient();
+
+    // The timer for checking to make sure the IRC channel is connected.
+    _twitchChatClientReconnect = new Timer(1000);
+    _twitchChatClientReconnect.AutoReset = false;
+    _twitchChatClientReconnect.Elapsed += TwitchChatClientReconnectOnElapsed;
+  }
+
+  private async Task CreateTwitchClient() {
+    if (_client.IsConnected) {
+      await _client.DisconnectAsync().ConfigureAwait(false);
+    }
+    
+    _client = new TwitchClient(loggerFactory: _loggerFactory);
 
     _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
     _client.OnUserBanned += TwitchChatClient_OnUserBanned;
@@ -112,11 +130,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
       LOG.Error("Twitch Client No Permission Error");
       return Task.CompletedTask;
     };
-
-    // The timer for checking to make sure the IRC channel is connected.
-    _twitchChatClientReconnect = new Timer(1000);
-    _twitchChatClientReconnect.AutoReset = false;
-    _twitchChatClientReconnect.Elapsed += TwitchChatClientReconnectOnElapsed;
   }
 
   /// <summary>
@@ -408,16 +421,34 @@ public class TwitchClientProxy : ITwitchClientProxy {
     }
 
     try {
-      if (_client.IsConnected) {
-        return true;
-      }
-
+      await CreateTwitchClient().ConfigureAwait(false);
       var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
       if (!_client.IsInitialized) {
         _client.Initialize(credentials);
       }
-
-      await _client.ConnectAsync().ConfigureAwait(false);
+      
+      try {
+        using var connectedEvent = new ManualResetEventSlim(false);
+        Task OnConnected(object? sender, TwitchLib.Client.Events.OnConnectedEventArgs e) {
+          connectedEvent.Set();
+          return Task.CompletedTask;
+        }
+        
+        try {
+          _client!.OnConnected += OnConnected;
+          await _client.ConnectAsync().ConfigureAwait(false);
+          if (!connectedEvent.Wait(30 * 1000)) {
+            return false;
+          }
+        }
+        finally {
+          _client.OnConnected -= OnConnected;
+        }
+      }
+      catch {
+        // Do nothing, just try.
+      }
+      
       _twitchChatClientReconnect.Stop();
       _twitchChatClientReconnect.Start();
       return _client.IsConnected;
