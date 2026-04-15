@@ -64,6 +64,7 @@ public static class UserHelpers {
         });
       }
       else {
+        existing.Email = email;
         existing.Token = bearerToken;
         existing.RefreshToken = bearerRefreshToken;
         existing.TokenExpires = DateTime.UtcNow + tokenExpires;
