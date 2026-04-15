@@ -13,11 +13,13 @@ public class TwitchChatBan {
   /// <param name="username">User that was banned.</param>
   /// <param name="roomId">Channel that had ban event. Id.</param>
   /// <param name="targetUserId">User that was banned. Id.</param>
-  public TwitchChatBan(string channel, string username, string roomId, string targetUserId) {
+  /// <param name="banReason">The reason for the ban, if provided.</param>
+  public TwitchChatBan(string channel, string username, string roomId, string targetUserId, string banReason) {
     Channel = channel;
     Username = username;
     RoomId = roomId;
     TargetUserId = targetUserId;
+    BanReason = banReason;
   }
   
   /// <summary>
@@ -25,6 +27,7 @@ public class TwitchChatBan {
   /// </summary>
   /// <param name="source">The original ban to pull metadata from.</param>
   public TwitchChatBan(UserBan source) {
+    BanReason = string.Empty;
     Channel = source.Channel;
     Username = source.Username;
     RoomId = source.RoomId;
@@ -50,4 +53,9 @@ public class TwitchChatBan {
   ///   User that was banned. Id.
   /// </summary>
   public string TargetUserId { get; private set; }
+  
+  /// <summary>
+  ///   The reason provided with the ban, if included.
+  /// </summary>
+  public string BanReason { get; private set; }
 }

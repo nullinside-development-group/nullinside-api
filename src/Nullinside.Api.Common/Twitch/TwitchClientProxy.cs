@@ -518,7 +518,10 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="disposing">True if called directly, false if called from the destructor.</param>
   protected virtual void Dispose(bool disposing) {
     if (disposing) {
-      Task.WaitAll(_client.DisconnectAsync());
+      if (_client.IsConnected) {
+        Task.WaitAll(_client.DisconnectAsync());
+      }
+
       _twitchChatClientReconnect?.Dispose();
     }
 
