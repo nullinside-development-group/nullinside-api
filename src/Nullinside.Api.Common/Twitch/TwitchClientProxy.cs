@@ -75,20 +75,18 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The twitch username that we are connected to twitch as.
   /// </summary>
   private string? _twitchUsername;
-
-  private ILoggerFactory _loggerFactory;
+  
+  /// <summary>
+  ///   The logger factory to use for debug logging.
+  /// </summary>
+  public ILoggerFactory? LoggerFactory { get; set; }
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
   /// </summary>
   protected TwitchClientProxy() {
     _joinedChannels = new HashSet<string>();
-    _loggerFactory = LoggerFactory.Create(c => c
-        .AddConsole()
-		//    .SetMinimumLevel(LogLevel.Trace) // uncomment to view raw messages received from twitch
-    );
-    
-    _client = new TwitchClient();
+    _client = new TwitchClient(loggerFactory: LoggerFactory);
 
     // The timer for checking to make sure the IRC channel is connected.
     _twitchChatClientReconnect = new Timer(1000);
@@ -101,7 +99,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
       await _client.DisconnectAsync().ConfigureAwait(false);
     }
     
-    _client = new TwitchClient(loggerFactory: _loggerFactory);
+    _client = new TwitchClient(loggerFactory: LoggerFactory);
 
     _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
     _client.OnUserBanned += TwitchChatClient_OnUserBanned;
