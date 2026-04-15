@@ -1,7 +1,5 @@
 using Nullinside.Api.Common.Twitch.Support;
 
-using TwitchLib.Client.Events;
-
 namespace Nullinside.Api.Common.Twitch;
 
 /// <summary>
