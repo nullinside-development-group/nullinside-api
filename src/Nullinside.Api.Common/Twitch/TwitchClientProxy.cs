@@ -87,20 +87,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   protected TwitchClientProxy() {
     _joinedChannels = new HashSet<string>();
     _client = new TwitchClient(loggerFactory: LoggerFactory);
-
-    // The timer for checking to make sure the IRC channel is connected.
-    _twitchChatClientReconnect = new Timer(1000);
-    _twitchChatClientReconnect.AutoReset = false;
-    _twitchChatClientReconnect.Elapsed += TwitchChatClientReconnectOnElapsed;
-  }
-
-  private async Task CreateTwitchClient() {
-    if (_client.IsConnected) {
-      await _client.DisconnectAsync().ConfigureAwait(false);
-    }
-    
-    _client = new TwitchClient(loggerFactory: LoggerFactory);
-
     _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
     _client.OnUserBanned += TwitchChatClient_OnUserBanned;
     _client.OnConnected += (sender, args) => {
@@ -128,6 +114,12 @@ public class TwitchClientProxy : ITwitchClientProxy {
       LOG.Error("Twitch Client No Permission Error");
       return Task.CompletedTask;
     };
+
+    // The timer for checking to make sure the IRC channel is connected.
+    _twitchChatClientReconnect = new Timer(1000);
+    _twitchChatClientReconnect.AutoReset = false;
+    _twitchChatClientReconnect.Elapsed += TwitchChatClientReconnectOnElapsed;
+    _twitchChatClientReconnect.Start();
   }
 
   /// <summary>
@@ -300,14 +292,13 @@ public class TwitchClientProxy : ITwitchClientProxy {
     }
 
     try {
-      await _client.DisconnectAsync().ContinueWith(async _ => {
-        if (null == _twitchUsername || null == _twitchOAuthToken) {
-          return;
-        }
+      await _client.DisconnectAsync().ConfigureAwait(false);
+      if (null == _twitchUsername || null == _twitchOAuthToken) {
+        return;
+      }
 
-        _client.SetConnectionCredentials(new ConnectionCredentials(_twitchUsername, _twitchOAuthToken));
-        await Connect().ConfigureAwait(false);
-      }).ConfigureAwait(false);
+      _client.SetConnectionCredentials(new ConnectionCredentials(_twitchUsername, _twitchOAuthToken));
+      await Connect().ConfigureAwait(false);
     }
     catch (Exception) {
       // Do nothing, just try.
@@ -349,14 +340,13 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="channel">The channel to join.</param>
   /// <returns>True if connected and joined, false otherwise.</returns>
   private async Task<bool> JoinChannel(string channel) {
+    if (!_client.IsConnected) {
+      return false;
+    }
+    
     // First add the channel to the master list.
     lock (_joinedChannels) {
       _joinedChannels.Add(channel.ToLowerInvariant());
-    }
-
-    // Try to connect.
-    if (!await Connect().ConfigureAwait(false)) {
-      return false;
     }
 
     try {
@@ -383,24 +373,30 @@ public class TwitchClientProxy : ITwitchClientProxy {
   /// <param name="sender">The timer.</param>
   /// <param name="e">The event arguments.</param>
   private async void TwitchChatClientReconnectOnElapsed(object? sender, ElapsedEventArgs e) {
-    // Connect the chat client.
-    if (!await Connect().ConfigureAwait(false)) {
-      return;
-    }
+    try {
+      // Connect the chat client.
+      if (!await Connect().ConfigureAwait(false)) {
+        return;
+      }
 
-    // Pull the master list of channels we should be connected to the stack.
-    string[]? allChannels = null;
-    lock (_joinedChannels) {
-      allChannels = _joinedChannels.ToArray();
-    }
+      // Pull the master list of channels we should be connected to the stack.
+      string[]? allChannels = null;
+      lock (_joinedChannels) {
+        allChannels = _joinedChannels.ToArray();
+      }
 
-    // Join all the channels.
-    foreach (string channel in allChannels) {
-      await JoinChannel(channel).ConfigureAwait(false);
+      // Join all the channels.
+      foreach (string channel in allChannels) {
+        await JoinChannel(channel).ConfigureAwait(false);
+      }
     }
-
-    // Restart the timer.
-    _twitchChatClientReconnect.Start();
+    catch (Exception ex) {
+      LOG.Error("Twitch chat reconnect timer failed", ex);
+    }
+    finally {
+      // Restart the timer.
+      _twitchChatClientReconnect.Start(); 
+    }
   }
 
   /// <summary>
@@ -419,9 +415,8 @@ public class TwitchClientProxy : ITwitchClientProxy {
     }
 
     try {
-      await CreateTwitchClient().ConfigureAwait(false);
-      var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
       if (!_client.IsInitialized) {
+        var credentials = new ConnectionCredentials(TwitchUsername, TwitchOAuthToken);
         _client.Initialize(credentials);
       }
       
@@ -436,6 +431,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
           _client!.OnConnected += OnConnected;
           await _client.ConnectAsync().ConfigureAwait(false);
           if (!connectedEvent.Wait(30 * 1000)) {
+            LOG.Error("Twitch Client Connection Timed Out");
             return false;
           }
         }
