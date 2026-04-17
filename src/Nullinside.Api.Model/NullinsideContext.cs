@@ -21,14 +21,10 @@ public class NullinsideContext : DbContext, INullinsideContext {
   public NullinsideContext(DbContextOptions<NullinsideContext> options) : base(options) {
   }
 
-  /// <summary>
-  ///   The users table which contains all of the users that have ever authenticated with the site.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<User> Users { get; set; } = null!;
 
-  /// <summary>
-  ///   The user's roles table which contains all of the "roles" the user has in the application.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<UserRole> UserRoles { get; set; } = null!;
 
   /// <summary>
@@ -36,35 +32,29 @@ public class NullinsideContext : DbContext, INullinsideContext {
   /// </summary>
   public DbSet<DockerDeployments> DockerDeployments { get; set; } = null!;
 
-  /// <summary>
-  ///   The docker deployments that are configurable in the applications.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<TwitchUser> TwitchUser { get; set; } = null!;
 
-  /// <summary>
-  ///   The docker deployments that are configurable in the applications.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<TwitchBan> TwitchBan { get; set; } = null!;
 
-  /// <summary>
-  ///   The feature toggles.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<FeatureToggle> FeatureToggle { get; set; } = null!;
 
-  /// <summary>
-  ///   The twitch user configuration.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<TwitchUserConfig> TwitchUserConfig { get; set; } = null!;
 
-  /// <summary>
-  ///   The twitch logs of users banned outside the bot.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<TwitchUserBannedOutsideOfBotLogs> TwitchUserBannedOutsideOfBotLogs { get; set; } = null!;
 
-  /// <summary>
-  ///   The twitch logs of the user's chat.
-  /// </summary>
+  /// <inheritdoc />
   public DbSet<TwitchUserChatLogs> TwitchUserChatLogs { get; set; } = null!;
+  
+  /// <inheritdoc />
+  public DbSet<Feedback> Feedback { get; set; }
+  
+  /// <inheritdoc />
+  public DbSet<FeedbackComment> FeedbackComment { get; set; }
 
   /// <summary>
   ///   Dynamically finds all <seealso cref="ITableModel" /> classes and generates tables from their definitions.

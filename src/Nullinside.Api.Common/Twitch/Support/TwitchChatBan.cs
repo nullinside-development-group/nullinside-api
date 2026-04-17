@@ -21,7 +21,7 @@ public class TwitchChatBan {
     TargetUserId = targetUserId;
     BanReason = banReason;
   }
-  
+
   /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchChatBan" /> class.
   /// </summary>
@@ -53,7 +53,7 @@ public class TwitchChatBan {
   ///   User that was banned. Id.
   /// </summary>
   public string TargetUserId { get; private set; }
-  
+
   /// <summary>
   ///   The reason provided with the ban, if included.
   /// </summary>

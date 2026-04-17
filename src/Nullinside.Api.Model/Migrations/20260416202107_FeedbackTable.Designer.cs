@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nullinside.Api.Model;
 
@@ -10,9 +11,11 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Model.Migrations
 {
     [DbContext(typeof(NullinsideContext))]
-    partial class NullinsideContextModelSnapshot : ModelSnapshot
+    [Migration("20260416202107_FeedbackTable")]
+    partial class FeedbackTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,12 +92,6 @@ namespace Nullinside.Api.Model.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -103,35 +100,6 @@ namespace Nullinside.Api.Model.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Feedback");
-                });
-
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.FeedbackComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("FeedbackId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("varchar(10000)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FeedbackId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FeedbackComment");
                 });
 
             modelBuilder.Entity("Nullinside.Api.Model.Ddl.TwitchBan", b =>
@@ -360,25 +328,6 @@ namespace Nullinside.Api.Model.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.FeedbackComment", b =>
-                {
-                    b.HasOne("Nullinside.Api.Model.Ddl.Feedback", "Feedback")
-                        .WithMany("Comments")
-                        .HasForeignKey("FeedbackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Nullinside.Api.Model.Ddl.User", "User")
-                        .WithMany("FeedbackComments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Feedback");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Nullinside.Api.Model.Ddl.TwitchUserConfig", b =>
                 {
                     b.HasOne("Nullinside.Api.Model.Ddl.User", null)
@@ -397,15 +346,8 @@ namespace Nullinside.Api.Model.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Nullinside.Api.Model.Ddl.Feedback", b =>
-                {
-                    b.Navigation("Comments");
-                });
-
             modelBuilder.Entity("Nullinside.Api.Model.Ddl.User", b =>
                 {
-                    b.Navigation("FeedbackComments");
-
                     b.Navigation("Feedbacks");
 
                     b.Navigation("Roles");

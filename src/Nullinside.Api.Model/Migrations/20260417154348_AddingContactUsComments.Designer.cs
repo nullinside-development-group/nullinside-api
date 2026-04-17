@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nullinside.Api.Model;
 
@@ -10,9 +11,11 @@ using Nullinside.Api.Model;
 namespace Nullinside.Api.Model.Migrations
 {
     [DbContext(typeof(NullinsideContext))]
-    partial class NullinsideContextModelSnapshot : ModelSnapshot
+    [Migration("20260417154348_AddingContactUsComments")]
+    partial class AddingContactUsComments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,9 +95,6 @@ namespace Nullinside.Api.Model.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -118,9 +118,6 @@ namespace Nullinside.Api.Model.Migrations
                         .IsRequired()
                         .HasMaxLength(10000)
                         .HasColumnType("varchar(10000)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
