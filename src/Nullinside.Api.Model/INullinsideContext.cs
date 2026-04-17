@@ -53,6 +53,16 @@ public interface INullinsideContext : IAsyncDisposable {
   ///   The twitch logs of the user's chat.
   /// </summary>
   DbSet<TwitchUserChatLogs> TwitchUserChatLogs { get; set; }
+  
+  /// <summary>
+  ///   The feedback submitted through the website.
+  /// </summary>
+  DbSet<Feedback> Feedback { get; set; }
+  
+  /// <summary>
+  ///   The comments to feedback submitted through the website.
+  /// </summary>
+  DbSet<FeedbackComment> FeedbackComment { get; set; }
 
   /// <summary>
   ///   Provides access to database related information and operations for this context.

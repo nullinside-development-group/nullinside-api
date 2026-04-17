@@ -91,6 +91,16 @@ public class User : ITableModel {
   public TwitchUserConfig? TwitchConfig { get; set; }
 
   /// <summary>
+  ///   The feedback submitted by the user.
+  /// </summary>
+  public ICollection<Feedback> Feedbacks { get; set; } = null!;
+
+  /// <summary>
+  ///   The comments submitted against feedback.
+  /// </summary>
+  public ICollection<FeedbackComment> FeedbackComments { get; set; } = null!;
+
+  /// <summary>
   ///   The method used to configure the POCOs of the table.
   /// </summary>
   /// <param name="modelBuilder">The model builder.</param>
