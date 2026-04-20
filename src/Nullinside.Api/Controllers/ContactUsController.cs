@@ -16,7 +16,6 @@ namespace Nullinside.Api.Controllers;
 /// <summary>
 ///   Provides the ability to read and write feedback for the website.
 /// </summary>
-[Authorize(nameof(UserRoles.VM_ADMIN))]
 [ApiController]
 [Route("[controller]")]
 public class ContactUsController : ControllerBase {
