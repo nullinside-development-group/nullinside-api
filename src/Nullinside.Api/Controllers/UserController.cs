@@ -309,7 +309,7 @@ public class UserController : ControllerBase {
     try {
       User? existing = await _dbContext.Users.FirstOrDefaultAsync(u => u.Token == token.Token && !u.IsBanned, cancellationToken).ConfigureAwait(false);
       if (null == existing) {
-        return Unauthorized();
+        return Ok(false);
       }
 
       return Ok(true);
