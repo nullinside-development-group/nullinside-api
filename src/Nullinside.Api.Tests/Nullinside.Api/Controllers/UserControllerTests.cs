@@ -318,7 +318,8 @@ public class UserControllerTests : UnitTestBase {
     // Make the call and ensure it fails.
     var controller = new TestableUserController(_configuration, _db, _webSocketPersister.Object);
     IActionResult obj = await controller.Validate(new AuthToken("123")).ConfigureAwait(false);
-    Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(401));
+    Assert.That((obj as IStatusCodeActionResult)?.StatusCode, Is.EqualTo(200));
+    Assert.That((obj as ObjectResult)?.Value, Is.False);
   }
 
   /// <summary>
