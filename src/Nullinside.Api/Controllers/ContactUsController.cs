@@ -49,6 +49,9 @@ public class ContactUsController : ControllerBase {
       return Unauthorized(false);
     }
 
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
+
     // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
     // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
     // that the site admin made. 
@@ -57,8 +60,10 @@ public class ContactUsController : ControllerBase {
     // is no longer the case, this code will need to be modified.
     List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
+      .ThenInclude(c => c.User)
+      .Include(f => f.User)
       .Where(f => f.UserId == userId)
-      .Select(f => new ContactUsFeedbackResponse(f))
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
       .ToListAsync(token)
       .ConfigureAwait(false);
 
@@ -78,6 +83,9 @@ public class ContactUsController : ControllerBase {
       return Unauthorized(false);
     }
 
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
+
     // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
     // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
     // that the site admin made. 
@@ -86,7 +94,9 @@ public class ContactUsController : ControllerBase {
     // is no longer the case, this code will need to be modified.
     List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
-      .Select(f => new ContactUsFeedbackResponse(f))
+      .ThenInclude(c => c.User)
+      .Include(f => f.User)
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
       .ToListAsync(token)
       .ConfigureAwait(false);
 
@@ -105,8 +115,8 @@ public class ContactUsController : ControllerBase {
       return Unauthorized(false);
     }
 
-    List<Claim> allRoles = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
-    bool isAdmin = allRoles.Any(r => Equals(r.Value, nameof(UserRoles.ADMIN)));
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
 
     // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
     // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
@@ -116,8 +126,10 @@ public class ContactUsController : ControllerBase {
     // is no longer the case, this code will need to be modified.
     ContactUsFeedbackResponse? feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
+      .ThenInclude(c => c.User)
+      .Include(f => f.User)
       .Where(f => (isAdmin || f.UserId == userId) && f.Id == id)
-      .Select(f => new ContactUsFeedbackResponse(f))
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
       .FirstOrDefaultAsync(token)
       .ConfigureAwait(false);
 
@@ -174,8 +186,8 @@ public class ContactUsController : ControllerBase {
       return BadRequest("Feedback not found");
     }
 
-    List<Claim> allRoles = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
-    bool isAdmin = allRoles.Any(r => Equals(r.Value, nameof(UserRoles.ADMIN)));
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
     if (!isAdmin && feedback.UserId != userId) {
       return Unauthorized(false);
     }

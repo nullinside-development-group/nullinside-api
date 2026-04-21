@@ -15,7 +15,7 @@ public enum FeedbackStatus {
   Completed,
 
   /// <summary>
-  ///   The feedback was rejected.
+  ///   The feedback was closed without action taken.
   /// </summary>
-  Rejected
+  Closed
 }
