@@ -153,7 +153,8 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=4");
     }
 
-    OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: token).ConfigureAwait(false);
+    TwitchLib.Api.Helix.Models.Users.GetUsers.User? twitchInfo = await api.GetUser(token).ConfigureAwait(false);
+    OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, email, Constants.OAUTH_TOKEN_TIME_LIMIT, twitchUsername: twitchInfo?.Login, twitchId: twitchInfo?.Id, cancellationToken: token).ConfigureAwait(false);
     if (null == bearerToken) {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
