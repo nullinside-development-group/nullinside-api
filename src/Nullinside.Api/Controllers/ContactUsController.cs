@@ -105,6 +105,9 @@ public class ContactUsController : ControllerBase {
       return Unauthorized(false);
     }
 
+    List<Claim> allRoles = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
+    bool isAdmin = allRoles.Any(r => Equals(r.Value, nameof(UserRoles.ADMIN)));
+
     // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
     // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
     // that the site admin made. 
@@ -113,7 +116,7 @@ public class ContactUsController : ControllerBase {
     // is no longer the case, this code will need to be modified.
     ContactUsFeedbackResponse? feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
-      .Where(f => f.UserId == userId && f.Id == id)
+      .Where(f => (isAdmin || f.UserId == userId) && f.Id == id)
       .Select(f => new ContactUsFeedbackResponse(f))
       .FirstOrDefaultAsync(token)
       .ConfigureAwait(false);
