@@ -137,6 +137,39 @@ public class ContactUsController : ControllerBase {
   }
 
   /// <summary>
+  ///   Updates the status of feedback.
+  /// </summary>
+  [Authorize(nameof(UserRoles.ADMIN))]
+  [HttpPost("{id:int}/status")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public async Task<ObjectResult> GetFeedback(int id, ContactUsFeedbackStatusChangeRequest status, CancellationToken token = new()) {
+    if (null == status.Status) {
+      return BadRequest("Status cannot be empty");
+    }
+
+    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
+    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
+      return Unauthorized(false);
+    }
+
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
+    if (!isAdmin) {
+      return Unauthorized(false);
+    }
+
+    Feedback? existing = await _dbContext.Feedback.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
+    if (null == existing) {
+      return BadRequest(false);
+    }
+
+    existing.Status = Enum.Parse<FeedbackStatus>(status.Status);
+    await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+    return Ok(true);
+  }
+
+  /// <summary>
   ///   Submits new feedback to the website.
   /// </summary>
   [HttpPost]
