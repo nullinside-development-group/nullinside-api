@@ -38,7 +38,7 @@ public class ContactUsController : ControllerBase {
   }
 
   /// <summary>
-  ///   Submits new feedback to the website.
+  ///   Retrieves all feedback for the authenticated user.
   /// </summary>
   [HttpGet]
   [ProducesResponseType(StatusCodes.Status200OK)]
@@ -55,7 +55,7 @@ public class ContactUsController : ControllerBase {
     //
     // The one and only reason this works is because the site admin is the only user responding to people...when that
     // is no longer the case, this code will need to be modified.
-    var feedback = await _dbContext.Feedback
+    List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
       .Where(f => f.UserId == userId)
       .Select(f => new ContactUsFeedbackResponse(f))
@@ -64,9 +64,37 @@ public class ContactUsController : ControllerBase {
 
     return Ok(feedback);
   }
-  
+
   /// <summary>
-  ///   Submits new feedback to the website.
+  ///   Retrieves all feedback for all users.
+  /// </summary>
+  [Authorize(nameof(UserRoles.ADMIN))]
+  [HttpGet("admin")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public async Task<ObjectResult> GetAllFeedbackAdmin(CancellationToken token = new()) {
+    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
+    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
+      return Unauthorized(false);
+    }
+
+    // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
+    // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
+    // that the site admin made. 
+    //
+    // The one and only reason this works is because the site admin is the only user responding to people...when that
+    // is no longer the case, this code will need to be modified.
+    List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
+      .Include(f => f.Comments)
+      .Select(f => new ContactUsFeedbackResponse(f))
+      .ToListAsync(token)
+      .ConfigureAwait(false);
+
+    return Ok(feedback);
+  }
+
+  /// <summary>
+  ///   Get a specific feedback item.
   /// </summary>
   [HttpGet("{id:int}")]
   [ProducesResponseType(StatusCodes.Status200OK)]
@@ -83,7 +111,7 @@ public class ContactUsController : ControllerBase {
     //
     // The one and only reason this works is because the site admin is the only user responding to people...when that
     // is no longer the case, this code will need to be modified.
-    var feedback = await _dbContext.Feedback
+    ContactUsFeedbackResponse? feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
       .Where(f => f.UserId == userId && f.Id == id)
       .Select(f => new ContactUsFeedbackResponse(f))
@@ -103,7 +131,7 @@ public class ContactUsController : ControllerBase {
     if (string.IsNullOrWhiteSpace(feedback.Product) || string.IsNullOrWhiteSpace(feedback.Message)) {
       return BadRequest("Product and message cannot be empty");
     }
-    
+
     string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
     if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
       return Unauthorized(false);
@@ -123,7 +151,7 @@ public class ContactUsController : ControllerBase {
   }
 
   /// <summary>
-  ///   Submits a comment against the website.
+  ///   Submits a comment attached to some feedback.
   /// </summary>
   [HttpPost("{id:int}/comment")]
   [ProducesResponseType(StatusCodes.Status200OK)]
@@ -141,6 +169,12 @@ public class ContactUsController : ControllerBase {
     Feedback? feedback = await _dbContext.Feedback.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
     if (null == feedback) {
       return BadRequest("Feedback not found");
+    }
+
+    List<Claim> allRoles = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
+    bool isAdmin = allRoles.Any(r => Equals(r.Value, nameof(UserRoles.ADMIN)));
+    if (!isAdmin && feedback.UserId != userId) {
+      return Unauthorized(false);
     }
 
     var dbComment = new FeedbackComment {
