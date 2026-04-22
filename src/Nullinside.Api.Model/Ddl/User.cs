@@ -101,6 +101,16 @@ public class User : ITableModel {
   public ICollection<FeedbackComment> FeedbackComments { get; set; } = null!;
 
   /// <summary>
+  ///   The collection of timestamps when the user read feedback.
+  /// </summary>
+  public ICollection<FeedbackReadReceipt> FeedbackReadReceipts { get; set; } = null!;
+
+  /// <summary>
+  ///   The collection of timestamps when the user read feedback on a comment.
+  /// </summary>
+  public ICollection<FeedbackCommentReadReceipt> FeedbackCommentReadReceipts { get; set; } = null!;
+
+  /// <summary>
   ///   The method used to configure the POCOs of the table.
   /// </summary>
   /// <param name="modelBuilder">The model builder.</param>
