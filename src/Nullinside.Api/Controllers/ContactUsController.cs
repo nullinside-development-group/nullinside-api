@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 
 using log4net;
@@ -19,6 +21,36 @@ namespace Nullinside.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class ContactUsController : ControllerBase {
+  /// <summary>
+  ///   The logger.
+  /// </summary>
+  private static readonly ILog LOG = LogManager.GetLogger(typeof(ContactUsController));
+
+  /// <summary>
+  ///   The email host to send emails to.
+  /// </summary>
+  private static readonly string? EMAIL_HOST = Environment.GetEnvironmentVariable("EMAIL_HOST");
+
+  /// <summary>
+  ///   The port to connect to on the host.
+  /// </summary>
+  private static readonly string? EMAIL_PORT = Environment.GetEnvironmentVariable("EMAIL_PORT");
+
+  /// <summary>
+  ///   The username of the account.
+  /// </summary>
+  private static readonly string? EMAIL_USERNAME = Environment.GetEnvironmentVariable("EMAIL_USERNAME");
+
+  /// <summary>
+  ///   The password of the account.
+  /// </summary>
+  private static readonly string? EMAIL_PASSWORD = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+
+  /// <summary>
+  ///   The domain of the UI.
+  /// </summary>
+  private static readonly string? UI_DOMAIN = Environment.GetEnvironmentVariable("UI_DOMAIN");
+
   /// <summary>
   ///   The nullinside database.
   /// </summary>
@@ -204,7 +236,49 @@ public class ContactUsController : ControllerBase {
 
     await _dbContext.Feedback.AddAsync(dbFeedback, token).ConfigureAwait(false);
     await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+
+    User? admin = _dbContext.Users.FirstOrDefault(u => u.Id == Constants.ADMIN_USER_ID);
+    if (null == admin || string.IsNullOrWhiteSpace(admin.Email)) {
+      return Ok(false);
+    }
+
+    SendAdminEmail(admin.Email, "New Feedback", feedback.Product, feedback.Message, dbFeedback.Id);
     return Ok(true);
+  }
+
+  private void SendAdminEmail(string recipient, string subject, string product, string content, int feedbackId) {
+    if (null == EMAIL_HOST || null == EMAIL_USERNAME || null == EMAIL_PASSWORD || null == EMAIL_PORT || !int.TryParse(EMAIL_PORT, out int port)) {
+      return;
+    }
+
+    string link = $"https://{UI_DOMAIN}/contact-us/feedback/{feedbackId}";
+#if DEBUG
+    link = link.Replace("https://", "http://");
+#endif
+
+    var to = new MailAddress(recipient);
+    var from = new MailAddress(EMAIL_USERNAME);
+
+    var email = new MailMessage(from, to);
+    email.Subject = subject;
+    email.Body = $"Product: {product}\n\n{content}\n\nLink:{link}";
+
+    var smtp = new SmtpClient();
+    smtp.Host = EMAIL_HOST;
+    smtp.Port = port;
+    smtp.Credentials = new NetworkCredential(EMAIL_USERNAME, EMAIL_PASSWORD);
+    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+    smtp.EnableSsl = true;
+
+    try {
+      /* Send method called below is what will send off our email
+       * unless an exception is thrown.
+       */
+      smtp.Send(email);
+    }
+    catch (SmtpException ex) {
+      LOG.Error("Failed to send notification email", ex);
+    }
   }
 
   /// <summary>
@@ -243,6 +317,20 @@ public class ContactUsController : ControllerBase {
 
     await _dbContext.FeedbackComment.AddAsync(dbComment, token).ConfigureAwait(false);
     await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+
+    User? otherPerson = null;
+    if (feedback.UserId != userId) {
+      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == Constants.ADMIN_USER_ID);
+    }
+    else {
+      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == feedback.UserId);
+    }
+
+    if (null == otherPerson || string.IsNullOrWhiteSpace(otherPerson.Email)) {
+      return Ok(false);
+    }
+
+    SendAdminEmail(otherPerson.Email, "New Feedback Comment", feedback.Product, dbComment.Message, feedback.Id);
     return Ok(true);
   }
 
