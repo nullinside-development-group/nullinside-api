@@ -143,7 +143,7 @@ public class ContactUsController : ControllerBase {
   [HttpPost("{id:int}/status")]
   [ProducesResponseType(StatusCodes.Status200OK)]
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<ObjectResult> GetFeedback(int id, ContactUsFeedbackStatusChangeRequest status, CancellationToken token = new()) {
+  public async Task<ObjectResult> UpdateFeedbackStatus(int id, ContactUsFeedbackStatusChangeRequest status, CancellationToken token = new()) {
     if (null == status.Status) {
       return BadRequest("Status cannot be empty");
     }
@@ -233,6 +233,70 @@ public class ContactUsController : ControllerBase {
     };
 
     await _dbContext.FeedbackComment.AddAsync(dbComment, token).ConfigureAwait(false);
+    await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+    return Ok(true);
+  }
+
+  /// <summary>
+  ///   Adds a read receipt for feedback.
+  /// </summary>
+  [HttpPost("{id:int}/read")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public async Task<ObjectResult> AddFeedbackReadReceipt(int id, CancellationToken token = new()) {
+    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
+    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
+      return Unauthorized(false);
+    }
+
+    Feedback? existing = await _dbContext.Feedback.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
+    if (null == existing) {
+      return BadRequest(false);
+    }
+
+    FeedbackReadReceipt? alreadyRead = _dbContext.FeedbackReadReceipt.FirstOrDefault(r => r.FeedbackId == existing.Id && r.UserId == userId);
+    if (null != alreadyRead) {
+      return Ok(true);
+    }
+
+    _dbContext.FeedbackReadReceipt.Add(new FeedbackReadReceipt {
+      FeedbackId = existing.Id,
+      UserId = userId,
+      Timestamp = DateTime.UtcNow
+    });
+
+    await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+    return Ok(true);
+  }
+
+  /// <summary>
+  ///   Adds a read receipt for feedback.
+  /// </summary>
+  [HttpPost("{id:int}/comment/read")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public async Task<ObjectResult> AddFeedbackCommentReadReceipt(int id, CancellationToken token = new()) {
+    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
+    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
+      return Unauthorized(false);
+    }
+
+    FeedbackComment? existing = await _dbContext.FeedbackComment.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
+    if (null == existing) {
+      return BadRequest(false);
+    }
+
+    FeedbackCommentReadReceipt? alreadyRead = _dbContext.FeedbackCommentReadReceipt.FirstOrDefault(r => r.FeedbackCommentId == id && r.UserId == userId);
+    if (null != alreadyRead) {
+      return Ok(true);
+    }
+
+    _dbContext.FeedbackCommentReadReceipt.Add(new FeedbackCommentReadReceipt {
+      FeedbackCommentId = existing.Id,
+      UserId = userId,
+      Timestamp = DateTime.UtcNow
+    });
+
     await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
     return Ok(true);
   }

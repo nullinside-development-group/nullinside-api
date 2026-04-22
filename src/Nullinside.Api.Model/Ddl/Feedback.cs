@@ -30,7 +30,7 @@ public class Feedback : ITableModel {
   ///   The feedback.
   /// </summary>
   public string Message { get; set; } = null!;
-  
+
   /// <summary>
   ///   The timestamp of when the feedback was submitted.
   /// </summary>
@@ -45,6 +45,11 @@ public class Feedback : ITableModel {
   ///   The comments associated with this.
   /// </summary>
   public ICollection<FeedbackComment> Comments { get; set; } = null!;
+
+  /// <summary>
+  ///   The collection of receipts for when the feedback was read.
+  /// </summary>
+  public ICollection<FeedbackReadReceipt> FeedbackReadReceipts { get; set; } = null!;
 
   /// <summary>
   ///   The method used to configure the POCOs of the table.
