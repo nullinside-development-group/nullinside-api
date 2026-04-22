@@ -7,5 +7,5 @@ public static class Constants {
   /// <summary>
   ///   The amount of time a token is valid for.
   /// </summary>
-  public static readonly TimeSpan OAUTH_TOKEN_TIME_LIMIT = TimeSpan.FromHours(1);
+  public static readonly TimeSpan OAUTH_TOKEN_TIME_LIMIT = TimeSpan.FromDays(7);
 }
