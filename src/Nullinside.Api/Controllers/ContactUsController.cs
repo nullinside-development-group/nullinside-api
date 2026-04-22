@@ -61,9 +61,12 @@ public class ContactUsController : ControllerBase {
     List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
       .ThenInclude(c => c.User)
+      .Include(f => f.Comments)
+      .ThenInclude(c => c.FeedbackCommentReadReceipts)
       .Include(f => f.User)
+      .Include(f => f.FeedbackReadReceipts)
       .Where(f => f.UserId == userId)
-      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin, userId))
       .ToListAsync(token)
       .ConfigureAwait(false);
 
@@ -95,8 +98,11 @@ public class ContactUsController : ControllerBase {
     List<ContactUsFeedbackResponse> feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
       .ThenInclude(c => c.User)
+      .Include(f => f.Comments)
+      .ThenInclude(c => c.FeedbackCommentReadReceipts)
       .Include(f => f.User)
-      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
+      .Include(f => f.FeedbackReadReceipts)
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin, userId))
       .ToListAsync(token)
       .ConfigureAwait(false);
 
@@ -127,9 +133,12 @@ public class ContactUsController : ControllerBase {
     ContactUsFeedbackResponse? feedback = await _dbContext.Feedback
       .Include(f => f.Comments)
       .ThenInclude(c => c.User)
+      .Include(f => f.Comments)
+      .ThenInclude(c => c.FeedbackCommentReadReceipts)
       .Include(f => f.User)
+      .Include(f => f.FeedbackReadReceipts)
       .Where(f => (isAdmin || f.UserId == userId) && f.Id == id)
-      .Select(f => new ContactUsFeedbackResponse(f, isAdmin))
+      .Select(f => new ContactUsFeedbackResponse(f, isAdmin, userId))
       .FirstOrDefaultAsync(token)
       .ConfigureAwait(false);
 
