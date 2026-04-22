@@ -11,7 +11,11 @@ public class ContactUsFeedbackResponse {
   /// </summary>
   /// <param name="feedback">The feedback object to copy data from.</param>
   /// <param name="isAdmin">True if the user requesting the data is an admin, false otherwise.</param>
-  public ContactUsFeedbackResponse(Feedback feedback, bool isAdmin) {
+  /// <param name="callerUserId">
+  ///   The user id of the person making the request, used to determine if they've read the feedback
+  ///   and comments.
+  /// </param>
+  public ContactUsFeedbackResponse(Feedback feedback, bool isAdmin, int callerUserId) {
     Id = feedback.Id;
     UserId = feedback.UserId;
     Product = feedback.Product;
@@ -19,13 +23,15 @@ public class ContactUsFeedbackResponse {
     Status = feedback.Status.ToString();
     Timestamp = feedback.Timestamp;
     Email = isAdmin ? feedback.User.Email : null;
+    IsRead = callerUserId == UserId || null != feedback.FeedbackReadReceipts.FirstOrDefault(r => r.UserId == callerUserId);
     Comments = feedback.Comments.Select(c => new ContactUsFeedbackCommentResponse(
       c.Id,
       c.UserId,
       Email = isAdmin ? c.User.Email : null,
-      feedback.UserId == c.UserId ? "You" : "Site Admin",
+      feedback.UserId == callerUserId ? "You" : "Site Admin",
       c.Message,
-      c.Timestamp
+      c.Timestamp,
+      c.UserId == callerUserId || null != c.FeedbackCommentReadReceipts.FirstOrDefault(r => r.UserId == callerUserId)
     ));
   }
 
@@ -38,6 +44,11 @@ public class ContactUsFeedbackResponse {
   ///   The user id who submitted the feedback.
   /// </summary>
   public int UserId { get; set; }
+
+  /// <summary>
+  ///   True if the feedback has been read, false otherwise.
+  /// </summary>
+  public bool IsRead { get; set; }
 
   /// <summary>
   ///   The email address of the user, ONLY available to users with the admin role.
@@ -82,13 +93,15 @@ public class ContactUsFeedbackResponse {
     /// <param name="user">The display name of the user who created the comment.</param>
     /// <param name="message">The comment content.</param>
     /// <param name="timestamp">The timestamp when the comment was created.</param>
-    public ContactUsFeedbackCommentResponse(int id, int userId, string? email, string user, string message, DateTime timestamp) {
+    /// <param name="isRead">True if the comment has been read, false otherwise.</param>
+    public ContactUsFeedbackCommentResponse(int id, int userId, string? email, string user, string message, DateTime timestamp, bool isRead) {
       Id = id;
       UserId = userId;
       User = user;
       Email = email;
       Message = message;
       Timestamp = timestamp;
+      IsRead = isRead;
     }
 
     /// <summary>
@@ -100,6 +113,11 @@ public class ContactUsFeedbackResponse {
     ///   The user id who created the comment.
     /// </summary>
     public int UserId { get; set; }
+
+    /// <summary>
+    ///   True if the feedback has been read, false otherwise.
+    /// </summary>
+    public bool IsRead { get; set; }
 
     /// <summary>
     ///   The email address of the user that made the comment.
