@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{80
 		..\go.sh = ..\go.sh
 		..\Jenkinsfile = ..\Jenkinsfile
 		..\README.md = ..\README.md
+		..\docker-compose.yml = ..\docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nullinside.Api.Common", "Nullinside.Api.Common\Nullinside.Api.Common.csproj", "{994E35B0-2208-4C01-B805-1337AB9677ED}"

@@ -1,28 +1,33 @@
 name: nullinside-api
 services:
-    nullinside-api:
-        build:
-            context: .
-            tags:
-                - "nullinside-api:latest"
-        logging:
-            driver: loki
-            options:
-                loki-url: 'http://192.168.1.4:3100/loki/api/v1/push'
-        container_name: nullinside-api
-        environment:
-            - TWITCH_BOT_CLIENT_ID
-            - TWITCH_BOT_CLIENT_SECRET
-            - TWITCH_BOT_CLIENT_REDIRECT
-            - DOCKER_SERVER
-            - DOCKER_USERNAME
-            - DOCKER_PASSWORD
-            - DOCKER_PASSWORD2
-            - MYSQL_SERVER
-            - MYSQL_USERNAME
-            - MYSQL_PASSWORD
-        ports:
-            - 8081:8080
-            - 8082:8081
-        restart: unless-stopped
-        image: nullinside-api:latest
+  nullinside-api:
+    build:
+      context: .
+      tags:
+        - "nullinside-api:latest"
+    logging:
+      driver: loki
+      options:
+        loki-url: 'http://192.168.1.4:3100/loki/api/v1/push'
+    container_name: nullinside-api
+    environment:
+      - TWITCH_BOT_CLIENT_ID
+      - TWITCH_BOT_CLIENT_SECRET
+      - TWITCH_BOT_CLIENT_REDIRECT
+      - DOCKER_SERVER
+      - DOCKER_USERNAME
+      - DOCKER_PASSWORD
+      - DOCKER_PASSWORD2
+      - MYSQL_SERVER
+      - MYSQL_USERNAME
+      - MYSQL_PASSWORD
+      - EMAIL_HOST
+      - EMAIL_PORT
+      - EMAIL_USERNAME
+      - EMAIL_PASSWORD
+      - UI_DOMAIN
+    ports:
+      - 8081:8080
+      - 8082:8081
+    restart: unless-stopped
+    image: nullinside-api:latest
