@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Mail;
 using System.Security.Claims;
 
 using log4net;
@@ -12,6 +10,10 @@ using Nullinside.Api.Common;
 using Nullinside.Api.Model;
 using Nullinside.Api.Model.Ddl;
 using Nullinside.Api.Shared.Json;
+#if RELEASE
+using System.Net;
+using System.Net.Mail;
+#endif
 
 namespace Nullinside.Api.Controllers;
 
@@ -247,6 +249,7 @@ public class ContactUsController : ControllerBase {
   }
 
   private void SendAdminEmail(string recipient, string subject, string product, string content, int feedbackId) {
+#if RELEASE
     if (null == EMAIL_HOST || null == EMAIL_USERNAME || null == EMAIL_PASSWORD || null == EMAIL_PORT || !int.TryParse(EMAIL_PORT, out int port)) {
       return;
     }
@@ -279,6 +282,7 @@ public class ContactUsController : ControllerBase {
     catch (SmtpException ex) {
       LOG.Error("Failed to send notification email", ex);
     }
+#endif
   }
 
   /// <summary>
@@ -314,6 +318,10 @@ public class ContactUsController : ControllerBase {
       Message = comment.Comment.Trim(),
       Timestamp = DateTime.UtcNow
     };
+
+    if (feedback.Status != FeedbackStatus.Open) {
+      feedback.Status = FeedbackStatus.Open;
+    }
 
     await _dbContext.FeedbackComment.AddAsync(dbComment, token).ConfigureAwait(false);
     await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
