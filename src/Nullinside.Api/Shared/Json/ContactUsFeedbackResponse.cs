@@ -28,7 +28,7 @@ public class ContactUsFeedbackResponse {
       c.Id,
       c.UserId,
       Email = isAdmin ? c.User.Email : null,
-      feedback.UserId == callerUserId ? "You" : "Site Admin",
+      isAdmin ? c.User.Email ?? c.User.Id.ToString() : feedback.UserId == callerUserId ? "You" : "Site Admin",
       c.Message,
       c.Timestamp,
       c.UserId == callerUserId || null != c.FeedbackCommentReadReceipts.FirstOrDefault(r => r.UserId == callerUserId)
