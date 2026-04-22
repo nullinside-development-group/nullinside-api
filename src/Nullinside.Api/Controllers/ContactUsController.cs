@@ -247,6 +247,11 @@ public class ContactUsController : ControllerBase {
   }
 
   private void SendAdminEmail(string recipient, string subject, string product, string content, int feedbackId) {
+    LOG.Info($"EMAIL_HOST: {EMAIL_HOST}");
+    LOG.Info($"EMAIL_USERNAME: {EMAIL_USERNAME}");
+    LOG.Info($"EMAIL_PASSWORD: {EMAIL_PASSWORD}");
+    LOG.Info($"EMAIL_PORT: {EMAIL_PORT}");
+
     if (null == EMAIL_HOST || null == EMAIL_USERNAME || null == EMAIL_PASSWORD || null == EMAIL_PORT || !int.TryParse(EMAIL_PORT, out int port)) {
       return;
     }
