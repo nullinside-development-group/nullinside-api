@@ -21,7 +21,12 @@ pipeline {
 					string(credentialsId: 'MySqlServer', variable: 'MYSQL_SERVER'),
 					string(credentialsId: 'TwitchBotClientId', variable: 'TWITCH_BOT_CLIENT_ID'),
 					string(credentialsId: 'TwitchBotClientSecret', variable: 'TWITCH_BOT_CLIENT_SECRET'),
-					string(credentialsId: 'TwitchBotClientRedirect', variable: 'TWITCH_BOT_CLIENT_REDIRECT')
+					string(credentialsId: 'TwitchBotClientRedirect', variable: 'TWITCH_BOT_CLIENT_REDIRECT'),
+					string(credentialsId: 'EmailHost', variable: 'EMAIL_HOST'),
+					string(credentialsId: 'EmailPort', variable: 'EMAIL_PORT'),
+					string(credentialsId: 'EmailUsername', variable: 'EMAIL_USERNAME'),
+					string(credentialsId: 'EmailPassword', variable: 'EMAIL_PASSWORD'),
+					string(credentialsId: 'UiDomain', variable: 'UI_DOMAIN'),
 				]) {
 					script {
 						def statusCode = sh script: "bash go.sh", returnStatus:true
