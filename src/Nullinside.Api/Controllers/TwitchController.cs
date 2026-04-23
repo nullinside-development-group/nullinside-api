@@ -66,8 +66,19 @@ public class TwitchController : ControllerBase {
       ExpiresUtc = botUser.TwitchTokenExpiration
     };
 
+    DateTime earliestScan = DateTime.UtcNow.AddHours(-1);
+#if DEBUG
+    earliestScan = DateTime.UtcNow.AddDays(-365);
+#endif
+
     List<User> users = await _dbContext.Users
-      .Where(u => !string.IsNullOrWhiteSpace(u.TwitchId) && u.TwitchLastScanned > DateTime.UtcNow.AddHours(-1))
+      .Include(u => u.TwitchConfig)
+      .Where(u =>
+        !u.IsBanned &&
+        null != u.TwitchConfig &&
+        u.TwitchConfig.Enabled &&
+        !string.IsNullOrWhiteSpace(u.TwitchId) &&
+        u.TwitchLastScanned > earliestScan)
       .ToListAsync(token)
       .ConfigureAwait(false);
     if (users.Count == 0) {
