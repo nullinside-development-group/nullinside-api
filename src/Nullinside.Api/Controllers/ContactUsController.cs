@@ -244,7 +244,7 @@ public class ContactUsController : ControllerBase {
       return Ok(false);
     }
 
-    SendAdminEmail(admin.Email, "New Feedback", feedback.Product, feedback.Message, dbFeedback.Id);
+    SendAdminEmail(admin.Email, $"{dbFeedback.Id} - New Feedback", feedback.Product, feedback.Message, dbFeedback.Id);
     return Ok(true);
   }
 
@@ -338,7 +338,7 @@ public class ContactUsController : ControllerBase {
       return Ok(false);
     }
 
-    SendAdminEmail(otherPerson.Email, "New Feedback Comment", feedback.Product, dbComment.Message, feedback.Id);
+    SendAdminEmail(otherPerson.Email, $"{feedback.Id} - New Feedback Comment", feedback.Product, dbComment.Message, feedback.Id);
     return Ok(true);
   }
 
