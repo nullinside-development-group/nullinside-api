@@ -56,7 +56,7 @@ public class TwitchController : ControllerBase {
   [ProducesResponseType(StatusCodes.Status401Unauthorized)]
   public async Task<ObjectResult> GetAllLiveBotStreams([FromServices] ITwitchApiProxy api, CancellationToken token = new()) {
     User? botUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.TwitchId == Constants.BOT_ID, token).ConfigureAwait(false);
-    if (null == botUser || null == api.TwitchAppConfig?.ClientId || null == api.TwitchAppConfig?.ClientSecret) {
+    if (null == botUser || null == botUser.TwitchId || null == api.TwitchAppConfig?.ClientId || null == api.TwitchAppConfig?.ClientSecret) {
       return Problem("Internal error reaching out to twitch");
     }
 
@@ -71,6 +71,7 @@ public class TwitchController : ControllerBase {
     earliestScan = DateTime.UtcNow.AddDays(-365);
 #endif
 
+    // Get all users that have the bot enabled.
     List<User> users = await _dbContext.Users
       .Include(u => u.TwitchConfig)
       .Where(u =>
@@ -84,13 +85,17 @@ public class TwitchController : ControllerBase {
     if (users.Count == 0) {
       return Ok(Enumerable.Empty<TwitchLiveUsersResponse>());
     }
+    
+    // Ensure those channels have the bot modded
+    var channels = (await api.GetUserModChannels(botUser.TwitchId).ConfigureAwait(false)).Select(c => c.broadcaster_id).ToList();
+    users = users.Where(u => channels.Contains(u.TwitchId!)).ToList();
 
     List<string> liveUserIds = (await api.GetChannelsLive(users.Select(u => u.TwitchId).ToList()!).ConfigureAwait(false)).ToList();
     if (liveUserIds.Count == 0) {
       return Ok(Enumerable.Empty<TwitchLiveUsersResponse>());
     }
 
-    List<User> liveUsers = users.Where(u => liveUserIds.Contains(u.TwitchId ?? string.Empty)).ToList();
+    List<User> liveUsers = users.Where(u => liveUserIds.Contains(u.TwitchId!)).ToList();
     if (liveUsers.Count == 0) {
       return Ok(Enumerable.Empty<TwitchLiveUsersResponse>());
     }
