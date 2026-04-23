@@ -326,6 +326,23 @@ public class TwitchApiProxy : ITwitchApiProxy {
     }, Retries, token).ConfigureAwait(false);
   }
 
+  /// <inheritdoc />
+  public virtual async Task<IEnumerable<Stream>?> GetStreams(List<string>? ids = null, List<string>? usernames = null, CancellationToken token = new()) {
+    if (null == ids && null == usernames) {
+      throw new ArgumentNullException(nameof(ids), "Either id or username must be provided.");
+    }
+
+    return await Retry.Execute(async () => {
+      ITwitchAPI api = GetApi();
+      GetStreamsResponse? response = await api.Helix.Streams.GetStreamsAsync(first: 100, userIds: ids, userLogins: usernames).ConfigureAwait(false);
+      if (null == response) {
+        return null;
+      }
+
+      return response.Streams;
+    }, Retries, token).ConfigureAwait(false);
+  }
+
   /// <summary>
   ///   Gets a new instance of the <see cref="TwitchAPI" />.
   /// </summary>

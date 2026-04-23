@@ -6,6 +6,8 @@ using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Helix.Models.Moderation.GetModerators;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
+using Stream = TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream;
+
 namespace Nullinside.Api.Common.Twitch;
 
 /// <summary>
@@ -60,6 +62,15 @@ public interface ITwitchApiProxy {
   /// <param name="token">The cancellation token.</param>
   /// <returns>The twitch information if successful, null otherwise.</returns>
   Task<(string? id, string? username)> GetUser(string username, CancellationToken token = new());
+
+  /// <summary>
+  ///   Gets the twitch stream information based on either the id or username.
+  /// </summary>
+  /// <param name="ids">The ids to look up.</param>
+  /// <param name="usernames">The usernames to look up.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>The twitch information if successful, null otherwise.</returns>
+  Task<IEnumerable<Stream>?> GetStreams(List<string>? ids = null, List<string>? usernames = null, CancellationToken token = new());
 
   /// <summary>
   ///   Gets the email address of the owner of the <see cref="OAuth" />.
