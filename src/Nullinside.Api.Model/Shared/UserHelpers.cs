@@ -31,8 +31,8 @@ public static class UserHelpers {
     DateTime expiresUtc = DateTime.UtcNow + tokenExpires;
     try {
       User? existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsBanned, cancellationToken).ConfigureAwait(false);
-      if (null == existing && !string.IsNullOrWhiteSpace(twitchUsername)) {
-        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchUsername == twitchUsername && !u.IsBanned, cancellationToken).ConfigureAwait(false);
+      if (null == existing && !string.IsNullOrWhiteSpace(twitchId)) {
+        existing = await dbContext.Users.FirstOrDefaultAsync(u => u.TwitchId == twitchId && !u.IsBanned, cancellationToken).ConfigureAwait(false);
       }
 
       if (null == existing) {
