@@ -99,6 +99,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
+app.Use(async (context, next) => {
+  context.Response.Headers.Append("X-Frame-Options", "DENY");
+  await next().ConfigureAwait(false);
+});
 app.UsePathBase("/api/v1");
 app.UseAuthentication();
 
