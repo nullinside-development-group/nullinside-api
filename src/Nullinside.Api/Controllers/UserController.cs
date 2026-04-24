@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Extensions;
@@ -29,6 +30,11 @@ namespace Nullinside.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class UserController : ControllerBase {
+  /// <summary>
+  ///   A semaphore used to prevent multiple threads from generating a new token at the same time.
+  /// </summary>
+  private static readonly SemaphoreSlim _tokenSemaphore = new(1, 1);
+
   /// <summary>
   ///   The application's configuration file.
   /// </summary>
@@ -84,7 +90,9 @@ public class UserController : ControllerBase {
         return Redirect($"{siteUrl}/user/login?error=2");
       }
 
-      string json = JsonConvert.SerializeObject(bearerToken);
+      string json = JsonConvert.SerializeObject(bearerToken, new JsonSerializerSettings {
+        ContractResolver = new CamelCasePropertyNamesContractResolver()
+      });
       return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
     }
     catch (InvalidJwtException) {
@@ -102,17 +110,31 @@ public class UserController : ControllerBase {
   [HttpPost]
   [Route("token/refresh")]
   public async Task<ActionResult> Refresh(AuthToken token, CancellationToken cancellationToken = new()) {
-    User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token.Token, cancellationToken).ConfigureAwait(false);
-    if (null == user?.Email) {
-      return Unauthorized();
-    }
+    await _tokenSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+    try {
+      User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token.Token, cancellationToken).ConfigureAwait(false);
+      if (null == user?.Email) {
+        return Unauthorized();
+      }
 
-    OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, user.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: cancellationToken).ConfigureAwait(false);
-    if (null == bearerToken) {
-      return StatusCode(500);
-    }
+      if (user.TokenExpires > DateTime.UtcNow + (Constants.OAUTH_TOKEN_TIME_LIMIT - TimeSpan.FromSeconds(10))) {
+        return Ok(new OAuthToken {
+          AccessToken = user.Token,
+          RefreshToken = user.RefreshToken,
+          ExpiresUtc = user.TokenExpires
+        });
+      }
 
-    return Ok(bearerToken);
+      OAuthToken? bearerToken = await UserHelpers.GenerateTokenAndSaveToDatabase(_dbContext, user.Email, Constants.OAUTH_TOKEN_TIME_LIMIT, cancellationToken: cancellationToken).ConfigureAwait(false);
+      if (null == bearerToken) {
+        return StatusCode(500);
+      }
+
+      return Ok(bearerToken);
+    }
+    finally {
+      _tokenSemaphore.Release();
+    }
   }
 
   /// <summary>
@@ -159,7 +181,9 @@ public class UserController : ControllerBase {
       return Redirect($"{siteUrl}/user/login?error=2");
     }
 
-    string json = JsonConvert.SerializeObject(bearerToken);
+    string json = JsonConvert.SerializeObject(bearerToken, new JsonSerializerSettings {
+      ContractResolver = new CamelCasePropertyNamesContractResolver()
+    });
     return Redirect($"{siteUrl}/user/login?token={Convert.ToBase64String(Encoding.UTF8.GetBytes(json))}");
   }
 
