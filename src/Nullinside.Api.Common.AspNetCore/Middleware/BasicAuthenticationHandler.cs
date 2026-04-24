@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using log4net;
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -45,6 +46,10 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
   /// </summary>
   /// <returns>The user and their roles if successful, <see cref="AuthenticateResult.Fail(string)" /> otherwise.</returns>
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
+    if (Request.Method == HttpMethods.Options) {
+      return AuthenticateResult.NoResult();
+    }
+
     // Read token from HTTP request header
     string? authorizationHeader = Request.Headers.Authorization;
     if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer ")) {
