@@ -65,6 +65,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private string? _twitchUsername;
 
   /// <summary>
+  ///   The last time a message was received from Twitch.
+  /// </summary>
+  private DateTime _lastMessageReceived = DateTime.UtcNow;
+
+  /// <summary>
   ///   Whether a credential update is pending.
   /// </summary>
   private int _updatePending;
@@ -400,7 +405,17 @@ public class TwitchClientProxy : ITwitchClientProxy {
         return;
       }
 
-      if (!_client.IsConnected) {
+      bool shouldReconnect = !_client.IsConnected;
+      if (!shouldReconnect && DateTime.UtcNow - _lastMessageReceived > TimeSpan.FromMinutes(5)) {
+        LOG.Warn($"No messages received in {DateTime.UtcNow - _lastMessageReceived}. Forcing reconnection.");
+        shouldReconnect = true;
+      }
+
+      if (shouldReconnect) {
+        if (_client.IsConnected) {
+          await _client.DisconnectAsync().ConfigureAwait(false);
+        }
+
         await ConnectAsync().ConfigureAwait(false);
       }
 
@@ -418,6 +433,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   }
 
   private Task TwitchChatClient_OnMessageReceived(object? sender, OnMessageReceivedArgs e) {
+    _lastMessageReceived = DateTime.UtcNow;
     string channelSan = e.ChatMessage.Channel.ToLowerInvariant();
     if (_onMessageReceived.TryGetValue(channelSan, out Action<TwitchChatMessage>? callback)) {
       foreach (Action<TwitchChatMessage> handler in callback.GetInvocationList()) {
@@ -434,6 +450,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   }
 
   private Task TwitchChatClient_OnUserBanned(object? sender, OnUserBannedArgs e) {
+    _lastMessageReceived = DateTime.UtcNow;
     string channelSan = e.UserBan.Channel.ToLowerInvariant();
     if (_onUserBanReceived.TryGetValue(channelSan, out Action<TwitchChatBan>? callback)) {
       foreach (Action<TwitchChatBan> handler in callback.GetInvocationList()) {
