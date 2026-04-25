@@ -82,6 +82,14 @@ public class TwitchClientProxy : ITwitchClientProxy {
     _client = new TwitchClient(loggerFactory: loggerFactory);
     _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
     _client.OnUserBanned += TwitchChatClient_OnUserBanned;
+    _client.OnJoinedChannel += (_, args) => {
+      LOG.Info($"Joined channel: {args.Channel}");
+      return Task.CompletedTask;
+    };
+    _client.OnLeftChannel += (_, args) => {
+      LOG.Warn($"Left channel: {args.Channel}");
+      return Task.CompletedTask;
+    };
     _client.OnConnected += (_, _) => {
       if (_client.IsConnected) {
         LOG.Info("Twitch Client Connected");
@@ -421,8 +429,32 @@ public class TwitchClientProxy : ITwitchClientProxy {
 
       if (_client.IsConnected) {
         foreach (string channel in _joinedChannels.Keys) {
+          // If the client thinks it's not in the channel, join it.
           if (!_client.JoinedChannels.Any(c => c.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))) {
+            LOG.Warn($"Channel {channel} is missing from JoinedChannels list. Re-joining...");
+            try {
+              // Sometimes JoinChannelAsync fails silently if it thinks it's already there 
+              // or if the connection is in a weird state.
+              await _client.JoinChannelAsync(channel).ConfigureAwait(false);
+            }
+            catch (Exception ex) {
+              LOG.Error($"Failed to re-join channel {channel}", ex);
+            }
+          }
+        }
+      }
+
+      // If we are connected but haven't received ANY messages for 2 minutes,
+      // it might be a general silence or a zombie connection.
+      // We'll try to re-join all channels if this happens, just in case the JoinedChannels list is lying.
+      if (_client.IsConnected && DateTime.UtcNow - _lastMessageReceived > TimeSpan.FromMinutes(2)) {
+        LOG.Info($"Inactivity detected ({DateTime.UtcNow - _lastMessageReceived}). Re-verifying all channels...");
+        foreach (string channel in _joinedChannels.Keys) {
+          try {
             await _client.JoinChannelAsync(channel).ConfigureAwait(false);
+          }
+          catch (Exception ex) {
+            LOG.Error($"Failed to refresh channel {channel}", ex);
           }
         }
       }
