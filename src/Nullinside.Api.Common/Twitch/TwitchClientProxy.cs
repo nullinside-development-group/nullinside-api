@@ -55,6 +55,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private readonly Timer _reconnectTimer;
 
   /// <summary>
+  ///   The last time a message was received from Twitch.
+  /// </summary>
+  private DateTime _lastMessageReceived = DateTime.UtcNow;
+
+  /// <summary>
   ///   The twitch OAuth token to use to connect.
   /// </summary>
   private string? _twitchOAuthToken;
@@ -63,11 +68,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The twitch username that we are connected to twitch as.
   /// </summary>
   private string? _twitchUsername;
-
-  /// <summary>
-  ///   The last time a message was received from Twitch.
-  /// </summary>
-  private DateTime _lastMessageReceived = DateTime.UtcNow;
 
   /// <summary>
   ///   Whether a credential update is pending.
@@ -332,15 +332,16 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   Joins a channel.
   /// </summary>
   /// <param name="channel">The channel to join.</param>
+  /// <param name="force">Whether to force the join even if the client thinks it's already in the channel.</param>
   /// <returns>True if successful, false otherwise.</returns>
-  private async Task<bool> JoinChannelAsync(string channel) {
+  private async Task<bool> JoinChannelAsync(string channel, bool force = false) {
     if (!await ConnectAsync().ConfigureAwait(false)) {
       return false;
     }
 
     _joinedChannels.TryAdd(channel, 0);
 
-    if (_client.JoinedChannels.Any(c => c.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))) {
+    if (!force && _client.JoinedChannels.Any(c => c.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))) {
       return true;
     }
 
@@ -414,14 +415,19 @@ public class TwitchClientProxy : ITwitchClientProxy {
       }
 
       bool shouldReconnect = !_client.IsConnected;
-      if (!shouldReconnect && DateTime.UtcNow - _lastMessageReceived > TimeSpan.FromMinutes(5)) {
-        LOG.Warn($"No messages received in {DateTime.UtcNow - _lastMessageReceived}. Forcing reconnection.");
+      if (!shouldReconnect && DateTime.UtcNow - _lastMessageReceived > TimeSpan.FromMinutes(2)) {
+        LOG.Warn($"Inactivity detected ({DateTime.UtcNow - _lastMessageReceived}). Forcing full reconnection.");
         shouldReconnect = true;
       }
 
       if (shouldReconnect) {
         if (_client.IsConnected) {
-          await _client.DisconnectAsync().ConfigureAwait(false);
+          try {
+            await _client.DisconnectAsync().ConfigureAwait(false);
+          }
+          catch (Exception ex) {
+            LOG.Error("Error during DisconnectAsync in ReconnectTimer", ex);
+          }
         }
 
         await ConnectAsync().ConfigureAwait(false);
@@ -440,21 +446,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
             catch (Exception ex) {
               LOG.Error($"Failed to re-join channel {channel}", ex);
             }
-          }
-        }
-      }
-
-      // If we are connected but haven't received ANY messages for 2 minutes,
-      // it might be a general silence or a zombie connection.
-      // We'll try to re-join all channels if this happens, just in case the JoinedChannels list is lying.
-      if (_client.IsConnected && DateTime.UtcNow - _lastMessageReceived > TimeSpan.FromMinutes(2)) {
-        LOG.Info($"Inactivity detected ({DateTime.UtcNow - _lastMessageReceived}). Re-verifying all channels...");
-        foreach (string channel in _joinedChannels.Keys) {
-          try {
-            await _client.JoinChannelAsync(channel).ConfigureAwait(false);
-          }
-          catch (Exception ex) {
-            LOG.Error($"Failed to refresh channel {channel}", ex);
           }
         }
       }
