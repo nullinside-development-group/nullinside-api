@@ -27,9 +27,14 @@ public class TwitchUserConfig : ITableModel {
   public bool Enabled { get; set; }
 
   /// <summary>
-  ///   Indicates if the user wants to ban known bots from public lists.
+  ///   True to ban accounts from known bot lists, false otherwise.
   /// </summary>
   public bool BanKnownBots { get; set; }
+
+  /// <summary>
+  ///   True to show the user on the homepage, false otherwise.
+  /// </summary>
+  public bool ShowOnHomePage { get; set; }
 
   /// <summary>
   ///   The method used to configure the POCOs of the table.
