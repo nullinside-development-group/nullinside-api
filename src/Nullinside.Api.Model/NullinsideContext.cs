@@ -62,6 +62,9 @@ public class NullinsideContext : DbContext, INullinsideContext {
   /// <inheritdoc />
   public DbSet<FeedbackReadReceipt> FeedbackReadReceipt { get; set; }
 
+  /// <inheritdoc />
+  public DbSet<TwitchUserLive> TwitchUserLive { get; set; }
+
   /// <summary>
   ///   Dynamically finds all <seealso cref="ITableModel" /> classes and generates tables from their definitions.
   /// </summary>

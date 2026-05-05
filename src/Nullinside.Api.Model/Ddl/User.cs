@@ -111,6 +111,11 @@ public class User : ITableModel {
   public ICollection<FeedbackCommentReadReceipt> FeedbackCommentReadReceipts { get; set; } = null!;
 
   /// <summary>
+  ///   The stream time information for a currently live user, null if not live.
+  /// </summary>
+  public TwitchUserLive? TwitchUserLive { get; set; }
+
+  /// <summary>
   ///   The method used to configure the POCOs of the table.
   /// </summary>
   /// <param name="modelBuilder">The model builder.</param>

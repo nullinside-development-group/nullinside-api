@@ -75,6 +75,11 @@ public interface INullinsideContext : IAsyncDisposable {
   DbSet<FeedbackReadReceipt> FeedbackReadReceipt { get; set; }
 
   /// <summary>
+  ///   The user's live stream information, if live, null otherwise.
+  /// </summary>
+  DbSet<TwitchUserLive> TwitchUserLive { get; set; }
+
+  /// <summary>
   ///   Provides access to database related information and operations for this context.
   /// </summary>
   DatabaseFacade Database { get; }
