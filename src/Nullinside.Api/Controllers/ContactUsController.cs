@@ -228,6 +228,12 @@ public class ContactUsController : ControllerBase {
       return Unauthorized(false);
     }
 
+    // If the user is spamming the API, stop adding their information to the database.
+    int totalUnread = await GetTotalUnreadFeedbackAndComments(token, userId).ConfigureAwait(false);
+    if (totalUnread >= Constants.MAXIMUM_UNREAD_CONTACT_US) {
+      return BadRequest("You have reached the maximum number of unread feedback messages. The admins must read the ones you have before you can submit more.");
+    }
+
     var dbFeedback = new Feedback {
       Product = feedback.Product.Trim(),
       Message = feedback.Message.Trim(),
@@ -244,11 +250,119 @@ public class ContactUsController : ControllerBase {
       return Ok(false);
     }
 
-    SendAdminEmail(admin.Email, $"{dbFeedback.Id} - New Feedback", feedback.Product, feedback.Message, dbFeedback.Id);
+    // If we've already sent a healthy number of emails that the admin hasn't responded to, don't continue to spam.
+    // They will see everything when they go to the website.
+    if (totalUnread < Constants.MAXIMUM_UNREAD_CONTACT_US_TO_STOP_EMAILING) {
+      SendEmail(admin.Email, $"New Feedback: {dbFeedback.Id}", feedback.Product, feedback.Message, dbFeedback.Id);
+    }
+
     return Ok(true);
   }
 
-  private void SendAdminEmail(string recipient, string subject, string product, string content, int feedbackId) {
+  /// <summary>
+  ///   Submits a comment attached to some feedback.
+  /// </summary>
+  [HttpPost("{id:int}/comment")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+  public async Task<ObjectResult> AddFeedbackComment(int id, ContactUsFeedbackComment comment, CancellationToken token = new()) {
+    if (string.IsNullOrWhiteSpace(comment.Comment)) {
+      return BadRequest("Comment cannot be empty");
+    }
+
+    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
+    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
+      return Unauthorized(false);
+    }
+
+    Feedback? feedback = await _dbContext.Feedback.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
+    if (null == feedback) {
+      return BadRequest("Feedback not found");
+    }
+
+    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
+                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
+    if (!isAdmin && feedback.UserId != userId) {
+      return Unauthorized(false);
+    }
+
+    // Since admins do not submit feedback, but they do submit comments, we need to check if the user is admin or not.
+    // Admins are not restricted, obviously.
+    int totalUnread = 0;
+    if (!isAdmin) {
+      // If the user is spamming the API, stop adding their information to the database.
+      totalUnread = await GetTotalUnreadFeedbackAndComments(token, userId).ConfigureAwait(false);
+      if (totalUnread >= Constants.MAXIMUM_UNREAD_CONTACT_US) {
+        return BadRequest("You have reached the maximum number of unread feedback messages. The admins must read the ones you have before you can submit more.");
+      }
+    }
+
+    var dbComment = new FeedbackComment {
+      FeedbackId = feedback.Id,
+      UserId = userId,
+      Message = comment.Comment.Trim(),
+      Timestamp = DateTime.UtcNow
+    };
+
+    if (feedback.Status != FeedbackStatus.Open) {
+      feedback.Status = FeedbackStatus.Open;
+    }
+
+    await _dbContext.FeedbackComment.AddAsync(dbComment, token).ConfigureAwait(false);
+    await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
+
+    User? otherPerson = null;
+    if (feedback.UserId != userId) {
+      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == feedback.UserId);
+    }
+    else {
+      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == Constants.ADMIN_USER_ID);
+    }
+
+    if (null == otherPerson || string.IsNullOrWhiteSpace(otherPerson.Email)) {
+      return Ok(false);
+    }
+
+    // If we've already sent a healthy number of emails that the admin hasn't responded to, don't continue to spam.
+    // They will see everything when they go to the website.
+    if (totalUnread < Constants.MAXIMUM_UNREAD_CONTACT_US_TO_STOP_EMAILING) {
+      SendEmail(otherPerson.Email, $"New Feedback Comment: {feedback.Id}", feedback.Product, dbComment.Message, feedback.Id);
+    }
+
+    return Ok(true);
+  }
+
+  /// <summary>
+  ///   Gets the total amount of unread feedback and comments for a user.
+  /// </summary>
+  /// <param name="token">Cancellation token.</param>
+  /// <param name="userId">The user id to lookup.</param>
+  /// <returns>The total amount of unread feedback and comments.</returns>
+  private async Task<int> GetTotalUnreadFeedbackAndComments(CancellationToken token, int userId) {
+    int unreadFeedback = (await _dbContext.Feedback
+      .Include(f => f.FeedbackReadReceipts)
+      .Where(f => f.UserId == userId && null == f.FeedbackReadReceipts.FirstOrDefault(r => r.UserId != userId))
+      .ToListAsync(token)
+      .ConfigureAwait(false)).Count;
+
+    int unreadComments = (await _dbContext.FeedbackComment
+      .Include(c => c.FeedbackCommentReadReceipts)
+      .Where(f => f.UserId == userId && null == f.FeedbackCommentReadReceipts.FirstOrDefault(r => r.UserId != userId))
+      .ToListAsync(token)
+      .ConfigureAwait(false)).Count;
+
+    return unreadFeedback + unreadComments;
+  }
+
+  /// <summary>
+  ///   Sends an email.
+  /// </summary>
+  /// <param name="recipient">The person to send the email to.</param>
+  /// <param name="subject">The subject of the email.</param>
+  /// <param name="product">The product the email is in regards to.</param>
+  /// <param name="content">The content of the email.</param>
+  /// <param name="feedbackId">The id of the feedback the email is in regards to.</param>
+  private void SendEmail(string recipient, string subject, string product, string content, int feedbackId) {
 #if RELEASE
     if (null == EMAIL_HOST || null == EMAIL_USERNAME || null == EMAIL_PASSWORD || null == EMAIL_PORT || !int.TryParse(EMAIL_PORT, out int port)) {
       return;
@@ -283,63 +397,6 @@ public class ContactUsController : ControllerBase {
       LOG.Error("Failed to send notification email", ex);
     }
 #endif
-  }
-
-  /// <summary>
-  ///   Submits a comment attached to some feedback.
-  /// </summary>
-  [HttpPost("{id:int}/comment")]
-  [ProducesResponseType(StatusCodes.Status200OK)]
-  [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-  public async Task<ObjectResult> AddFeedbackComment(int id, ContactUsFeedbackComment comment, CancellationToken token = new()) {
-    if (string.IsNullOrWhiteSpace(comment.Comment)) {
-      return BadRequest("Comment cannot be empty");
-    }
-
-    string? authenticatedUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.UserData)?.Value;
-    if (null == authenticatedUserId || !int.TryParse(authenticatedUserId, out int userId)) {
-      return Unauthorized(false);
-    }
-
-    Feedback? feedback = await _dbContext.Feedback.FirstOrDefaultAsync(f => f.Id == id, token).ConfigureAwait(false);
-    if (null == feedback) {
-      return BadRequest("Feedback not found");
-    }
-
-    bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
-                                                                       Equals(c.Value, nameof(UserRoles.ADMIN)));
-    if (!isAdmin && feedback.UserId != userId) {
-      return Unauthorized(false);
-    }
-
-    var dbComment = new FeedbackComment {
-      FeedbackId = feedback.Id,
-      UserId = userId,
-      Message = comment.Comment.Trim(),
-      Timestamp = DateTime.UtcNow
-    };
-
-    if (feedback.Status != FeedbackStatus.Open) {
-      feedback.Status = FeedbackStatus.Open;
-    }
-
-    await _dbContext.FeedbackComment.AddAsync(dbComment, token).ConfigureAwait(false);
-    await _dbContext.SaveChangesAsync(token).ConfigureAwait(false);
-
-    User? otherPerson = null;
-    if (feedback.UserId != userId) {
-      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == feedback.UserId);
-    }
-    else {
-      otherPerson = _dbContext.Users.FirstOrDefault(u => u.Id == Constants.ADMIN_USER_ID);
-    }
-
-    if (null == otherPerson || string.IsNullOrWhiteSpace(otherPerson.Email)) {
-      return Ok(false);
-    }
-
-    SendAdminEmail(otherPerson.Email, $"{feedback.Id} - New Feedback Comment", feedback.Product, dbComment.Message, feedback.Id);
-    return Ok(true);
   }
 
   /// <summary>
