@@ -86,8 +86,8 @@ public class ContactUsController : ControllerBase {
     bool isAdmin = null != HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role &&
                                                                        Equals(c.Value, nameof(UserRoles.ADMIN)));
 
-    // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
-    // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
+    // The way we specify users here isn't technically correct. We don't have usernames, and we don't want to leak the
+    // user or site admin's email address, so we will simplify it to say it's either a comment you made or a comment
     // that the site admin made. 
     //
     // The one and only reason this works is because the site admin is the only user responding to people...when that
@@ -159,7 +159,7 @@ public class ContactUsController : ControllerBase {
                                                                        Equals(c.Value, nameof(UserRoles.ADMIN)));
 
     // The way we specify users here isn't technically correct. We don't have usernames and we don't want to leak the
-    // user or site admin's email address, so we will simplify it to say its either a comment you made or a comment
+    // user or site admin's email address, so we will simplify it to say it's either a comment you made or a comment
     // that the site admin made. 
     //
     // The one and only reason this works is because the site admin is the only user responding to people...when that
@@ -337,7 +337,7 @@ public class ContactUsController : ControllerBase {
   /// </summary>
   /// <param name="token">Cancellation token.</param>
   /// <param name="userId">The user id to lookup.</param>
-  /// <returns>The total amount of unread feedback and comments.</returns>
+  /// <returns>The total number of unread feedback and comments.</returns>
   private async Task<int> GetTotalUnreadFeedbackAndComments(CancellationToken token, int userId) {
     int unreadFeedback = (await _dbContext.Feedback
       .Include(f => f.FeedbackReadReceipts)
@@ -359,9 +359,9 @@ public class ContactUsController : ControllerBase {
   /// </summary>
   /// <param name="recipient">The person to send the email to.</param>
   /// <param name="subject">The subject of the email.</param>
-  /// <param name="product">The product the email is in regards to.</param>
+  /// <param name="product">The product the email is in regard to.</param>
   /// <param name="content">The content of the email.</param>
-  /// <param name="feedbackId">The id of the feedback the email is in regards to.</param>
+  /// <param name="feedbackId">The id of the feedback the email is in regard to.</param>
   private void SendEmail(string recipient, string subject, string product, string content, int feedbackId) {
 #if RELEASE
     if (null == EMAIL_HOST || null == EMAIL_USERNAME || null == EMAIL_PASSWORD || null == EMAIL_PORT || !int.TryParse(EMAIL_PORT, out int port)) {

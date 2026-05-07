@@ -80,6 +80,11 @@ public interface INullinsideContext : IAsyncDisposable {
   DbSet<TwitchUserLive> TwitchUserLive { get; set; }
 
   /// <summary>
+  ///   The list of users with only a few messages that were banned by someone other than us.
+  /// </summary>
+  DbSet<BansWithMessagesInChat> BansWithMessagesInChat { get; set; }
+
+  /// <summary>
   ///   Provides access to database related information and operations for this context.
   /// </summary>
   DatabaseFacade Database { get; }
