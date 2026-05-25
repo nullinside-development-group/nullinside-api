@@ -9,6 +9,52 @@ namespace Nullinside.Api.Common.Extensions;
 ///   Extensions for the <see cref="string" /> class.
 /// </summary>
 public static class StringExtensions {
+  // Characters that visually resemble ASCII letters
+  private static readonly Dictionary<char, string> LOOKALIKE_MAP = new() {
+    // Cyrillic
+    ['а'] = "a",
+    ['е'] = "e",
+    ['о'] = "o",
+    ['р'] = "p",
+    ['с'] = "c",
+    ['у'] = "y",
+    ['х'] = "x",
+    ['і'] = "i",
+    ['ј'] = "j",
+    ['к'] = "k",
+    ['м'] = "m",
+    ['н'] = "h",
+    ['т'] = "t",
+    ['в'] = "b",
+
+    // Greek
+    ['Α'] = "A",
+    ['Β'] = "B",
+    ['Ε'] = "E",
+    ['Ζ'] = "Z",
+    ['Η'] = "H",
+    ['Ι'] = "I",
+    ['Κ'] = "K",
+    ['Μ'] = "M",
+    ['Ν'] = "N",
+    ['Ο'] = "O",
+    ['Ρ'] = "P",
+    ['Τ'] = "T",
+    ['Χ'] = "X",
+
+    ['α'] = "a",
+    ['β'] = "b",
+    ['γ'] = "y",
+    ['δ'] = "d",
+    ['ε'] = "e",
+    ['ι'] = "i",
+    ['κ'] = "k",
+    ['ο'] = "o",
+    ['ρ'] = "p",
+    ['τ'] = "t",
+    ['χ'] = "x"
+  };
+
   /// <summary>
   ///   Calculate the difference between 2 strings using the Levenshtein distance algorithm
   /// </summary>
@@ -70,6 +116,12 @@ public static class StringExtensions {
 
       // Skip accent marks/formatting
       if (category == UnicodeCategory.NonSpacingMark) {
+        continue;
+      }
+
+      // Remap look-a-likes
+      if (LOOKALIKE_MAP.TryGetValue(c, out string? mapped)) {
+        sb.Append(mapped);
         continue;
       }
 
