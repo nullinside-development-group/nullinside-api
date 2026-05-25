@@ -9,18 +9,21 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <DocumentationFile>bin\Debug\Nullinside.Api.Common.xml</DocumentationFile>
+        <NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <DocumentationFile>bin\Release\Nullinside.Api.Common.xml</DocumentationFile>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <DebugType>none</DebugType>
+        <NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="log4net" Version="3.3.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
+        <PackageReference Include="ICU4N" Version="60.1.0-alpha.439"/>
+        <PackageReference Include="log4net" Version="3.3.1"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
         <PackageReference Include="SSH.NET" Version="2025.1.0"/>
         <PackageReference Include="TwitchLib.Api" Version="3.10.2"/>
