@@ -9,13 +9,13 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <DocumentationFile>bin\Debug\Nullinside.Api.Common.AspNetCore.xml</DocumentationFile>
-		<NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
+        <NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <DocumentationFile>bin\Release\Nullinside.Api.Common.AspNetCore.xml</DocumentationFile>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
+        <NoWarn>1701;1702;ICU4N_IDE_0002</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
