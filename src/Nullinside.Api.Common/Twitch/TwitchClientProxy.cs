@@ -82,7 +82,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
     _loggerFactory = loggerFactory;
     InitializeClient();
 
-    _reconnectTimer = new Timer(500);
+    _reconnectTimer = new Timer(TimeSpan.FromSeconds(30).TotalMilliseconds);
     _reconnectTimer.Elapsed += ReconnectTimer_Elapsed;
     _reconnectTimer.AutoReset = true;
     _reconnectTimer.Start();
@@ -231,6 +231,20 @@ public class TwitchClientProxy : ITwitchClientProxy {
   }
 
   /// <summary>
+  ///   Connects to the twitch IRC server.
+  /// </summary>
+  /// <returns>True if successful, false otherwise.</returns>
+  public async Task<bool> ConnectAsync() {
+    await _connectionSemaphore.WaitAsync().ConfigureAwait(false);
+    try {
+      return await ConnectAsyncInternal().ConfigureAwait(false);
+    }
+    finally {
+      _connectionSemaphore.Release();
+    }
+  }
+
+  /// <summary>
   ///   The callback(s) to invoke when the twitch chat client is disconnected.
   /// </summary>
   private event Action? OnDisconnected;
@@ -322,20 +336,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   Connects to the twitch IRC server.
   /// </summary>
   /// <returns>True if successful, false otherwise.</returns>
-  public async Task<bool> ConnectAsync() {
-    await _connectionSemaphore.WaitAsync().ConfigureAwait(false);
-    try {
-      return await ConnectAsyncInternal().ConfigureAwait(false);
-    }
-    finally {
-      _connectionSemaphore.Release();
-    }
-  }
-
-  /// <summary>
-  ///   Connects to the twitch IRC server.
-  /// </summary>
-  /// <returns>True if successful, false otherwise.</returns>
   private async Task<bool> ConnectAsyncInternal() {
     if (_client.IsConnected) {
       return true;
@@ -356,6 +356,10 @@ public class TwitchClientProxy : ITwitchClientProxy {
       // Give it a small amount of time to actually report being connected if it's not immediate
       for (int i = 0; i < 50 && !_client.IsConnected; i++) {
         await Task.Delay(100).ConfigureAwait(false);
+      }
+
+      if (_client.IsConnected) {
+        await RejoinChannels().ConfigureAwait(false);
       }
 
       return _client.IsConnected;
@@ -400,24 +404,28 @@ public class TwitchClientProxy : ITwitchClientProxy {
       }
 
       if (_client.IsConnected) {
-        foreach (string channel in _joinedChannels.Keys) {
-          // If the client thinks it's not in the channel, join it.
-          if (!_client.JoinedChannels.Any(c => c.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))) {
-            LOG.Warn($"Channel {channel} is missing from JoinedChannels list. Re-joining...");
-            try {
-              // Sometimes JoinChannelAsync fails silently if it thinks it's already there 
-              // or if the connection is in a weird state.
-              await _client.JoinChannelAsync(channel).ConfigureAwait(false);
-            }
-            catch (Exception ex) {
-              LOG.Error($"Failed to re-join channel {channel}", ex);
-            }
-          }
-        }
+        await RejoinChannels().ConfigureAwait(false);
       }
     }
     catch (Exception ex) {
       LOG.Error("Failed to reconnect to Twitch", ex);
+    }
+  }
+
+  private async Task RejoinChannels() {
+    foreach (string channel in _joinedChannels.Keys) {
+      // If the client thinks it's not in the channel, join it.
+      if (!_client.JoinedChannels.Any(c => c.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))) {
+        LOG.Warn($"Channel {channel} is missing from JoinedChannels list. Re-joining...");
+        try {
+          // Sometimes JoinChannelAsync fails silently if it thinks it's already there 
+          // or if the connection is in a weird state.
+          await _client.JoinChannelAsync(channel).ConfigureAwait(false);
+        }
+        catch (Exception ex) {
+          LOG.Error($"Failed to re-join channel {channel}", ex);
+        }
+      }
     }
   }
 
