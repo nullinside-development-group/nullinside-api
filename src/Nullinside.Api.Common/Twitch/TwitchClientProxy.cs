@@ -25,11 +25,6 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private static readonly ILog LOG = LogManager.GetLogger(typeof(TwitchClientProxy));
 
   /// <summary>
-  ///   The twitch client to send and receive messages with.
-  /// </summary>
-  private readonly TwitchClient _client;
-
-  /// <summary>
   ///   Semaphore to ensure only one connection attempt happens at a time.
   /// </summary>
   private readonly SemaphoreSlim _connectionSemaphore = new(1, 1);
@@ -38,6 +33,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   The list of chats we attempted to join with the bot.
   /// </summary>
   private readonly ConcurrentDictionary<string, byte> _joinedChannels = new();
+
+  /// <summary>
+  ///   The logger factory to use for debug logging.
+  /// </summary>
+  private readonly ILoggerFactory? _loggerFactory;
 
   /// <summary>
   ///   The callback(s) to invoke when a channel receives a chat message.
@@ -55,6 +55,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private readonly Timer _reconnectTimer;
 
   /// <summary>
+  ///   The twitch client to send and receive messages with.
+  /// </summary>
+  private TwitchClient _client = null!;
+
+  /// <summary>
   ///   The last time a message was received from Twitch.
   /// </summary>
   private DateTime _lastMessageReceived = DateTime.UtcNow;
@@ -70,56 +75,14 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private string? _twitchUsername;
 
   /// <summary>
-  ///   Whether a credential update is pending.
-  /// </summary>
-  private int _updatePending;
-
-  /// <summary>
   ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
   /// </summary>
   /// <param name="loggerFactory">The logger factory to use for debug logging.</param>
   public TwitchClientProxy(ILoggerFactory? loggerFactory = null) {
-    _client = new TwitchClient(loggerFactory: loggerFactory);
-    _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
-    _client.OnUserBanned += TwitchChatClient_OnUserBanned;
-    _client.OnJoinedChannel += (_, args) => {
-      LOG.Info($"Joined channel: {args.Channel}");
-      return Task.CompletedTask;
-    };
-    _client.OnLeftChannel += (_, args) => {
-      LOG.Warn($"Left channel: {args.Channel}");
-      return Task.CompletedTask;
-    };
-    _client.OnConnected += (_, _) => {
-      if (_client.IsConnected) {
-        LOG.Info("Twitch Client Connected");
-      }
+    _loggerFactory = loggerFactory;
+    InitializeClient();
 
-      return Task.CompletedTask;
-    };
-    _client.OnDisconnected += (_, _) => {
-      LOG.Error("Twitch Client Disconnected");
-      OnDisconnected?.Invoke();
-      return Task.CompletedTask;
-    };
-    _client.OnConnectionError += (_, args) => {
-      LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
-      return Task.CompletedTask;
-    };
-    _client.OnError += (_, args) => {
-      LOG.Error("Twitch Client Error", args.Exception);
-      return Task.CompletedTask;
-    };
-    _client.OnIncorrectLogin += (_, args) => {
-      LOG.Error("Twitch Client Incorrect Login", args.Exception);
-      return Task.CompletedTask;
-    };
-    _client.OnNoPermissionError += (_, _) => {
-      LOG.Error("Twitch Client No Permission Error");
-      return Task.CompletedTask;
-    };
-
-    _reconnectTimer = new Timer(TimeSpan.FromSeconds(30).TotalMilliseconds);
+    _reconnectTimer = new Timer(500);
     _reconnectTimer.Elapsed += ReconnectTimer_Elapsed;
     _reconnectTimer.AutoReset = true;
     _reconnectTimer.Start();
@@ -236,6 +199,18 @@ public class TwitchClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
+  public async Task<bool> DisconnectAsync() {
+    await _connectionSemaphore.WaitAsync().ConfigureAwait(false);
+    try {
+      await _client.DisconnectAsync().ConfigureAwait(false);
+      return true;
+    }
+    finally {
+      _connectionSemaphore.Release();
+    }
+  }
+
+  /// <inheritdoc />
   public void Dispose() {
     _reconnectTimer.Dispose();
     if (_client.IsConnected) {
@@ -268,25 +243,11 @@ public class TwitchClientProxy : ITwitchClientProxy {
       return;
     }
 
-    if (Interlocked.CompareExchange(ref _updatePending, 1, 0) != 0) {
-      return;
-    }
-
-    // Small delay to allow both properties to be set if they are being updated together.
-    await Task.Delay(100).ConfigureAwait(false);
-
     await _connectionSemaphore.WaitAsync().ConfigureAwait(false);
     try {
-      Interlocked.Exchange(ref _updatePending, 0);
-
       // Check if credentials have actually changed compared to what the client is using.
       if (_client.IsInitialized &&
           _client.ConnectionCredentials?.TwitchUsername == _twitchUsername) {
-        // Credentials haven't changed (we can't easily check token without potentially having to 
-        // access protected members or assuming if username is same, it might be the same token 
-        // but it's safer to just re-initialize if we aren't sure. 
-        // Actually TwitchLib's ConnectionCredentials doesn't expose TwitchToken publicly in some versions?
-        // Let's check what it has.
         await ConnectAsyncInternal().ConfigureAwait(false);
         return;
       }
@@ -295,6 +256,8 @@ public class TwitchClientProxy : ITwitchClientProxy {
         await _client.DisconnectAsync().ConfigureAwait(false);
       }
 
+      // Re-initialize the client to ensure a clean state, especially for the underlying WebSocket.
+      InitializeClient();
       _client.Initialize(new ConnectionCredentials(_twitchUsername, _twitchOAuthToken));
       await ConnectAsyncInternal().ConfigureAwait(false);
     }
@@ -359,7 +322,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   ///   Connects to the twitch IRC server.
   /// </summary>
   /// <returns>True if successful, false otherwise.</returns>
-  private async Task<bool> ConnectAsync() {
+  public async Task<bool> ConnectAsync() {
     await _connectionSemaphore.WaitAsync().ConfigureAwait(false);
     try {
       return await ConnectAsyncInternal().ConfigureAwait(false);
@@ -430,6 +393,9 @@ public class TwitchClientProxy : ITwitchClientProxy {
           }
         }
 
+        // Before reconnecting, make sure we have a fresh client instance.
+        // This avoids "WebSocket already started" errors from TwitchLib.
+        InitializeClient();
         await ConnectAsync().ConfigureAwait(false);
       }
 
@@ -487,5 +453,50 @@ public class TwitchClientProxy : ITwitchClientProxy {
     }
 
     return Task.CompletedTask;
+  }
+
+  /// <summary>
+  ///   Initializes the twitch client and sets up its event handlers.
+  /// </summary>
+  private void InitializeClient() {
+    _client = new TwitchClient(loggerFactory: _loggerFactory);
+    _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
+    _client.OnUserBanned += TwitchChatClient_OnUserBanned;
+    _client.OnJoinedChannel += (_, args) => {
+      LOG.Info($"Joined channel: {args.Channel}");
+      return Task.CompletedTask;
+    };
+    _client.OnLeftChannel += (_, args) => {
+      LOG.Warn($"Left channel: {args.Channel}");
+      return Task.CompletedTask;
+    };
+    _client.OnConnected += (_, _) => {
+      if (_client.IsConnected) {
+        LOG.Info("Twitch Client Connected");
+      }
+
+      return Task.CompletedTask;
+    };
+    _client.OnDisconnected += (_, _) => {
+      LOG.Error("Twitch Client Disconnected");
+      OnDisconnected?.Invoke();
+      return Task.CompletedTask;
+    };
+    _client.OnConnectionError += (_, args) => {
+      LOG.Error($"Twitch Client Connection Error: {args.Error.Message}");
+      return Task.CompletedTask;
+    };
+    _client.OnError += (_, args) => {
+      LOG.Error("Twitch Client Error", args.Exception);
+      return Task.CompletedTask;
+    };
+    _client.OnIncorrectLogin += (_, args) => {
+      LOG.Error("Twitch Client Incorrect Login", args.Exception);
+      return Task.CompletedTask;
+    };
+    _client.OnNoPermissionError += (_, _) => {
+      LOG.Error("Twitch Client No Permission Error");
+      return Task.CompletedTask;
+    };
   }
 }
