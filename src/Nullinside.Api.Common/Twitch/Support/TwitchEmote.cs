@@ -22,13 +22,11 @@ public class TwitchEmote {
   ///   Character ending index. For example, if the message was "This is Kappa test.", the start
   ///   index would be 12 for 'Kappa'.
   /// </param>
-  /// <param name="imageUrl">The url of the emote's image.</param>
-  public TwitchEmote(string emoteId, string name, int emoteStartIndex, int emoteEndIndex, string imageUrl) {
+  public TwitchEmote(string emoteId, string name, int emoteStartIndex, int emoteEndIndex) {
     Id = emoteId;
     Name = name;
     StartIndex = emoteStartIndex;
     EndIndex = emoteEndIndex;
-    ImageUrl = imageUrl;
   }
 
   /// <summary>
@@ -40,7 +38,6 @@ public class TwitchEmote {
     Name = emote.Name;
     StartIndex = emote.StartIndex;
     EndIndex = emote.EndIndex;
-    ImageUrl = emote.ImageUrl;
   }
 
   /// <summary>
@@ -64,9 +61,4 @@ public class TwitchEmote {
   ///   'Kappa'.
   /// </summary>
   public int EndIndex { get; }
-
-  /// <summary>
-  ///   URL to Twitch hosted emote image.
-  /// </summary>
-  public string ImageUrl { get; }
 }

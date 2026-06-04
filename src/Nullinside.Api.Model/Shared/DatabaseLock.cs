@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-using Nullinside.Api.Model;
-
-namespace Nullinside.Api.Common;
+namespace Nullinside.Api.Model.Shared;
 
 /// <summary>
 ///   Handles acquiring a lock at the database level.

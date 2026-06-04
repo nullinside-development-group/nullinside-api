@@ -42,7 +42,7 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
-  void RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback);
+  Task RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback);
 
   /// <summary>
   ///   Adds a callback for when users are banned from the chat.
@@ -57,7 +57,6 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="channel">The name of the channel to add the callback for.</param>
   /// <param name="callback">The callback to remove from when a user is banned.</param>
   void RemoveBannedCallback(string channel, Action<TwitchChatBan> callback);
-
 
   /// <summary>
   ///   Adds a callback for being disconnected from the twitch chat server.
