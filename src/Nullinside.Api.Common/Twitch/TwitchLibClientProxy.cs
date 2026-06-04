@@ -18,11 +18,11 @@ namespace Nullinside.Api.Common.Twitch;
 /// <summary>
 ///   A proxy for the Twitch chat client.
 /// </summary>
-public class TwitchClientProxy : ITwitchClientProxy {
+public class TwitchLibClientProxy : ITwitchClientProxy {
   /// <summary>
   ///   The logger.
   /// </summary>
-  private static readonly ILog LOG = LogManager.GetLogger(typeof(TwitchClientProxy));
+  private static readonly ILog LOG = LogManager.GetLogger(typeof(TwitchLibClientProxy));
 
   /// <summary>
   ///   The twitch client to send and receive messages with.
@@ -75,10 +75,10 @@ public class TwitchClientProxy : ITwitchClientProxy {
   private int _updatePending;
 
   /// <summary>
-  ///   Initializes a new instance of the <see cref="TwitchClientProxy" /> class.
+  ///   Initializes a new instance of the <see cref="TwitchLibClientProxy" /> class.
   /// </summary>
   /// <param name="loggerFactory">The logger factory to use for debug logging.</param>
-  public TwitchClientProxy(ILoggerFactory? loggerFactory = null) {
+  public TwitchLibClientProxy(ILoggerFactory? loggerFactory = null) {
     _client = new TwitchClient(loggerFactory: loggerFactory);
     _client.OnMessageReceived += TwitchChatClient_OnMessageReceived;
     _client.OnUserBanned += TwitchChatClient_OnUserBanned;
@@ -183,7 +183,7 @@ public class TwitchClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
-  public void RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback) {
+  public Task RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback) {
     string channelSan = channel.ToLowerInvariant();
     if (_onMessageReceived.TryGetValue(channelSan, out Action<TwitchChatMessage>? existing)) {
       existing -= callback;
@@ -196,6 +196,8 @@ public class TwitchClientProxy : ITwitchClientProxy {
         _onMessageReceived[channelSan] = existing;
       }
     }
+
+    return Task.CompletedTask;
   }
 
   /// <inheritdoc />
