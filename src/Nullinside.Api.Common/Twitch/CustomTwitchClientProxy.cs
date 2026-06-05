@@ -211,7 +211,7 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
   /// <returns>A completed task.</returns>
   private Task OnRawIrcReceived(string irc) {
     var message = new TwitchChatMessage(irc);
-    if (!_messageCallbacks.TryGetValue(message.Channel, out Action<TwitchChatMessage>? callbacks) || callbacks.GetInvocationList().Length <= 1) {
+    if (!_messageCallbacks.TryGetValue(message.Channel, out Action<TwitchChatMessage>? callbacks) || callbacks.GetInvocationList().Length < 1) {
       return Task.CompletedTask;
     }
 
