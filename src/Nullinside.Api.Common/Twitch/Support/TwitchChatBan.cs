@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using TwitchLib.Client.Models;
 
 namespace Nullinside.Api.Common.Twitch.Support;
@@ -32,6 +34,69 @@ public class TwitchChatBan {
     Username = source.Username;
     RoomId = source.RoomId;
     TargetUserId = source.TargetUserId;
+  }
+
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="TwitchChatBan" /> class.
+  /// </summary>
+  /// <param name="irc">The original ban to pull metadata from.</param>
+  public TwitchChatBan(string irc) {
+    BanReason = string.Empty;
+    Channel = string.Empty;
+    Username = string.Empty;
+    RoomId = string.Empty;
+    TargetUserId = string.Empty;
+
+    if (string.IsNullOrWhiteSpace(irc)) {
+      return;
+    }
+
+    // Parse IRC tags
+    if (!irc.StartsWith("@")) {
+      return;
+    }
+
+    int tagsEnd = irc.IndexOf(' ');
+    if (tagsEnd <= 0) {
+      return;
+    }
+
+    string[] tags = irc[..tagsEnd].Split(';');
+
+    foreach (string tag in tags) {
+      string[] parts = tag.Split('=', 2);
+      if (parts.Length != 2) {
+        continue;
+      }
+
+      switch (parts[0].TrimStart('@')) {
+        case "room-id":
+          RoomId = parts[1];
+          break;
+
+        case "target-user-id":
+          TargetUserId = parts[1];
+          break;
+
+        case "ban-reason":
+          BanReason = parts[1]
+            .Replace(@"\s", " ")
+            .Replace(@"\:", ";");
+          break;
+      }
+    }
+
+    // Parse channel from CLEARCHAT command
+    Match channelMatch = Regex.Match(irc, @"CLEARCHAT\s+#(?<channel>[^\s]+)", RegexOptions.IgnoreCase);
+    if (channelMatch.Success) {
+      Channel = channelMatch.Groups["channel"].Value;
+    }
+
+    // Parse username (trailing parameter)
+    Match userMatch = Regex.Match(irc, @"CLEARCHAT\s+#[^\s]+\s+:(?<user>.+)$", RegexOptions.IgnoreCase);
+    if (userMatch.Success) {
+      Username = userMatch.Groups["user"].Value;
+    }
   }
 
   /// <summary>

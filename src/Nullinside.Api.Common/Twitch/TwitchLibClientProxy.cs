@@ -214,7 +214,7 @@ public class TwitchLibClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
-  public void RemoveBannedCallback(string channel, Action<TwitchChatBan> callback) {
+  public Task RemoveBannedCallback(string channel, Action<TwitchChatBan> callback) {
     string channelSan = channel.ToLowerInvariant();
     if (_onUserBanReceived.TryGetValue(channelSan, out Action<TwitchChatBan>? existing)) {
       existing -= callback;
@@ -225,6 +225,8 @@ public class TwitchLibClientProxy : ITwitchClientProxy {
         _onUserBanReceived[channelSan] = existing;
       }
     }
+
+    return Task.CompletedTask;
   }
 
   /// <inheritdoc />
