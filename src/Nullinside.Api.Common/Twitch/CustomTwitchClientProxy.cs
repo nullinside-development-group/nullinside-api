@@ -16,6 +16,11 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
   private static readonly ILog LOG = LogManager.GetLogger(typeof(CustomTwitchClientProxy));
 
   /// <summary>
+  ///   The callbacks when a ban is received.
+  /// </summary>
+  private readonly ConcurrentDictionary<string, Action<TwitchChatBan>> _banCallbacks = new();
+
+  /// <summary>
   ///   The callbacks when a message is received.
   /// </summary>
   private readonly ConcurrentDictionary<string, Action<TwitchChatMessage>> _messageCallbacks = new();
@@ -60,7 +65,7 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
         TwitchIrcClient? client = _client;
         if (null != client) {
           try {
-            await client.ReadLoopAsync(OnRawIrcReceived, disposed.Token).ConfigureAwait(false);
+            await client.ReadLoopAsync(OnRawIrcReceived, OnBanReceived, disposed.Token).ConfigureAwait(false);
           }
           catch (Exception ex) {
             LOG.Error("Error ReadLoopAsync on irc reader", ex);
@@ -72,6 +77,7 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
       }
     });
   }
+
 
   /// <inheritdoc />
   public string? TwitchUsername {
@@ -161,14 +167,31 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
-  public Task AddBannedCallback(string channel, Action<TwitchChatBan> callback) {
-    //throw new NotImplementedException();
-    return Task.CompletedTask;
+  public async Task AddBannedCallback(string channel, Action<TwitchChatBan> callback) {
+    channel = channel.ToLowerInvariant();
+    _banCallbacks.AddOrUpdate(channel, callback, (_, existing) => {
+      if (existing.GetInvocationList().Contains(callback)) {
+        return existing;
+      }
+
+      return existing + callback;
+    });
   }
 
   /// <inheritdoc />
-  public void RemoveBannedCallback(string channel, Action<TwitchChatBan> callback) {
-    //throw new NotImplementedException();
+  public async Task RemoveBannedCallback(string channel, Action<TwitchChatBan> callback) {
+    channel = channel.ToLowerInvariant();
+    if (!_banCallbacks.TryGetValue(channel, out Action<TwitchChatBan>? existing)) {
+      return;
+    }
+
+    existing -= callback;
+    if (existing == null) {
+      _banCallbacks.TryRemove(channel, out _);
+    }
+    else {
+      _banCallbacks[channel] = existing;
+    }
   }
 
   /// <inheritdoc />
@@ -221,6 +244,30 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
       }
       catch (Exception ex) {
         LOG.Error($"Error in message callback for {message.Channel}: {message.Message}", ex);
+      }
+    }
+
+    return Task.CompletedTask;
+  }
+
+  /// <summary>
+  ///   Called whenever a ban is received.
+  /// </summary>
+  /// <param name="irc">The irc message.</param>
+  /// <returns></returns>
+  /// <exception cref="NotImplementedException"></exception>
+  private Task OnBanReceived(string irc) {
+    var ban = new TwitchChatBan(irc);
+    if (!_banCallbacks.TryGetValue(ban.Channel, out Action<TwitchChatBan>? callbacks) || callbacks.GetInvocationList().Length < 1) {
+      return Task.CompletedTask;
+    }
+
+    foreach (Delegate callback in callbacks.GetInvocationList()) {
+      try {
+        callback.DynamicInvoke(ban);
+      }
+      catch (Exception ex) {
+        LOG.Error($"Error in ban callback for {ban.Channel}: {ban.Username}", ex);
       }
     }
 

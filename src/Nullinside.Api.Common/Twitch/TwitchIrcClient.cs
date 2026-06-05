@@ -149,8 +149,9 @@ public sealed class TwitchIrcClient : IDisposable {
   ///   Performs a blocking read loop to read messages from the IRC server.
   /// </summary>
   /// <param name="onMessage">The function to call when a message is received.</param>
+  /// <param name="onBan">The function to call when a ban is received.</param>
   /// <param name="token">The cancellation token to use for the read loop.</param>
-  public async Task ReadLoopAsync(Func<string, Task>? onMessage = null, CancellationToken token = default) {
+  public async Task ReadLoopAsync(Func<string, Task>? onMessage = null, Func<string, Task>? onBan = null, CancellationToken token = default) {
     while (!token.IsCancellationRequested) {
       StreamReader? reader = _reader;
 
@@ -167,6 +168,25 @@ public sealed class TwitchIrcClient : IDisposable {
 
       if (line.StartsWith("PING ")) {
         await SendRawAsync($"PONG {line["PING ".Length..]}").ConfigureAwait(false);
+        continue;
+      }
+
+      if (line.Contains(":tmi.twitch.tv RECONNECT")) {
+        await _connectionLock.WaitAsync().ConfigureAwait(false);
+
+        try {
+          await DisconnectInternalAsync().ConfigureAwait(false);
+          await ConnectInternalAsync().ConfigureAwait(false);
+        }
+        finally {
+          _connectionLock.Release();
+        }
+
+        continue;
+      }
+
+      if (null != onBan && line.Contains(" CLEARCHAT ") && line.Contains("target-user-id=")) {
+        await onBan(line).ConfigureAwait(false);
         continue;
       }
 
