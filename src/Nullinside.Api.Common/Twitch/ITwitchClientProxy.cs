@@ -71,4 +71,16 @@ public interface ITwitchClientProxy : IDisposable, IAsyncDisposable {
   /// <param name="callback">The callback to remove.</param>
   /// <returns>An asynchronous task.</returns>
   void RemoveDisconnectedCallback(Action callback);
+  
+  /// <summary>
+  ///   Connects to the chat server, if possible.
+  /// </summary>
+  /// <returns>An asynchronous task.</returns>
+  Task Connect();
+
+  /// <summary>
+  ///   Disconnects from the chat server.
+  /// </summary>
+  /// <returns>An asynchronous task.</returns>
+  Task Disconnect();
 }
