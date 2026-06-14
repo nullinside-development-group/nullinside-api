@@ -240,6 +240,16 @@ public class TwitchLibClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
+  public async Task Connect() {
+    await _client.ConnectAsync().ConfigureAwait(false);
+  }
+
+  /// <inheritdoc />
+  public async Task Disconnect() {
+    await _client.DisconnectAsync().ConfigureAwait(false);
+  }
+
+  /// <inheritdoc />
   public void Dispose() {
     _reconnectTimer.Dispose();
     if (_client.IsConnected) {

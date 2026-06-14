@@ -90,6 +90,20 @@ public sealed class TwitchIrcClient : IDisposable {
       _connectionLock.Release();
     }
   }
+  
+  /// <summary>
+  ///   Disconnects from the twitch IRC server.
+  /// </summary>
+  public async Task DisconnectAsync() {
+    await _connectionLock.WaitAsync().ConfigureAwait(false);
+
+    try {
+      await DisconnectInternalAsync().ConfigureAwait(false);
+    }
+    finally {
+      _connectionLock.Release();
+    }
+  }
 
   /// <summary>
   ///   Updates the credentials used to connect to the IRC server.

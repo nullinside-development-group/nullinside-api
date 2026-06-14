@@ -205,6 +205,24 @@ public class CustomTwitchClientProxy : ITwitchClientProxy {
   }
 
   /// <inheritdoc />
+  public async Task Connect() {
+    if (_client == null) {
+      return;
+    }
+
+    await _client.ConnectAsync().ConfigureAwait(false);
+  }
+
+  /// <inheritdoc />
+  public async Task Disconnect() {
+    if (_client == null) {
+      return;
+    }
+
+    await _client.DisconnectAsync().ConfigureAwait(false);
+  }
+
+  /// <inheritdoc />
   public async Task RemoveMessageCallback(string channel, Action<TwitchChatMessage> callback) {
     channel = channel.ToLowerInvariant();
     if (!_messageCallbacks.TryGetValue(channel, out Action<TwitchChatMessage>? existing)) {
