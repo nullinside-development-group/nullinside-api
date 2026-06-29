@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 
 using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Twitch.Json;
+using Nullinside.Api.Common.Twitch.Support;
 
 using TwitchLib.Api;
 using TwitchLib.Api.Auth;
@@ -267,7 +268,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
   }
 
   /// <inheritdoc />
-  public virtual async Task<IEnumerable<string>> GetChannelsLive(IEnumerable<string> userIds) {
+  public virtual async Task<IEnumerable<TwitchUserInfo>> GetChannelsLive(IEnumerable<string> userIds) {
     ITwitchAPI api = GetApi();
 
     // We can only query 100 at a time, so throttle the search.
@@ -287,7 +288,7 @@ public class TwitchApiProxy : ITwitchApiProxy {
       }
     }
 
-    return liveUsers.Select(l => l.UserId);
+    return liveUsers.Select(l => new TwitchUserInfo(l.UserName, l.UserLogin, l.UserId));
   }
 
   /// <inheritdoc />

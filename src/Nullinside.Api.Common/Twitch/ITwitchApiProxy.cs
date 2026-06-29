@@ -1,5 +1,6 @@
 ﻿using Nullinside.Api.Common.Auth;
 using Nullinside.Api.Common.Twitch.Json;
+using Nullinside.Api.Common.Twitch.Support;
 
 using TwitchLib.Api.Helix.Models.Chat.GetChatters;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
@@ -120,7 +121,7 @@ public interface ITwitchApiProxy {
   /// </summary>
   /// <param name="userIds">The twitch ids of the channels.</param>
   /// <returns>The list of twitch channels that are currently live.</returns>
-  Task<IEnumerable<string>> GetChannelsLive(IEnumerable<string> userIds);
+  Task<IEnumerable<TwitchUserInfo>> GetChannelsLive(IEnumerable<string> userIds);
 
   /// <summary>
   ///   Makes a user a moderator in a channel.
