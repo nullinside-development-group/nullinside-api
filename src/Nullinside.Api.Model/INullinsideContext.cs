@@ -78,6 +78,11 @@ public interface INullinsideContext : IAsyncDisposable {
   ///   The user's live stream information, if live, null otherwise.
   /// </summary>
   DbSet<TwitchUserLive> TwitchUserLive { get; set; }
+  
+  /// <summary>
+  ///   A channel we are a moderator of.
+  /// </summary>
+  DbSet<TwitchModeratedUser> TwitchModeratedUser { get; set; }
 
   /// <summary>
   ///   The list of users with only a few messages that were banned by someone other than us.
