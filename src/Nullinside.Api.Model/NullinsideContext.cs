@@ -66,6 +66,9 @@ public class NullinsideContext : DbContext, INullinsideContext {
   public DbSet<TwitchUserLive> TwitchUserLive { get; set; }
 
   /// <inheritdoc />
+  public DbSet<TwitchModeratedUser> TwitchModeratedUser { get; set; }
+
+  /// <inheritdoc />
   public DbSet<BansWithMessagesInChat> BansWithMessagesInChat { get; set; }
 
   /// <summary>
